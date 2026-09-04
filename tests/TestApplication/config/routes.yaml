@@ -1,0 +1,5 @@
+jpmmartin_sylius_subscription_admin:
+    resource: "@JpmMartinSyliusSubscriptionPlugin/config/routes/admin.yaml"
+
+jpmmartin_sylius_subscription_shop:
+    resource: "@JpmMartinSyliusSubscriptionPlugin/config/routes/shop.yaml"
