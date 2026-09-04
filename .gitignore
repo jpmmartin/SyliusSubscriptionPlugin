@@ -1,0 +1,52 @@
+/vendor/
+/var/
+/node_modules/
+/drivers/
+/composer.lock
+
+/etc/build/*
+!/etc/build/.gitignore
+
+/.phpunit.result.cache
+/behat.yml
+/phpunit.xml
+/compose.override.yml
+.phpunit.result.cache
+
+# Symfony CLI https://symfony.com/doc/current/setup/symfony_server.html#different-php-settings-per-project
+/.php-version
+/php.ini
+
+/tests/TestApplication/.env.local
+/tests/TestApplication/.env.*.local
+
+# Claude Code working files, kept out of the published package by choice: the skills are
+# authoring tools for this repository, not part of what a consumer installs.
+# settings.local.json is per-developer by convention in any case.
+/.claude/skills/
+/.claude/settings.local.json
+
+###> graphify ###
+# graphify is a local authoring tool, not part of the published package, and nothing it
+# produces or configures belongs in the repository. The generated graph is a build
+# artefact regenerated from the sources on every update, and the hooks and merge driver
+# would force graphify on anyone who clones this repo.
+/graphify-out/
+/.gitattributes
+/.claude/settings.json
+/.claude/CLAUDE.md
+.claude/settings.json.graphify-bak
+###< graphify ###
+
+###> openspec ###
+# OpenSpec is a local planning tool: proposals, delta specs, designs and task lists.
+# This is a community plugin — what ships is the plugin, not the author's record of how
+# it was planned. Same decision as SyliusNmiPlugin, deliberately, so both plugins behave
+# alike. Note this diverges from the PeptidesMarketplace application, which does track
+# openspec/ because it is private and its Rule 3 makes the spec the source of truth.
+#
+# .claude/commands/opsx/* are the CLI's slash commands — authoring tools for whoever
+# writes the specs, never something a consumer of this plugin installs.
+/openspec/
+/.claude/commands/opsx/
+###< openspec ###
