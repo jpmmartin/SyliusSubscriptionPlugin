@@ -26,18 +26,6 @@
 /.claude/skills/
 /.claude/settings.local.json
 
-###> graphify ###
-# graphify is a local authoring tool, not part of the published package, and nothing it
-# produces or configures belongs in the repository. The generated graph is a build
-# artefact regenerated from the sources on every update, and the hooks and merge driver
-# would force graphify on anyone who clones this repo.
-/graphify-out/
-/.gitattributes
-/.claude/settings.json
-/.claude/CLAUDE.md
-.claude/settings.json.graphify-bak
-###< graphify ###
-
 ###> openspec ###
 # OpenSpec is a local planning tool: proposals, delta specs, designs and task lists.
 # This is a community plugin — what ships is the plugin, not the author's record of how
