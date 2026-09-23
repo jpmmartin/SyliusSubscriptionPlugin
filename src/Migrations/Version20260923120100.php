@@ -49,7 +49,9 @@ final class Version20260923120100 extends AbstractMigration
         $this->addSql('UPDATE jpm_martin_sylius_subscription_cycle SET manual_retry = ?', [false], [ParameterType::BOOLEAN]);
 
         $subscription = $schema->getTable('jpm_martin_sylius_subscription');
-        $subscription->modifyColumn('consecutive_failed_cycles', ['notnull' => true]);
+        // The default is set to none on purpose: on MariaDB taken for MySQL (a serverVersion without
+        // "mariadb"), a nullable column's default is read back as the string 'NULL' and kept otherwise.
+        $subscription->modifyColumn('consecutive_failed_cycles', ['notnull' => true, 'default' => null]);
         foreach (array_keys(self::MOVED_REFERENCES) as $column) {
             $this->dropReference($subscription, $column);
         }
@@ -57,7 +59,7 @@ final class Version20260923120100 extends AbstractMigration
             $subscription->dropColumn($column);
         }
 
-        $schema->getTable('jpm_martin_sylius_subscription_cycle')->modifyColumn('manual_retry', ['notnull' => true]);
+        $schema->getTable('jpm_martin_sylius_subscription_cycle')->modifyColumn('manual_retry', ['notnull' => true, 'default' => null]);
     }
 
     /** Only a subscription of one item, on a plan, fits back into one subscription per line. */
@@ -84,9 +86,9 @@ final class Version20260923120100 extends AbstractMigration
         foreach (['quantity', 'unit_price', 'failed_cycles_count'] as $column) {
             $subscription->addColumn($column, 'integer', ['notnull' => false]);
         }
-        $subscription->modifyColumn('consecutive_failed_cycles', ['notnull' => false]);
+        $subscription->modifyColumn('consecutive_failed_cycles', ['notnull' => false, 'default' => null]);
 
-        $schema->getTable('jpm_martin_sylius_subscription_cycle')->modifyColumn('manual_retry', ['notnull' => false]);
+        $schema->getTable('jpm_martin_sylius_subscription_cycle')->modifyColumn('manual_retry', ['notnull' => false, 'default' => null]);
     }
 
     private function count(string $sql): int

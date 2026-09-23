@@ -33,6 +33,30 @@ final class ManagingRepeatableVariantsContext implements Context
         $this->subscriptionTab->saveChanges();
     }
 
+    #[When('/^I start editing the ("[^"]+" variant)$/')]
+    public function iStartEditingTheVariant(ProductVariantInterface $variant): void
+    {
+        $this->openFor($variant);
+    }
+
+    #[When('I let customers repeat it')]
+    public function iLetCustomersRepeatIt(): void
+    {
+        $this->subscriptionTab->markRepeatable();
+    }
+
+    #[When('I stop requiring it to be shipped')]
+    public function iStopRequiringItToBeShipped(): void
+    {
+        $this->subscriptionTab->requireShipping(false);
+    }
+
+    #[When('I save my changes')]
+    public function iSaveMyChanges(): void
+    {
+        $this->subscriptionTab->saveChanges();
+    }
+
     #[Then('/^the ("[^"]+" variant) should be repeatable$/')]
     public function theVariantShouldBeRepeatable(ProductVariantInterface $variant): void
     {
@@ -47,6 +71,14 @@ final class ManagingRepeatableVariantsContext implements Context
         $this->openFor($variant);
 
         Assert::false($this->subscriptionTab->isMarkedRepeatable());
+    }
+
+    #[Then('/^the ("[^"]+" variant) should not require shipping$/')]
+    public function theVariantShouldNotRequireShipping(ProductVariantInterface $variant): void
+    {
+        $this->openFor($variant);
+
+        Assert::false($this->subscriptionTab->isShippingRequired());
     }
 
     private function openFor(ProductVariantInterface $variant): void

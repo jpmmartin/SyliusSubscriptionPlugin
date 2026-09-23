@@ -25,6 +25,19 @@ Feature: Placing an order with subscriptions
         Then I should see the thank you page
         And the recurring charges I accepted on my order should be recorded as version "1"
 
+    @ui @javascript
+    Scenario: Placing an order with a subscription in the browser
+        Given I am a logged in customer
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        And I am at the checkout addressing step
+        When I specify the billing address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
+        And I complete the addressing step
+        And I proceed with "Free" shipping method and "Card on file" payment
+        And I accept the recurring charges of my subscriptions
+        And I confirm my order
+        Then I should see the thank you page
+        And the recurring charges I accepted on my order should be recorded as version "1"
+
     @api @ui
     Scenario: Not placing an order with a subscription as a guest
         Given I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan

@@ -6,5 +6,8 @@ includes:
 parameters:
     level: max
 
+    # The lowest PHP the plugin supports, so syntax and functions of later versions are reported.
+    phpVersion: 80200
+
     paths:
         - src

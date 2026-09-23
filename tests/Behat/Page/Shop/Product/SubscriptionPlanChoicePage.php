@@ -6,8 +6,12 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Product;
 
 use Behat\Mink\Element\NodeElement;
 use FriendsOfBehat\PageObjectExtension\Page\SymfonyPage;
+use Sylius\Behat\Service\DriverHelper;
 
-/** The choice between buying once and subscribing, on Sylius's product page. */
+/**
+ * The choice between buying once and subscribing, on Sylius's product page. The add-to-cart form is a
+ * live component, so choosing and adding only work in a browser, where they wait for its updates.
+ */
 final class SubscriptionPlanChoicePage extends SymfonyPage
 {
     public function getRouteName(): string
@@ -40,6 +44,28 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
         );
     }
 
+    public function choosePlan(string $code): void
+    {
+        foreach ($this->getPlanRadios() as $radio) {
+            if ($radio->getAttribute('value') === $code) {
+                $radio->click();
+                DriverHelper::waitForLiveComponentUpdate($this->getSession());
+
+                return;
+            }
+        }
+
+        throw new \RuntimeException(\sprintf('The "%s" plan is not offered.', $code));
+    }
+
+    /** Sylius's own button; its live action sends the customer to the cart. */
+    public function addToCart(): void
+    {
+        $this->getElement('add_to_cart_button')->click();
+        $this->getDocument()->waitFor(5, fn (): bool => str_contains($this->getSession()->getCurrentUrl(), '/cart'));
+        DriverHelper::waitForPageToLoad($this->getSession());
+    }
+
     public function isOneTimePurchaseOffered(): bool
     {
         foreach ($this->getPlanRadios() as $radio) {
@@ -54,6 +80,7 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'add_to_cart_button' => '[data-test-button="add-to-cart-button"]',
             'plan_choice' => '[data-test-subscription-plans]',
         ]);
     }

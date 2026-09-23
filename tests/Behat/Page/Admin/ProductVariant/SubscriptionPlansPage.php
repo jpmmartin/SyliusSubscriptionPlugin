@@ -6,8 +6,13 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\ProductVaria
 
 use Behat\Mink\Element\NodeElement;
 use FriendsOfBehat\PageObjectExtension\Page\SymfonyPage;
+use Sylius\Behat\Service\DriverHelper;
 
-/** The "Subscription" tab of Sylius's variant edit page: the "can be repeated" switch and the plans. */
+/**
+ * The "Subscription" tab of Sylius's variant edit page: the "can be repeated" switch and the plans.
+ * The variant's form is a live component: in a browser, a field is reached through its tab, and each
+ * change waits for the form to be rendered again.
+ */
 final class SubscriptionPlansPage extends SymfonyPage
 {
     public function getRouteName(): string
@@ -17,12 +22,16 @@ final class SubscriptionPlansPage extends SymfonyPage
 
     public function markRepeatable(): void
     {
+        $this->showTab('subscription-plans');
         $this->getElement('repeatable')->check();
+        DriverHelper::waitForLiveComponentUpdate($this->getSession());
     }
 
     public function unmarkRepeatable(): void
     {
+        $this->showTab('subscription-plans');
         $this->getElement('repeatable')->uncheck();
+        DriverHelper::waitForLiveComponentUpdate($this->getSession());
     }
 
     public function isMarkedRepeatable(): bool
@@ -30,9 +39,24 @@ final class SubscriptionPlansPage extends SymfonyPage
         return $this->getElement('repeatable')->isChecked();
     }
 
+    /** Sylius's own "Shipping required" switch, on the variant's general tab. */
+    public function requireShipping(bool $required): void
+    {
+        $this->showTab('details');
+        $field = $this->getElement('shipping_required');
+        $required ? $field->check() : $field->uncheck();
+        DriverHelper::waitForLiveComponentUpdate($this->getSession());
+    }
+
+    public function isShippingRequired(): bool
+    {
+        return $this->getElement('shipping_required')->isChecked();
+    }
+
     public function saveChanges(): void
     {
         $this->getElement('save_changes')->click();
+        DriverHelper::waitForPageToLoad($this->getSession());
     }
 
     public function addPlan(): void
@@ -79,7 +103,17 @@ final class SubscriptionPlansPage extends SymfonyPage
             'plan' => '[data-test-subscription-plan="%code%"]',
             'repeatable' => '[data-test-subscription-repeatable]',
             'save_changes' => '[data-test-update-changes-button]',
+            'shipping_required' => '#sylius_admin_product_variant_shippingRequired',
+            'side_navigation_tab' => '[data-test-side-navigation-tab="%tab%"]',
         ]);
+    }
+
+    /** Without a browser every tab is in the page already; in one, only the open tab can be used. */
+    private function showTab(string $tab): void
+    {
+        if (DriverHelper::isJavascript($this->getDriver())) {
+            $this->getElement('side_navigation_tab', ['%tab%' => $tab])->click();
+        }
     }
 
     private function getPlanCell(string $code, string $cell): NodeElement

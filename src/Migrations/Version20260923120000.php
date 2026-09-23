@@ -44,8 +44,10 @@ final class Version20260923120000 extends AbstractMigration
         $this->addSql('UPDATE jpm_martin_sylius_subscription SET failed_cycles_count = 0');
 
         $subscription = $schema->getTable('jpm_martin_sylius_subscription');
+        // The default is set to none on purpose: on MariaDB taken for MySQL (a serverVersion without
+        // "mariadb"), a nullable column's default is read back as the string 'NULL' and kept otherwise.
         foreach (['product_variant_id', 'plan_id', 'quantity', 'unit_price', 'failed_cycles_count'] as $column) {
-            $subscription->modifyColumn($column, ['notnull' => true]);
+            $subscription->modifyColumn($column, ['notnull' => true, 'default' => null]);
         }
         $subscription->dropColumn('consecutive_failed_cycles');
         $schema->getTable('jpm_martin_sylius_subscription_cycle')->dropColumn('manual_retry');

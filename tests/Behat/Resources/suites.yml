@@ -128,6 +128,8 @@ default:
                 - sylius.behat.context.setup.locale
                 - sylius.behat.context.setup.product
 
+                - sylius.behat.context.ui.shop.cart
+
                 - jpm_martin_sylius_subscription.behat.context.setup.subscription_plan
                 - jpm_martin_sylius_subscription.behat.context.ui.shop.subscribing_to_products
 
