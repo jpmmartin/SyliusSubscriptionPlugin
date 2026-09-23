@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <parameters>
+        <parameter key="jpm_martin_sylius_subscription.form.type.subscription_frequency.validation_groups" type="collection">
+            <parameter>jpm_martin_sylius_subscription</parameter>
+        </parameter>
+    </parameters>
+
+    <services>
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_frequency" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionFrequencyType">
+            <argument>%jpm_martin_sylius_subscription.model.subscription_frequency.class%</argument>
+            <argument>%jpm_martin_sylius_subscription.form.type.subscription_frequency.validation_groups%</argument>
+            <tag name="form.type" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.frequency.repeatable_variants" class="JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariants">
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.repeatable_variant" />
+            <argument>%jpm_martin_sylius_subscription.model.repeatable_variant.class%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface" alias="jpm_martin_sylius_subscription.frequency.repeatable_variants" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.frequency.cart_repeater" class="JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeater">
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.cart_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
+            <argument>%jpm_martin_sylius_subscription.model.cart_frequency.class%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface" alias="jpm_martin_sylius_subscription.frequency.cart_repeater" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.controller.repeat_cart"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\RepeatCartAction"
+                 public="true"
+        >
+            <argument type="service" id="sylius.context.cart" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="sylius.manager.order" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.twig.extension.cart_repetition" class="JpmMartin\SyliusSubscriptionPlugin\Twig\CartRepetitionExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <tag name="twig.extension" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.form.extension.repeatable_product_variant" class="JpmMartin\SyliusSubscriptionPlugin\Form\Extension\RepeatableProductVariantTypeExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
+            <tag name="form.type_extension" />
+        </service>
+    </services>
+</container>

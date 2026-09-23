@@ -1,5 +1,12 @@
+# The admin routes go under the admin path, which is what puts them behind the admin firewall: its
+# pattern is that path. The README tells a consuming store the same thing.
 jpmmartin_sylius_subscription_admin:
     resource: "@JpmMartinSyliusSubscriptionPlugin/config/routes/admin.yaml"
+    prefix: /%sylius_admin.path_name%
 
+# The shop routes go under the locale prefix, exactly as Sylius's own shop routes are imported.
 jpmmartin_sylius_subscription_shop:
     resource: "@JpmMartinSyliusSubscriptionPlugin/config/routes/shop.yaml"
+    prefix: /{_locale}
+    requirements:
+        _locale: ^[A-Za-z]{2,4}(_([A-Za-z]{4}|[0-9]{3}))?(_([A-Za-z]{2}|[0-9]{3}))?$

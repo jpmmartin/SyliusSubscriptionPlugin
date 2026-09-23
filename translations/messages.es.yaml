@@ -1,0 +1,99 @@
+jpm_martin_sylius_subscription:
+    consent:
+        text: Autorizo a la tienda a cobrar automáticamente en mi método de pago cada renovación de las suscripciones de este pedido, al precio y con el intervalo indicados, hasta que las cancele desde mi cuenta.
+    ui:
+        plan_or_frequency: "Plan o frecuencia"
+        repeat_this_cart: "Repetir este carrito"
+        repeat_this_cart_help: "Recibe de nuevo los productos de este carrito, con descuento, hasta que lo dejes. Los productos a los que te suscribiste con un plan conservan su plan; los que no se pueden repetir se compran una vez."
+        do_not_repeat: "No repetir"
+        frequency_choice_with_discount: "%frequency% (ahorra un %discount%%)"
+        repeated_line: "Se repite: %frequency%"
+        repeated_line_with_discount: "Se repite: %frequency% (ahorra un %discount%%)"
+        apply: "Aplicar"
+        subscription_frequency: Frecuencia de suscripción
+        subscription_frequencies: Frecuencias de suscripción
+        subscription_plan: Plan de suscripción
+        subscription_plans: Planes de suscripción
+        add_subscription_plan: Añadir plan de suscripción
+        no_subscription_plans: Esta variante solo se vende como compra única. Añade un plan para venderla también por suscripción.
+        interval: Intervalo
+        discount: Descuento de suscriptor
+        max_cycles: Máximo de ciclos
+        until_cancelled: Hasta que se cancele
+        purchase_type: ¿Cómo quieres comprarlo?
+        one_time_purchase: Compra única
+        plan_choice: 'Suscripción: %name%'
+        plan_choice_with_discount: 'Suscripción: %name% (ahorra un %discount%%)'
+        subscription_line: 'Suscripción: %name%'
+        subscription: Suscripción
+        my_subscriptions: Mis suscripciones
+        my_subscriptions_subtitle: Los productos que recibes periódicamente y cuándo se renueva cada uno.
+        no_subscriptions: Todavía no tienes suscripciones.
+        next_renewal: Próxima renovación
+        price_per_renewal: Precio por renovación
+        renewals: Renovaciones
+        change_frequency: Cambiar la frecuencia
+        change_frequency_help: La nueva frecuencia se aplica desde tu próxima renovación, que mantiene su fecha.
+        new_frequency: Nueva frecuencia
+        frequency: Frecuencia
+        every:
+            day: '{1}Cada día|]1,Inf[Cada %count% días'
+            week: '{1}Cada semana|]1,Inf[Cada %count% semanas'
+            month: '{1}Cada mes|]1,Inf[Cada %count% meses'
+            year: '{1}Cada año|]1,Inf[Cada %count% años'
+        products: Productos
+        paid_renewals: Renovaciones cobradas
+        paid_cycles_of: '%paid% de %max%'
+        no_longer_renews: Ya no se renueva
+        retry: Reintentar
+        skipped: Saltado
+        skipped_reason:
+            out_of_stock: Sin stock
+            disabled: Desactivado
+            not_in_channel: No se vende en este canal
+        cancel_subscription: Cancelar suscripción
+        subscriptions: Suscripciones
+        suspend: Suspender
+        reactivate: Reactivar
+        cancel: Cancelar suscripción
+        consecutive_failed_cycles: Renovaciones fallidas seguidas
+        consent: Consentimiento de cobros recurrentes
+        no_consent: No consta ningún consentimiento para esta suscripción.
+        consent_version: Versión
+        accepted_at: Aceptado el
+        attempts: Intentos de cobro
+        held_until: 'En espera hasta el %date%'
+        attempt_type:
+            charge: Cobro
+            status: Consulta de estado
+        outcome:
+            approved: Aprobado
+            declined: Rechazado
+            not_attempted: No intentado
+            unknown: Desconocido
+        state:
+            pending: Pendiente
+            active: Activa
+            suspended: Suspendida
+            cancelled: Cancelada
+            completed: Terminada
+            scheduled: Programada
+            on_hold: En espera
+            awaiting_payment: Pendiente de pago
+            paid: Cobrada
+            failed: Fallida
+        interval_unit:
+            day: día(s)
+            week: semana(s)
+            month: mes(es)
+            year: año(s)
+    form:
+        product_variant:
+            repeatable: "Se puede repetir con las frecuencias de la tienda"
+            repeatable_help: "Cuando un cliente repite su carrito con una frecuencia de la tienda, esta variante también se repite. Déjalo apagado en tarjetas regalo y en lo que no deba renovarse."
+        subscription_plan:
+            interval_count: Se renueva cada
+            interval_unit: Unidad del intervalo
+            discount_percentage: Descuento de suscriptor (%)
+            max_cycles: Máximo de ciclos
+            max_cycles_help: Déjalo vacío para renovar hasta que el cliente cancele.

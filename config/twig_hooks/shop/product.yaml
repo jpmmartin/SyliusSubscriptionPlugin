@@ -1,0 +1,8 @@
+# The choice between buying once and subscribing, between the variant table and the quantity. Sylius
+# closes the add-to-cart form without rendering the rest, so the field has to be placed by a hook.
+sylius_twig_hooks:
+    hooks:
+        'sylius_shop.product.show.content.info.summary.add_to_cart':
+            jpm_martin_sylius_subscription_plan:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/product/show/add_to_cart/subscription_plan.html.twig'
+                priority: 150

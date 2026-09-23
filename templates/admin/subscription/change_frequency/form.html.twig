@@ -1,0 +1,18 @@
+{% set subscription = hookable_metadata.context.resource %}
+{% set form = hookable_metadata.context.form %}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
+
+<div class="container-xl">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-secondary">{{ 'jpm_martin_sylius_subscription.ui.change_frequency_help'|trans }}</p>
+            {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+                {{ form_row(form.frequency, sylius_test_form_attribute('frequency')) }}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('confirm-frequency-change') }}>{{ 'jpm_martin_sylius_subscription.ui.change_frequency'|trans }}</button>
+                    <a class="btn" href="{{ path('jpm_martin_sylius_subscription_admin_subscription_show', { id: subscription.id }) }}">{{ 'sylius.ui.cancel'|trans }}</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>

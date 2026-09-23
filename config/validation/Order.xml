@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        http://symfony.com/schema/dic/services/constraint-mapping-1.0.xsd"
+>
+    <!-- The shop's last checkout step validates the order in this group. The API's counterpart is on CompleteOrder. -->
+    <class name="Sylius\Component\Core\Model\Order">
+        <constraint name="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionCheckoutRequirements">
+            <option name="groups">
+                <value>sylius_checkout_complete</value>
+            </option>
+        </constraint>
+    </class>
+</constraint-mapping>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <!-- Both ways into the cart, the shop's add-to-cart listener and the API's handlers, go through this service. -->
+        <service id="jpm_martin_sylius_subscription.modifier.order"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Modifier\SubscriptionAwareOrderModifier"
+                 decorates="sylius.modifier.order"
+        >
+            <argument type="service" id=".inner" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="sylius.modifier.order_item_quantity" />
+        </service>
+
+        <!-- Before the subscriber price (45), which prices the lines it gives the cart's frequency. -->
+        <service id="jpm_martin_sylius_subscription.order_processing.cart_frequency"
+                 class="JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\CartFrequencyProcessor"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
+            <tag name="sylius.order_processor" priority="47" />
+        </service>
+
+        <!-- After Sylius's price recalculation (50) and before shipments (40), promotions (20) and taxes (10). -->
+        <service id="jpm_martin_sylius_subscription.order_processing.subscription_plan_price"
+                 class="JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\SubscriptionPlanPriceProcessor"
+        >
+            <argument type="service" id="sylius.calculator.product_variant_price" />
+            <tag name="sylius.order_processor" priority="45" />
+        </service>
+    </services>
+</container>

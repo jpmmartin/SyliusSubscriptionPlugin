@@ -1,0 +1,21 @@
+{# The subscription's and its cycles' states, drawn like Sylius's order states. #}
+{% macro label(state) %}
+    {% set view_options = {
+        pending: { bg_color: 'grey' },
+        active: { bg_color: 'green' },
+        suspended: { bg_color: 'orange' },
+        cancelled: { bg_color: 'red' },
+        completed: { bg_color: 'blue' },
+        scheduled: { bg_color: 'grey' },
+        on_hold: { bg_color: 'orange' },
+        awaiting_payment: { bg_color: 'violet' },
+        paid: { bg_color: 'green' },
+        failed: { bg_color: 'red' },
+    } %}
+
+    <div class="d-inline-block">
+        <span class="badge rounded-pill" style="background-color: {{ view_options[state]['bg_color']|default('grey') }}; color: white">
+            {{ ('jpm_martin_sylius_subscription.ui.state.' ~ state)|trans }}
+        </span>
+    </div>
+{% endmacro %}

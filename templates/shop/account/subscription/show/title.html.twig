@@ -1,0 +1,3 @@
+{% set subscription = hookable_metadata.context.subscription %}
+
+<h1 class="mb-4" {{ sylius_test_html_attribute('subscription-title') }}>{{ subscription.items|map(item => item.productVariant.product.name)|join(', ') }}</h1>

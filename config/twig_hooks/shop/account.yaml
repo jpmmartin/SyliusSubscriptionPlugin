@@ -1,0 +1,58 @@
+# The customer's subscriptions in their account. Each page's prefix falls back to Sylius's
+# sylius_shop.account.common hooks, so the menu and the layout are the account's own; only the
+# breadcrumbs, the header and the main content are the plugin's.
+sylius_twig_hooks:
+    hooks:
+        'jpm_martin_sylius_subscription.shop.account.subscription.index.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/index/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription.index.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/index/title.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription.index.content.main':
+            subscriptions:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/index/subscriptions.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription.show.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription.show.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/title.html.twig'
+                priority: 200
+            buttons:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/buttons.html.twig'
+                priority: 100
+            details:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/details.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription.show.content.main':
+            items:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/items.html.twig'
+                priority: 100
+            cycles:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/show/cycles.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_frequency_change.update.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_frequency/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_frequency_change.update.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_frequency/title.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_frequency_change.update.content.main':
+            form:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_frequency/form.html.twig'
+                priority: 0

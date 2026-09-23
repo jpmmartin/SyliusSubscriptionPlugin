@@ -1,0 +1,6 @@
+{% extends '@SyliusShop/account/common/index.html.twig' %}
+
+{% set prefixes = ['jpm_martin_sylius_subscription.shop.account.subscription'] %}
+{% set attrs = { subscriptions: resources } %}
+
+{% block title %}{{ 'jpm_martin_sylius_subscription.ui.my_subscriptions'|trans }} | {{ parent() }}{% endblock %}

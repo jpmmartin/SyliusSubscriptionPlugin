@@ -1,0 +1,15 @@
+# A subscription line says so in the cart. Sylius's product cell has no hook of its own, so its
+# hookable is replaced by one that renders the same component and adds the plan or the frequency
+# below it. "Repeat this cart" is a form of its own, so it goes after the cart's live form, not
+# inside it.
+sylius_twig_hooks:
+    hooks:
+        'sylius_shop.cart.index.content.form.sections.general.items.body':
+            item:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/cart/index/items/body/item.html.twig'
+                priority: 300
+
+        'sylius_shop.cart.index.content':
+            jpm_martin_sylius_subscription_repeat_cart:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/cart/index/repeat_cart.html.twig'
+                priority: 50

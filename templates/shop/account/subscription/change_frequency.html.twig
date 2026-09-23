@@ -1,0 +1,8 @@
+{% extends '@SyliusShop/account/common/update.html.twig' %}
+
+{% set prefixes = ['jpm_martin_sylius_subscription.shop.account.subscription_frequency_change'] %}
+{% set attrs = { subscription, form } %}
+
+{% form_theme form '@SyliusShop/form/theme.html.twig' %}
+
+{% block title %}{{ 'jpm_martin_sylius_subscription.ui.change_frequency'|trans }} | {{ parent() }}{% endblock %}

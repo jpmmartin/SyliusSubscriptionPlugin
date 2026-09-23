@@ -1,0 +1,89 @@
+# Every filter works without JavaScript. The next renewal is the open cycle's date, joined by the
+# repository under the "openCycle" alias; a subscription matches a variant if any of its items is of it.
+sylius_grid:
+    grids:
+        jpm_martin_sylius_subscription_admin_subscription:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%jpm_martin_sylius_subscription.model.subscription.class%"
+                    repository:
+                        method: createAdminListQueryBuilder
+            sorting:
+                nextRenewal: asc
+            fields:
+                id:
+                    type: string
+                    label: '#'
+                    sortable: ~
+                customer:
+                    type: twig
+                    label: sylius.ui.customer
+                    sortable: customer.lastName
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/customer.html.twig"
+                products:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.products
+                    path: .
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/grid/field/products.html.twig"
+                frequency:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.frequency
+                    path: .
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/grid/field/frequency.html.twig"
+                price:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.price_per_renewal
+                    path: .
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/grid/field/price.html.twig"
+                state:
+                    type: twig
+                    label: sylius.ui.state
+                    sortable: ~
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/grid/field/state.html.twig"
+                nextRenewal:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.next_renewal
+                    path: .
+                    sortable: openCycle.scheduledAt
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/grid/field/next_renewal.html.twig"
+            filters:
+                state:
+                    type: select
+                    label: sylius.ui.state
+                    form_options:
+                        choices:
+                            jpm_martin_sylius_subscription.ui.state.pending: pending
+                            jpm_martin_sylius_subscription.ui.state.active: active
+                            jpm_martin_sylius_subscription.ui.state.suspended: suspended
+                            jpm_martin_sylius_subscription.ui.state.cancelled: cancelled
+                            jpm_martin_sylius_subscription.ui.state.completed: completed
+                customer:
+                    type: string
+                    label: sylius.ui.customer
+                    options:
+                        fields: [customer.email, customer.firstName, customer.lastName]
+                    form_options:
+                        type: !php/const Sylius\Component\Grid\Filter\StringFilter::TYPE_CONTAINS
+                variant:
+                    type: string
+                    label: sylius.ui.variant
+                    options:
+                        fields: [productVariant.code]
+                    form_options:
+                        type: !php/const Sylius\Component\Grid\Filter\StringFilter::TYPE_CONTAINS
+                nextRenewal:
+                    type: date
+                    label: jpm_martin_sylius_subscription.ui.next_renewal
+                    options:
+                        field: openCycle.scheduledAt
+            actions:
+                item:
+                    show:
+                        type: show

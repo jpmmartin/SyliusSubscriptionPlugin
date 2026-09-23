@@ -1,0 +1,10 @@
+{# How often something renews: "Every 3 months". #}
+{%- macro every(count, unit) -%}
+    {{ ('jpm_martin_sylius_subscription.ui.every.' ~ unit.value)|trans({ '%count%': count }) }}
+{%- endmacro -%}
+
+{# How often a subscription renews. #}
+{%- macro frequency(subscription) -%}
+    {%- from _self import every -%}
+    {{ every(subscription.billingIntervalCount, subscription.billingIntervalUnit) }}
+{%- endmacro -%}

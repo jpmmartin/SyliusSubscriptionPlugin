@@ -1,0 +1,13 @@
+{#
+    Deleting only works for a plan no order line points at; one that has been sold is disabled
+    instead, and the database refuses the delete.
+#}
+{% set plan = hookable_metadata.context.resource %}
+{% set variant = plan.productVariant %}
+
+{{ component('sylius_admin:delete_modal', {
+    id: plan.id,
+    path: path('jpm_martin_sylius_subscription_admin_subscription_plan_delete', {productId: variant.product.id, variantId: variant.id, id: plan.id}),
+    label: 'sylius.ui.delete',
+    icon_only: false,
+}) }}

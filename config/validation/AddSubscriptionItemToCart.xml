@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        http://symfony.com/schema/dic/services/constraint-mapping-1.0.xsd"
+>
+    <class name="JpmMartin\SyliusSubscriptionPlugin\Command\AddSubscriptionItemToCart">
+        <constraint name="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionItemAddable">
+            <option name="groups">
+                <value>jpm_martin_sylius_subscription</value>
+            </option>
+        </constraint>
+
+        <property name="productVariantCode">
+            <constraint name="NotBlank">
+                <option name="message">sylius.order_item.product_variant.not_blank</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+        </property>
+        <property name="subscriptionPlanCode">
+            <constraint name="NotBlank">
+                <option name="message">jpm_martin_sylius_subscription.subscription_item.subscription_plan.not_blank</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+        </property>
+        <!-- The same bounds Sylius puts on a quantity added through its own endpoint. -->
+        <property name="quantity">
+            <constraint name="Sylius\Bundle\CoreBundle\Validator\Constraints\CartItemQuantityRange">
+                <option name="min">1</option>
+                <option name="notInRangeMessage">sylius.cart_item.quantity.not_in_range</option>
+                <option name="groups">
+                    <value>jpm_martin_sylius_subscription</value>
+                </option>
+            </constraint>
+        </property>
+    </class>
+</constraint-mapping>

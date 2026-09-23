@@ -1,0 +1,37 @@
+{#
+    Sylius's product cell, with what the line renews on added below the product: its plan, or the
+    frequency its cart is repeated with. In a repeated cart, a line that is not repeated says it is
+    bought once.
+#}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
+{% set item = hookable_metadata.context.item %}
+{% set plan = item.subscriptionPlan ?? null %}
+{% set frequency = item.subscriptionFrequency ?? null %}
+{% set cart_is_repeated = item.order is not null and item.order.items|filter(line => (line.subscriptionFrequency ?? null) is not null)|length > 0 %}
+
+<td {{ sylius_test_html_attribute('cart-item-product') }}>
+    {{ component('sylius_shop:order_item:product_info', { item: item }) }}
+
+    {% if plan is not null %}
+        <div class="mt-2">
+            <span class="badge text-bg-light" {{ sylius_test_html_attribute('cart-item-subscription-plan', plan.code) }}>
+                {{ 'jpm_martin_sylius_subscription.ui.subscription_line'|trans({'%name%': plan.name}) }}
+            </span>
+        </div>
+    {% elseif frequency is not null %}
+        <div class="mt-2">
+            <span class="badge text-bg-light" {{ sylius_test_html_attribute('cart-item-subscription-frequency', frequency.code) }}>
+                {{ (frequency.discountPercentage > 0 ? 'jpm_martin_sylius_subscription.ui.repeated_line_with_discount' : 'jpm_martin_sylius_subscription.ui.repeated_line')|trans({
+                    '%frequency%': every(frequency.intervalCount, frequency.intervalUnit),
+                    '%discount%': frequency.discountPercentage,
+                }) }}
+            </span>
+        </div>
+    {% elseif cart_is_repeated %}
+        <div class="mt-2">
+            <span class="badge text-bg-light" {{ sylius_test_html_attribute('cart-item-bought-once') }}>
+                {{ 'jpm_martin_sylius_subscription.ui.one_time_purchase'|trans }}
+            </span>
+        </div>
+    {% endif %}
+</td>

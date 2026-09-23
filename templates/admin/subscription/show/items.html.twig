@@ -1,0 +1,50 @@
+{% from '@SyliusAdmin/shared/helper/money.html.twig' import format %}
+
+{% set subscription = hookable_metadata.context.resource %}
+
+<div class="container-xl">
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">{{ 'jpm_martin_sylius_subscription.ui.products'|trans }}</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table" {{ sylius_test_html_attribute('items') }}>
+            <thead>
+                <tr>
+                    <th>{{ 'sylius.ui.product'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.plan_or_frequency'|trans }}</th>
+                    <th>{{ 'sylius.ui.quantity'|trans }}</th>
+                    <th>{{ 'sylius.ui.unit_price'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.paid_renewals'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in subscription.items %}
+                    <tr {{ sylius_test_html_attribute('item', item.productVariant.product.name) }}>
+                        <td>
+                            <strong>{{ item.productVariant.product.name }}</strong>
+                            <div class="fs-5 text-secondary">{{ item.productVariant.code }}</div>
+                        </td>
+                        <td {{ sylius_test_html_attribute('item-plan') }}>
+                            {{ item.terms.name|default('-') }}
+                            {% if item.frequency is not null %}
+                                <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('item-store-frequency') }}>{{ 'jpm_martin_sylius_subscription.ui.subscription_frequency'|trans }}</div>
+                            {% endif %}
+                        </td>
+                        <td {{ sylius_test_html_attribute('item-quantity') }}>{{ item.quantity }}</td>
+                        <td {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</td>
+                        <td {{ sylius_test_html_attribute('item-paid-cycles') }}>
+                            {% if item.terms is not null and item.terms.maxCycles is not null %}
+                                {{ 'jpm_martin_sylius_subscription.ui.paid_cycles_of'|trans({ '%paid%': item.paidCycles, '%max%': item.terms.maxCycles }) }}
+                            {% else %}
+                                {{ item.paidCycles }}
+                            {% endif %}
+                            {% if not item.renewable %}
+                                <span class="badge bg-secondary-lt">{{ 'jpm_martin_sylius_subscription.ui.no_longer_renews'|trans }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

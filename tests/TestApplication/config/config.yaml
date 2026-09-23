@@ -17,3 +17,17 @@ doctrine:
                         type: attribute
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
                         prefix: Tests\JpmMartin\SyliusSubscriptionPlugin
+
+# The payment method the test store charges renewals with: "Card on file", as Behat's
+# "the store allows paying with ..." names it. Any other method is refused for subscriptions.
+jpm_martin_sylius_subscription:
+    payment_methods: ['Card_on_file']
+    # The test store's gateway declines a stolen card for good; any other decline is retried.
+    final_decline_codes: ['stolen_card']
+
+# The installation step the plugin asks of a store: its OrderItem carries the chosen plan.
+sylius_order:
+    resources:
+        order_item:
+            classes:
+                model: Tests\JpmMartin\SyliusSubscriptionPlugin\Entity\OrderItem

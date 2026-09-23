@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
+                                        http://symfony.com/schema/dic/services/constraint-mapping-1.0.xsd"
+>
+    <!-- Next to Sylius's own constraints on the same command and in the same group; Symfony adds them up. -->
+    <class name="Sylius\Bundle\ApiBundle\Command\Checkout\CompleteOrder">
+        <constraint name="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionCheckoutRequirements">
+            <option name="groups">
+                <value>sylius_checkout_complete</value>
+            </option>
+        </constraint>
+    </class>
+</constraint-mapping>

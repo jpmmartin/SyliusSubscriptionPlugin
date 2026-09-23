@@ -1,0 +1,57 @@
+{#
+    "Repeat this cart": the frequencies the cart's channel offers, and not repeating it. Offered only
+    when the channel has a frequency and the cart a line that could be repeated. It is a form of its
+    own, outside the cart's live form, and posts to the plugin's route, which comes back here.
+#}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
+{% set cart = hookable_metadata.context.cart %}
+{% set frequencies = jpm_martin_sylius_subscription_cart_frequencies(cart) %}
+
+{% if frequencies is not empty and jpm_martin_sylius_subscription_cart_has_repeatable_lines(cart) %}
+    {% set current = jpm_martin_sylius_subscription_cart_frequency(cart) %}
+
+    <div class="row">
+        <div class="col-12 col-xl-8 mb-5">
+            <div class="p-4 bg-light" {{ sylius_test_html_attribute('repeat-cart') }}>
+                <h2 class="h5 mb-2">{{ 'jpm_martin_sylius_subscription.ui.repeat_this_cart'|trans }}</h2>
+                <p class="text-body-secondary mb-3">{{ 'jpm_martin_sylius_subscription.ui.repeat_this_cart_help'|trans }}</p>
+
+                <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_cart_repeat') }}" novalidate>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('jpm_martin_sylius_subscription_repeat_cart') }}">
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="subscription_frequency" value=""
+                               id="jpm-martin-sylius-subscription-repeat-cart-none"
+                               {% if current is null %}checked{% endif %}
+                               {{ sylius_test_html_attribute('repeat-cart-option', '') }}
+                        >
+                        <label class="form-check-label" for="jpm-martin-sylius-subscription-repeat-cart-none">
+                            {{ 'jpm_martin_sylius_subscription.ui.do_not_repeat'|trans }}
+                        </label>
+                    </div>
+                    {% for frequency in frequencies %}
+                        {% set id = 'jpm-martin-sylius-subscription-repeat-cart-' ~ frequency.code|lower %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="subscription_frequency" value="{{ frequency.code }}"
+                                   id="{{ id }}"
+                                   {% if current is not null and current.code == frequency.code %}checked{% endif %}
+                                   {{ sylius_test_html_attribute('repeat-cart-option', frequency.code) }}
+                            >
+                            <label class="form-check-label" for="{{ id }}">
+                                {% if frequency.discountPercentage > 0 %}
+                                    {{ 'jpm_martin_sylius_subscription.ui.frequency_choice_with_discount'|trans({'%frequency%': every(frequency.intervalCount, frequency.intervalUnit), '%discount%': frequency.discountPercentage}) }}
+                                {% else %}
+                                    {{ every(frequency.intervalCount, frequency.intervalUnit) }}
+                                {% endif %}
+                            </label>
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-outline-primary mt-3" {{ sylius_test_html_attribute('repeat-cart-button') }}>
+                        {{ 'jpm_martin_sylius_subscription.ui.apply'|trans }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}

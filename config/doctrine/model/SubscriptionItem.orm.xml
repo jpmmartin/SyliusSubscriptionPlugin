@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!--
+        One product of a subscription. The variant and the plan are restricted rather than
+        cascaded, like the subscription's own references: a commercial record cannot lose them.
+    -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItem" table="jpm_martin_sylius_subscription_item">
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <field name="quantity" column="quantity" type="integer" />
+        <field name="unitPrice" column="unit_price" type="integer" />
+        <field name="paidCycles" column="paid_cycles" type="integer" />
+
+        <many-to-one field="subscription" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface" inversed-by="items">
+            <join-column name="subscription_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+        <many-to-one field="productVariant" target-entity="Sylius\Component\Core\Model\ProductVariantInterface">
+            <join-column name="product_variant_id" referenced-column-name="id" nullable="false" />
+        </many-to-one>
+        <!-- Empty for an item that follows no plan of its own. -->
+        <many-to-one field="plan" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface">
+            <join-column name="plan_id" referenced-column-name="id" nullable="true" />
+        </many-to-one>
+        <many-to-one field="frequency" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface">
+            <join-column name="frequency_id" referenced-column-name="id" nullable="true" />
+        </many-to-one>
+        <many-to-one field="originOrderItem" target-entity="Sylius\Component\Core\Model\OrderItemInterface">
+            <join-column name="origin_order_item_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

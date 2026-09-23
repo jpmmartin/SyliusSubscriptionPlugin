@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <parameters>
+        <parameter key="jpm_martin_sylius_subscription.form.type.subscription_plan.validation_groups" type="collection">
+            <parameter>jpm_martin_sylius_subscription</parameter>
+        </parameter>
+    </parameters>
+
+    <services>
+        <!-- The resource's own factory, taught to create a plan already attached to its variant. -->
+        <service id="jpm_martin_sylius_subscription.factory.subscription_plan.for_variant"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Factory\SubscriptionPlanFactory"
+                 decorates="jpm_martin_sylius_subscription.factory.subscription_plan"
+        >
+            <argument type="service" id=".inner" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_plan" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionPlanType">
+            <argument>%jpm_martin_sylius_subscription.model.subscription_plan.class%</argument>
+            <argument>%jpm_martin_sylius_subscription.form.type.subscription_plan.validation_groups%</argument>
+            <tag name="form.type" />
+        </service>
+
+        <!-- After CoreBundle's extension of the same type, which adds the variant field this one follows. -->
+        <service id="jpm_martin_sylius_subscription.form.extension.cart_item" class="JpmMartin\SyliusSubscriptionPlugin\Form\Extension\SubscriptionPlanCartItemTypeExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument>%jpm_martin_sylius_subscription.model.subscription_plan.class%</argument>
+            <tag name="form.type_extension" priority="-10" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.twig.extension.subscription_plan" class="JpmMartin\SyliusSubscriptionPlugin\Twig\SubscriptionPlanExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <tag name="twig.extension" />
+        </service>
+    </services>
+</container>

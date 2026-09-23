@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!-- One of the store's frequencies, offered in the channels it is given, as a payment method is. -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequency" table="jpm_martin_sylius_subscription_frequency">
+        <unique-constraints>
+            <unique-constraint name="uniq_jpm_martin_sylius_subscription_frequency_code" columns="code" />
+        </unique-constraints>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <field name="code" column="code" type="string" length="255" />
+        <field name="name" column="name" type="string" length="255" />
+        <field name="intervalCount" column="interval_count" type="integer" />
+        <field name="intervalUnit" column="interval_unit" type="string" length="8" enum-type="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit" />
+        <field name="discountPercentage" column="discount_percentage" type="integer" />
+        <field name="maxCycles" column="max_cycles" type="integer" nullable="true" />
+        <field name="enabled" column="enabled" type="boolean" />
+
+        <many-to-many field="channels" target-entity="Sylius\Component\Channel\Model\ChannelInterface">
+            <order-by>
+                <order-by-field name="id" />
+            </order-by>
+            <join-table name="jpm_martin_sylius_subscription_frequency_channels">
+                <join-columns>
+                    <join-column name="frequency_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+                </join-columns>
+                <inverse-join-columns>
+                    <join-column name="channel_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+                </inverse-join-columns>
+            </join-table>
+        </many-to-many>
+    </mapped-superclass>
+</doctrine-mapping>

@@ -1,0 +1,13 @@
+# The variant's plans, as a tab of the variant page. The tab lives inside the variant's own form, so
+# it only lists and links: creating, editing and deleting a plan happen on the plan's own pages.
+sylius_twig_hooks:
+    hooks:
+        'sylius_admin.product_variant.update.content.form.side_navigation':
+            jpm_martin_sylius_subscription_plans:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/product_variant/form/side_navigation/subscription_plans.html.twig'
+                priority: -100
+
+        'sylius_admin.product_variant.update.content.form.sections':
+            jpm_martin_sylius_subscription_plans:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/product_variant/form/sections/subscription_plans.html.twig'
+                priority: -100
