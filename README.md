@@ -51,7 +51,13 @@ with all of them, charged without the customer present, with retries when a char
 
 ## Requirements
 
-- Sylius `^2.2` and PHP `^8.2`.
+- Sylius `^2.2`, on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4.
+- One of the databases Sylius tests its plugins against: MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4, or
+  PostgreSQL 15, 16 or 17. Every one of them is checked on each change; see
+  [Continuous integration](#continuous-integration). On MySQL and MariaDB, codes are compared without
+  regard to case, as Sylius's own are: `MONTHLY` and `monthly` are the same code there. On MariaDB,
+  name it in `serverVersion`, as Doctrine asks (`?serverVersion=mariadb-11.4.2`): given a bare number,
+  Doctrine takes MariaDB for MySQL and misreads column defaults when comparing schemas.
 - The Symfony Workflow state machine adapter for Sylius's order graphs, which is Sylius 2's default:
   the plugin reacts to the workflow events of `sylius_order_checkout`, `sylius_order_payment` and
   `sylius_order`. Its own graphs are always run by Symfony Workflow.
@@ -398,8 +404,59 @@ vendor/bin/console doctrine:migrations:migrate -n
 Configure the database in `tests/TestApplication/.env.local` and `tests/TestApplication/.env.test.local`.
 
 ```bash
-composer check   # ECS, PHPStan, PHPUnit and Behat
+composer check   # ECS, PHPStan, PHPUnit and Behat without JavaScript
 ```
+
+### Scenarios with JavaScript
+
+The `@javascript` scenarios drive a headless Chrome listening on `127.0.0.1:9222` against the test
+application served on the URL in `BEHAT_BASE_URL` (`http://127.0.0.1:8080/` unless
+`tests/TestApplication/.env.test.local` says otherwise). Any Chrome started with remote debugging
+works; in Docker:
+
+```bash
+docker run -d --rm --name chrome --network host --shm-size=1g chromedp/headless-shell:latest --window-size=2880,1800
+APP_ENV=test symfony server:start --port=8080 --dir=vendor/sylius/test-application/public --daemon --no-tls
+composer behat-js
+```
+
+If the product page answers 500 with an empty body, PHP-FPM has run out of memory: the test
+environment needs more than the 128M of a default `php.ini`. Raise `memory_limit` for the PHP the
+server uses, for example with an extra ini file:
+`PHP_INI_SCAN_DIR=":/path/to/dir-with-a-memory-ini" symfony server:start ...`.
+
+### Another database
+
+The tests use whatever `DATABASE_URL` says, and an environment variable wins over the `.env` files.
+To run them on MariaDB 11.4, for example:
+
+```bash
+docker run -d --rm --name mariadb -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=sylius -e MYSQL_PASSWORD=sylius \
+    -e MYSQL_DATABASE=sylius -p 127.0.0.1:3307:3306 mariadb:11.4
+# once it accepts connections:
+export APP_ENV=test DATABASE_URL="mysql://sylius:sylius@127.0.0.1:3307/sylius?serverVersion=mariadb-11.4.0"
+vendor/bin/console doctrine:migrations:migrate -n
+composer migrations-roundtrip   # takes the plugin's migrations down and up again
+composer check
+```
+
+Run one suite at a time per checkout: the test clock is a file of the test application
+(`vendor/sylius/test-application/var/date.txt`), so two runs from the same directory change each
+other's date.
+
+### Continuous integration
+
+`.github/workflows/build.yaml` runs on every push and pull request:
+
+- once, `composer validate --strict`, ECS and PHPStan;
+- for each database above, with PHP 8.3 and Symfony 7.4, and on PostgreSQL 17 with PHP 8.2 and
+  Symfony 6.4 and with PHP 8.5 and Symfony 7.4: the container lint, the migrations' round trip,
+  PHPUnit, and Behat without and with JavaScript.
+
+The test application is built by Sylius's own action, as in Sylius's PluginSkeleton, which migrates
+MariaDB as if it were MySQL; the tests then run with MariaDB named in `DATABASE_URL`, as a store
+configures it. A failing combination does not stop the others, a browser scenario that fails is run
+once more, and the Behat logs and screenshots of a failed run are kept as an artifact.
 
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with

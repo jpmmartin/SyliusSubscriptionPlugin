@@ -6,8 +6,9 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Cart;
 
 use Behat\Mink\Element\NodeElement;
 use FriendsOfBehat\PageObjectExtension\Page\SymfonyPage;
+use Sylius\Behat\Service\DriverHelper;
 
-/** "Repeat this cart" on Sylius's cart page, and what each line renews on. */
+/** "Repeat this cart" on Sylius's cart page, and what each line renews on: its plan or its frequency. */
 final class RepeatCartPage extends SymfonyPage
 {
     public function getRouteName(): string
@@ -44,6 +45,11 @@ final class RepeatCartPage extends SymfonyPage
         $this->choose('');
     }
 
+    public function getPlanOf(string $productName): ?string
+    {
+        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-plan]')?->getAttribute('data-test-cart-item-subscription-plan');
+    }
+
     public function getRepetitionOf(string $productName): ?string
     {
         return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-frequency]')?->getText();
@@ -67,6 +73,7 @@ final class RepeatCartPage extends SymfonyPage
     {
         $this->getElement('repeat_cart')->selectFieldOption('subscription_frequency', $code);
         $this->getElement('repeat_cart_button')->press();
+        DriverHelper::waitForPageToLoad($this->getSession());
     }
 
     /** @return list<NodeElement> */

@@ -95,6 +95,7 @@
             "@database-reset",
             "@frontend-clear"
         ],
+        "migrations-roundtrip": "@php bin/migrations-roundtrip.php",
         "check": [
             "@ecs",
             "@phpstan",

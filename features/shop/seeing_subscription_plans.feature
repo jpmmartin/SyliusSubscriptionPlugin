@@ -28,3 +28,12 @@ Feature: Seeing the subscription plans of a product
     Scenario: Buying once a product whose variant offers no plans
         When I view product "Coffee" in the store
         Then I should only be able to buy it once
+
+    @ui @javascript
+    Scenario: Subscribing to a product from its page
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        When I view product "Coffee" in the store
+        And I choose to subscribe on the "COFFEE_MONTHLY" plan
+        And I add it to my cart
+        Then my cart should have "Coffee" on the "COFFEE_MONTHLY" plan
+        And I should see "Coffee" with unit price "$18.00" in my cart

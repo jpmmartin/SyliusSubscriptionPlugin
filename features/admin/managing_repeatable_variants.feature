@@ -22,3 +22,13 @@ Feature: Choosing the variants customers can repeat
         When I stop letting customers repeat the "Coffee" variant
         Then I should be notified that it has been successfully edited
         And the "Coffee" variant should not be repeatable
+
+    @ui @javascript
+    Scenario: Letting customers repeat a variant while changing something else in it
+        When I start editing the "Coffee" variant
+        And I let customers repeat it
+        And I stop requiring it to be shipped
+        And I save my changes
+        Then I should be notified that it has been successfully edited
+        And the "Coffee" variant should be repeatable
+        And the "Coffee" variant should not require shipping

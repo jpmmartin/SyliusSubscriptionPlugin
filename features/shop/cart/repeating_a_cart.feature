@@ -48,6 +48,14 @@ Feature: Repeating my cart
         And the "Coffee" item should not be repeated
         And my cart total should be "$20.00"
 
+    @ui @javascript
+    Scenario: Changing a quantity of a repeated cart without reloading the page
+        Given I have product "Coffee" in the cart
+        And I chose to repeat my cart "Every month (save 5%)"
+        When I change product "Coffee" quantity to 3 in my cart
+        Then the "Coffee" item should be repeated "Every month (save 5%)"
+        And my cart total should be "$57.00"
+
     @ui
     Scenario: Not being offered to repeat a cart with nothing that can be repeated
         Given I have product "Gift card" in the cart

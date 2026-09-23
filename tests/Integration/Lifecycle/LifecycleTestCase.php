@@ -350,14 +350,15 @@ abstract class LifecycleTestCase extends KernelTestCase
         return $item;
     }
 
-    /** @return list<SubscriptionInterface> as stored */
+    /** @return list<SubscriptionInterface> as stored, in the order they were started */
     protected function storedSubscriptions(): array
     {
         /** @var RepositoryInterface<SubscriptionInterface> $repository */
         $repository = self::getContainer()->get('jpm_martin_sylius_subscription.repository.subscription');
 
+        // Without an order, a database returns rows as it finds them: an updated row may come last.
         $subscriptions = [];
-        foreach ($repository->findAll() as $subscription) {
+        foreach ($repository->findBy([], ['id' => 'ASC']) as $subscription) {
             self::assertInstanceOf(SubscriptionInterface::class, $subscription);
             $this->entityManager()->refresh($subscription);
             $subscriptions[] = $subscription;

@@ -1,0 +1,154 @@
+# Checks every push and pull request on each database Sylius tests its plugins against, and on the
+# oldest and newest PHP and Symfony the plugin supports. The test application is built by Sylius's
+# own action, as in Sylius's PluginSkeleton, with headless Chrome for the JavaScript scenarios.
+name: Build
+
+on:
+    push:
+        branches-ignore:
+            - 'dependabot/**'
+        paths-ignore:
+            - "*.md"
+    pull_request:
+        paths-ignore:
+            - "*.md"
+    release:
+        types: [created]
+    schedule:
+        -
+            cron: "0 1 * * 6" # Saturdays at 1am, to catch breakage from new releases of the dependencies
+    workflow_dispatch: ~
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    static:
+        runs-on: ubuntu-latest
+
+        name: "Static analysis"
+
+        steps:
+            -
+                uses: actions/checkout@v4
+
+            -
+                name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: "8.3"
+                    extensions: "intl, gd"
+                    coverage: none
+
+            -
+                name: Validate composer.json
+                run: composer validate --ansi --strict
+
+            -
+                name: Install PHP dependencies
+                run: composer install --no-interaction --no-progress
+                env:
+                    COMPOSER_ROOT_VERSION: dev-main
+
+            -
+                name: Check coding standard
+                run: vendor/bin/ecs check
+
+            -
+                name: Run PHPStan
+                run: vendor/bin/phpstan analyse --no-progress
+
+    tests:
+        runs-on: ubuntu-latest
+
+        name: "PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }}, ${{ matrix.database }}"
+
+        strategy:
+            fail-fast: false
+            matrix:
+                php: ["8.3"]
+                symfony: ["^7.4"]
+                sylius: ["~2.2.0"]
+                database: ["mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:11.4", "postgres:15", "postgres:16", "postgres:17"]
+                node: ["22.x"]
+
+                # The oldest and the newest PHP, each with the Symfony it pairs with. Neither can merge
+                # into a combination above, so each adds a run of its own.
+                include:
+                    -
+                        php: "8.2"
+                        symfony: "^6.4"
+                        sylius: "~2.2.0"
+                        database: "postgres:17"
+                        node: "22.x"
+                    -
+                        php: "8.5"
+                        symfony: "^7.4"
+                        sylius: "~2.2.0"
+                        database: "postgres:17"
+                        node: "22.x"
+
+        env:
+            APP_ENV: test
+
+        steps:
+            -
+                uses: actions/checkout@v4
+
+            -
+                name: Build Sylius Test Application
+                uses: SyliusLabs/BuildTestAppAction@v4
+                with:
+                    e2e_js: "yes"
+                    cache_key: "${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}"
+                    cache_restore_key: "${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-"
+                    database: "${{ matrix.database }}"
+                    node_version: "${{ matrix.node }}"
+                    php_version: "${{ matrix.php }}"
+                    sylius_version: "${{ matrix.sylius }}"
+                    symfony_version: "${{ matrix.symfony }}"
+
+            -
+                name: Validate container
+                run: vendor/bin/console lint:container
+
+            # On the database the action has just migrated, before any test leaves subscriptions in it.
+            -
+                name: Take the plugin's migrations down and up again
+                run: composer migrations-roundtrip
+
+            # The action gives MariaDB a serverVersion without "mariadb", so Doctrine takes it for MySQL,
+            # which the migrations above have just been run as. A store names MariaDB, as Doctrine asks,
+            # and the tests run the way such a store does.
+            -
+                name: Name MariaDB in the database URL
+                if: startsWith(matrix.database, 'mariadb:')
+                run: echo "DATABASE_URL=mysql://sylius:sylius@127.0.0.1/sylius?serverVersion=mariadb-${MATRIX_DATABASE#mariadb:}.0" >> "$GITHUB_ENV"
+                env:
+                    MATRIX_DATABASE: ${{ matrix.database }}
+
+            -
+                name: Run PHPUnit
+                run: vendor/bin/phpunit --colors=always
+
+            -
+                name: Run Behat without JavaScript
+                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="~@javascript&&~@mink:chromedriver"
+
+            # A browser scenario that fails is run once more, as Sylius's PluginSkeleton does; one
+            # that only passes the second time still shows in this step's log.
+            -
+                name: Run Behat with JavaScript
+                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" || vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" --rerun
+
+            -
+                name: Upload Behat logs
+                uses: actions/upload-artifact@v4
+                if: failure()
+                with:
+                    name: "Behat logs - PHP ${{ matrix.php }} - Symfony ${{ matrix.symfony }} - ${{ matrix.database }} - ${{ github.run_id }}"
+                    path: etc/build/
+                    if-no-files-found: ignore
+                    compression-level: 6
+                    overwrite: true

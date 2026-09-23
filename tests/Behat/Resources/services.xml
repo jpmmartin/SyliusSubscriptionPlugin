@@ -204,6 +204,7 @@
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\SubscribingToProductsContext"
         >
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.product.subscription_plan_choice" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.cart.repeat_cart" />
         </service>
 
         <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_plan"
