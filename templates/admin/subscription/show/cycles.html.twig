@@ -1,0 +1,75 @@
+{% from '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/macro/state.html.twig' import label %}
+
+{% set subscription = hookable_metadata.context.resource %}
+
+<div class="container-xl">
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">{{ 'jpm_martin_sylius_subscription.ui.renewals'|trans }}</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table" {{ sylius_test_html_attribute('cycles') }}>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{{ 'sylius.ui.date'|trans }}</th>
+                    <th>{{ 'sylius.ui.state'|trans }}</th>
+                    <th>{{ 'sylius.ui.order'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.products'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.attempts'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cycle in subscription.cycles %}
+                    <tr {{ sylius_test_html_attribute('cycle', cycle.number) }}>
+                        <td>{{ cycle.number }}</td>
+                        <td>{{ cycle.scheduledAt|date('d-m-Y') }}</td>
+                        <td>
+                            {{ label(cycle.state) }}
+                            {% if cycle.state == 'on_hold' %}
+                                <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('hold') }}>{{ 'jpm_martin_sylius_subscription.ui.held_until'|trans({ '%date%': cycle.holdUntil|date('d-m-Y') }) }}: {{ cycle.holdReason }}</div>
+                            {% endif %}
+                            {% if cycle.cancellationReason is not null %}
+                                <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('cancellation-reason') }}>{{ cycle.cancellationReason }}</div>
+                            {% endif %}
+                            {% if jpm_martin_sylius_subscription_can_retry_cycle(cycle) %}
+                                <form method="post" action="{{ path('jpm_martin_sylius_subscription_admin_subscription_cycle_retry', { subscriptionId: subscription.id, id: cycle.id }) }}" class="mt-1">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('jpm_martin_sylius_subscription_cycle_retry_' ~ cycle.id) }}">
+                                    <button type="submit" class="btn btn-sm" {{ sylius_test_html_attribute('retry') }}>{{ 'jpm_martin_sylius_subscription.ui.retry'|trans }}</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cycle.order is not null %}
+                                <a href="{{ path('sylius_admin_order_show', { id: cycle.order.id }) }}">#{{ cycle.order.number }}</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for cycle_item in cycle.items %}
+                                {% set name = cycle_item.subscriptionItem.productVariant.product.name %}
+                                {% if cycle_item.included %}
+                                    <div {{ sylius_test_html_attribute('included-item', name) }}>{{ name }} × {{ cycle_item.quantity }}</div>
+                                {% else %}
+                                    <div class="text-secondary" {{ sylius_test_html_attribute('skipped-item', name) }}>
+                                        <s>{{ name }} × {{ cycle_item.quantity }}</s>
+                                        · {{ 'jpm_martin_sylius_subscription.ui.skipped'|trans }}: <span {{ sylius_test_html_attribute('skipped-reason') }}>{{ ('jpm_martin_sylius_subscription.ui.skipped_reason.' ~ cycle_item.skippedReason)|trans }}</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for attempt in cycle.attempts %}
+                                <div {{ sylius_test_html_attribute('attempt', loop.index) }}>
+                                    <span {{ sylius_test_html_attribute('attempted-at') }}>{{ attempt.attemptedAt|date('d-m-Y H:i') }}</span>
+                                    · {{ ('jpm_martin_sylius_subscription.ui.attempt_type.' ~ attempt.type)|trans }}
+                                    · <strong {{ sylius_test_html_attribute('outcome') }}>{{ ('jpm_martin_sylius_subscription.ui.outcome.' ~ attempt.outcome)|trans }}</strong>
+                                    {% if attempt.reason is not null %}· <span {{ sylius_test_html_attribute('reason') }}>{{ attempt.reason }}</span>{% endif %}
+                                    {% if attempt.code is not null %}· <code {{ sylius_test_html_attribute('code') }}>{{ attempt.code }}</code>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

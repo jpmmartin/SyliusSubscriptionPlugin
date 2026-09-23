@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:gedmo="http://gediminasm.org/schemas/orm/doctrine-extensions-mapping"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!--
+        What a customer receives on one schedule. Its items hold the variants, quantities and frozen
+        prices; the billing and delivery intervals are separate columns although today they are
+        equal, so a prepaid plan can be added without reshaping the table.
+    -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\Subscription" table="jpm_martin_sylius_subscription">
+        <indexes>
+            <index name="idx_jpm_martin_sylius_subscription_state" columns="state" />
+        </indexes>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <field name="currencyCode" column="currency_code" type="string" length="3" />
+
+        <field name="billingIntervalCount" column="billing_interval_count" type="integer" />
+        <field name="billingIntervalUnit" column="billing_interval_unit" type="string" length="8" enum-type="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit" />
+        <field name="deliveryIntervalCount" column="delivery_interval_count" type="integer" />
+        <field name="deliveryIntervalUnit" column="delivery_interval_unit" type="string" length="8" enum-type="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit" />
+
+        <field name="consentVersion" column="consent_version" type="string" length="255" nullable="true" />
+        <field name="consentText" column="consent_text" type="text" nullable="true" />
+        <field name="consentAcceptedAt" column="consent_accepted_at" type="datetime_immutable" nullable="true" />
+
+        <!-- Business dates are set by the plugin from its clock, never by a listener. -->
+        <field name="activatedAt" column="activated_at" type="datetime_immutable" nullable="true" />
+        <field name="scheduleAnchorAt" column="schedule_anchor_at" type="datetime_immutable" nullable="true" />
+        <field name="scheduleAnchorCycle" column="schedule_anchor_cycle" type="integer" />
+
+        <field name="state" column="state" type="string" length="16" />
+        <field name="consecutiveFailedCycles" column="consecutive_failed_cycles" type="integer" />
+
+        <field name="createdAt" column="created_at" type="datetime">
+            <gedmo:timestampable on="create" />
+        </field>
+        <field name="updatedAt" column="updated_at" type="datetime" nullable="true">
+            <gedmo:timestampable on="update" />
+        </field>
+
+        <many-to-one field="customer" target-entity="Sylius\Component\Core\Model\CustomerInterface">
+            <join-column name="customer_id" referenced-column-name="id" nullable="false" />
+        </many-to-one>
+        <many-to-one field="channel" target-entity="Sylius\Component\Core\Model\ChannelInterface">
+            <join-column name="channel_id" referenced-column-name="id" nullable="false" />
+        </many-to-one>
+        <many-to-one field="paymentMethod" target-entity="Sylius\Component\Core\Model\PaymentMethodInterface">
+            <join-column name="payment_method_id" referenced-column-name="id" nullable="false" />
+        </many-to-one>
+        <!-- Empty when none of its items requires shipping. -->
+        <many-to-one field="shippingMethod" target-entity="Sylius\Component\Core\Model\ShippingMethodInterface">
+            <join-column name="shipping_method_id" referenced-column-name="id" nullable="true" />
+        </many-to-one>
+
+        <one-to-many field="items" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface" mapped-by="subscription">
+            <cascade>
+                <cascade-persist />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+
+        <one-to-many field="cycles" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface" mapped-by="subscription">
+            <cascade>
+                <cascade-persist />
+            </cascade>
+            <order-by>
+                <order-by-field name="number" direction="ASC" />
+            </order-by>
+        </one-to-many>
+    </mapped-superclass>
+</doctrine-mapping>

@@ -1,0 +1,85 @@
+{#
+    The variant's subscription tab. It sits inside the variant's own form: the "can be repeated" switch
+    is a field of that form, saved with the variant, and the plans are only listed here, with links to
+    the plan pages, where they are created, edited and deleted.
+#}
+{% set variant = hookable_metadata.context.resource %}
+{% set form = hookable_metadata.context.form %}
+{% set plans = jpm_martin_sylius_subscription_variant_plans(variant) %}
+
+<div class="tab-pane" id="product-variant-subscription-plans" role="tabpanel" tabindex="0">
+    {% if form.subscriptionRepeatable is defined %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="card-title">{{ 'jpm_martin_sylius_subscription.ui.subscription_frequencies'|trans }}</div>
+            </div>
+            <div class="card-body">
+                {{ form_row(form.subscriptionRepeatable, sylius_test_form_attribute('subscription-repeatable')) }}
+            </div>
+        </div>
+    {% endif %}
+    <div class="card mb-3" {{ sylius_test_html_attribute('subscription-plans') }}>
+        <div class="card-header">
+            <div class="card-title">{{ 'jpm_martin_sylius_subscription.ui.subscription_plans'|trans }}</div>
+        </div>
+        <div class="card-body">
+            {% if plans is empty %}
+                <p class="text-secondary" {{ sylius_test_html_attribute('no-subscription-plans') }}>
+                    {{ 'jpm_martin_sylius_subscription.ui.no_subscription_plans'|trans }}
+                </p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'sylius.ui.code'|trans }}</th>
+                                <th>{{ 'sylius.ui.name'|trans }}</th>
+                                <th>{{ 'jpm_martin_sylius_subscription.ui.interval'|trans }}</th>
+                                <th>{{ 'jpm_martin_sylius_subscription.ui.discount'|trans }}</th>
+                                <th>{{ 'jpm_martin_sylius_subscription.ui.max_cycles'|trans }}</th>
+                                <th>{{ 'sylius.ui.enabled'|trans }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plan in plans %}
+                                <tr {{ sylius_test_html_attribute('subscription-plan', plan.code) }}>
+                                    <td>{{ plan.code }}</td>
+                                    <td {{ sylius_test_html_attribute('subscription-plan-name') }}>{{ plan.name }}</td>
+                                    <td {{ sylius_test_html_attribute('subscription-plan-interval') }}>
+                                        {{ plan.intervalCount }} {{ ('jpm_martin_sylius_subscription.ui.interval_unit.' ~ plan.intervalUnit.value)|trans }}
+                                    </td>
+                                    <td {{ sylius_test_html_attribute('subscription-plan-discount') }}>{{ plan.discountPercentage }} %</td>
+                                    <td>{{ plan.maxCycles ?? 'jpm_martin_sylius_subscription.ui.until_cancelled'|trans }}</td>
+                                    <td {{ sylius_test_html_attribute('subscription-plan-enabled') }}>
+                                        {% if plan.enabled %}
+                                            <span class="badge bg-green-lt">{{ 'sylius.ui.enabled'|trans }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-lt">{{ 'sylius.ui.disabled'|trans }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm"
+                                           href="{{ path('jpm_martin_sylius_subscription_admin_subscription_plan_update', {productId: variant.product.id, variantId: variant.id, id: plan.id}) }}"
+                                           {{ sylius_test_html_attribute('edit-subscription-plan', plan.code) }}
+                                        >
+                                            {{ 'sylius.ui.edit'|trans }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <a class="btn btn-primary"
+               href="{{ path('jpm_martin_sylius_subscription_admin_subscription_plan_create', {productId: variant.product.id, variantId: variant.id}) }}"
+               {{ sylius_test_html_attribute('add-subscription-plan') }}
+            >
+                {{ 'jpm_martin_sylius_subscription.ui.add_subscription_plan'|trans }}
+            </a>
+        </div>
+    </div>
+</div>

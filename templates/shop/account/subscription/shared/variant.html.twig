@@ -1,0 +1,10 @@
+{# A variant as Sylius shows it on an order line: its options, or its name when the product has none. #}
+{% if variant.product.hasOptions() %}
+    <small class="text-body-tertiary" {{ sylius_test_html_attribute('variant') }}>
+        {%- for option_value in variant.optionValues -%}
+            {{ option_value.name }}: {{ option_value.value }}{% if not loop.last %}, {% endif %}
+        {%- endfor -%}
+    </small>
+{% elseif variant.name is not null %}
+    <small class="text-body-tertiary" {{ sylius_test_html_attribute('variant') }}>{{ variant.name }}</small>
+{% endif %}

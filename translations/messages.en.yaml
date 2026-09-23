@@ -1,0 +1,99 @@
+jpm_martin_sylius_subscription:
+    consent:
+        text: I authorise the store to charge my payment method automatically for every renewal of the subscriptions in this order, at the price and interval shown, until I cancel them from my account.
+    ui:
+        plan_or_frequency: "Plan or frequency"
+        repeat_this_cart: "Repeat this cart"
+        repeat_this_cart_help: "Receive the products of this cart again, with a discount, until you stop. Products you subscribed to on a plan keep their plan; those that cannot be repeated are bought once."
+        do_not_repeat: "Don't repeat"
+        frequency_choice_with_discount: "%frequency% (save %discount%%)"
+        repeated_line: "Repeated: %frequency%"
+        repeated_line_with_discount: "Repeated: %frequency% (save %discount%%)"
+        apply: "Apply"
+        subscription_frequency: Subscription frequency
+        subscription_frequencies: Subscription frequencies
+        subscription_plan: Subscription plan
+        subscription_plans: Subscription plans
+        add_subscription_plan: Add subscription plan
+        no_subscription_plans: This variant is sold as a one-off purchase only. Add a plan to also sell it by subscription.
+        interval: Interval
+        discount: Subscriber discount
+        max_cycles: Maximum cycles
+        until_cancelled: Until cancelled
+        purchase_type: How would you like to buy it?
+        one_time_purchase: One-time purchase
+        plan_choice: 'Subscribe: %name%'
+        plan_choice_with_discount: 'Subscribe: %name% (save %discount%%)'
+        subscription_line: 'Subscription: %name%'
+        subscription: Subscription
+        my_subscriptions: My subscriptions
+        my_subscriptions_subtitle: The products you receive regularly, and when each renews next.
+        no_subscriptions: You have no subscriptions yet.
+        next_renewal: Next renewal
+        price_per_renewal: Price per renewal
+        renewals: Renewals
+        change_frequency: Change frequency
+        change_frequency_help: The new frequency applies from your next renewal, which keeps its date.
+        new_frequency: New frequency
+        frequency: Frequency
+        every:
+            day: '{1}Every day|]1,Inf[Every %count% days'
+            week: '{1}Every week|]1,Inf[Every %count% weeks'
+            month: '{1}Every month|]1,Inf[Every %count% months'
+            year: '{1}Every year|]1,Inf[Every %count% years'
+        products: Products
+        paid_renewals: Paid renewals
+        paid_cycles_of: '%paid% of %max%'
+        no_longer_renews: No longer renews
+        retry: Retry
+        skipped: Skipped
+        skipped_reason:
+            out_of_stock: Out of stock
+            disabled: Disabled
+            not_in_channel: Not sold in this channel
+        cancel_subscription: Cancel subscription
+        subscriptions: Subscriptions
+        suspend: Suspend
+        reactivate: Reactivate
+        cancel: Cancel subscription
+        consecutive_failed_cycles: Failed renewals in a row
+        consent: Consent to recurring charges
+        no_consent: No consent was recorded for this subscription.
+        consent_version: Version
+        accepted_at: Accepted at
+        attempts: Charge attempts
+        held_until: 'Held until %date%'
+        attempt_type:
+            charge: Charge
+            status: Status check
+        outcome:
+            approved: Approved
+            declined: Declined
+            not_attempted: Not attempted
+            unknown: Unknown
+        state:
+            pending: Pending
+            active: Active
+            suspended: Suspended
+            cancelled: Cancelled
+            completed: Completed
+            scheduled: Scheduled
+            on_hold: On hold
+            awaiting_payment: Awaiting payment
+            paid: Paid
+            failed: Failed
+        interval_unit:
+            day: day(s)
+            week: week(s)
+            month: month(s)
+            year: year(s)
+    form:
+        product_variant:
+            repeatable: "Can be repeated with the store's frequencies"
+            repeatable_help: "When a customer repeats their cart with one of the store's frequencies, this variant is repeated too. Leave it off for gift cards and anything that must not renew."
+        subscription_plan:
+            interval_count: Renews every
+            interval_unit: Interval unit
+            discount_percentage: Subscriber discount (%)
+            max_cycles: Maximum cycles
+            max_cycles_help: Leave empty to renew until the customer cancels.

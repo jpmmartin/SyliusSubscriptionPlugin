@@ -1,0 +1,33 @@
+{% from '@SyliusShop/shared/macro/money.html.twig' import format %}
+
+{% set subscription = hookable_metadata.context.subscription %}
+
+<h2 class="h4 mb-3">{{ 'jpm_martin_sylius_subscription.ui.products'|trans }}</h2>
+<div class="table-responsive mb-4">
+    <table class="table align-middle" {{ sylius_test_html_attribute('items') }}>
+        <thead>
+            <tr>
+                <th>{{ 'sylius.ui.product'|trans }}</th>
+                <th>{{ 'sylius.ui.quantity'|trans }}</th>
+                <th>{{ 'sylius.ui.unit_price'|trans }}</th>
+                <th>{{ 'sylius.ui.total'|trans }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in subscription.items %}
+                <tr {{ sylius_test_html_attribute('item', item.productVariant.product.name) }}>
+                    <td>
+                        {{ item.productVariant.product.name }}
+                        {% include '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/shared/variant.html.twig' with { variant: item.productVariant } only %}
+                        {% if not item.renewable %}
+                            <span class="badge rounded-pill text-bg-secondary">{{ 'jpm_martin_sylius_subscription.ui.no_longer_renews'|trans }}</span>
+                        {% endif %}
+                    </td>
+                    <td {{ sylius_test_html_attribute('item-quantity') }}>{{ item.quantity }}</td>
+                    <td {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</td>
+                    <td {{ sylius_test_html_attribute('item-total') }}>{{ format(item.unitPrice * item.quantity, subscription.currencyCode) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

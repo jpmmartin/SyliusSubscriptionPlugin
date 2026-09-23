@@ -1,0 +1,19 @@
+{# The subscription's and its cycles' states, as Sylius's admin draws order states. #}
+{%- macro label(state) -%}
+    {% set state_badge = {
+        pending: 'bg-secondary-lt',
+        active: 'bg-green-lt',
+        suspended: 'bg-orange-lt',
+        cancelled: 'bg-red-lt',
+        completed: 'bg-blue-lt',
+        scheduled: 'bg-secondary-lt',
+        on_hold: 'bg-orange-lt',
+        awaiting_payment: 'bg-purple-lt',
+        paid: 'bg-green-lt',
+        failed: 'bg-red-lt',
+    } %}
+
+    <span class="badge {{ state_badge[state]|default('') }}">
+        {{ ('jpm_martin_sylius_subscription.ui.state.' ~ state)|trans }}
+    </span>
+{%- endmacro -%}

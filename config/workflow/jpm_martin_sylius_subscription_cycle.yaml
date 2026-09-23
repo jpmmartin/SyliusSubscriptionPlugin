@@ -1,0 +1,50 @@
+# Paid and cancelled are final; failed is not, because an administrator may retry it. Mapped to the
+# Symfony Workflow adapter explicitly, like the subscription graph.
+framework:
+    workflows:
+        !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::GRAPH:
+            type: state_machine
+            marking_store:
+                type: method
+                property: state
+            supports:
+                - JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface
+            initial_marking: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+            places:
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_ON_HOLD
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_PAID
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_FAILED
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_CANCELLED
+            transitions:
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_HOLD:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_ON_HOLD
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_PLACE_ORDER:
+                    from:
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_ON_HOLD
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_PAY:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_PAID
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_FAIL:
+                    from:
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_ON_HOLD
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_FAILED
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_RETRY:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_FAILED
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::TRANSITION_CANCEL:
+                    from:
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_SCHEDULED
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_ON_HOLD
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_AWAITING_PAYMENT
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface::STATE_CANCELLED
+
+sylius_state_machine_abstraction:
+    graphs_to_adapters_mapping:
+        !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions::GRAPH: symfony_workflow

@@ -1,0 +1,50 @@
+# The store's frequencies. A frequency in use cannot be deleted, only disabled.
+sylius_grid:
+    grids:
+        jpm_martin_sylius_subscription_admin_subscription_frequency:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%jpm_martin_sylius_subscription.model.subscription_frequency.class%"
+            sorting:
+                code: asc
+            fields:
+                code:
+                    type: string
+                    label: sylius.ui.code
+                    sortable: ~
+                name:
+                    type: string
+                    label: sylius.ui.name
+                    sortable: ~
+                interval:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.interval
+                    path: .
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription_frequency/grid/field/interval.html.twig"
+                discountPercentage:
+                    type: twig
+                    label: jpm_martin_sylius_subscription.ui.discount
+                    options:
+                        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription_frequency/grid/field/discount.html.twig"
+                enabled:
+                    type: twig
+                    label: sylius.ui.enabled
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/boolean.html.twig"
+            filters:
+                search:
+                    type: string
+                    label: sylius.ui.search
+                    options:
+                        fields: [code, name]
+            actions:
+                main:
+                    create:
+                        type: create
+                item:
+                    update:
+                        type: update
+                    delete:
+                        type: delete

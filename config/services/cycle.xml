@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <service id="jpm_martin_sylius_subscription.cycle.failure_handler" class="JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleFailureHandler">
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument>%jpm_martin_sylius_subscription.suspend_after_failed_cycles%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleFailureHandlerInterface" alias="jpm_martin_sylius_subscription.cycle.failure_handler" />
+
+        <!-- Every service tagged jpm_martin_sylius_subscription.cycle_gate, or autoconfigured as a CycleGateInterface. -->
+        <service id="jpm_martin_sylius_subscription.gate.keeper" class="JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateKeeper">
+            <argument type="tagged_iterator" tag="jpm_martin_sylius_subscription.cycle_gate" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
+            <argument type="service" id="clock" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateKeeperInterface" alias="jpm_martin_sylius_subscription.gate.keeper" public="true" />
+
+        <!-- Sylius's cancellation of orders left unpaid, leaving out the renewal orders whose cycle still awaits payment. -->
+        <service id="jpm_martin_sylius_subscription.order.unpaid_orders_state_updater"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAwareUnpaidOrdersStateUpdater"
+                 decorates="sylius.updater.unpaid_orders_state"
+        >
+            <argument type="service" id="sylius.manager.order" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="logger" />
+            <argument>%sylius_order.order_expiration_period%</argument>
+            <argument>%sylius.model.order.class%</argument>
+            <argument>%jpm_martin_sylius_subscription.model.subscription_cycle.class%</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.order.renewal_placer" class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacer">
+            <argument type="service" id="sylius.factory.order" />
+            <argument type="service" id="sylius.factory.order_item" />
+            <argument type="service" id="sylius.factory.address" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_cycle_item" />
+            <argument type="service" id="sylius.modifier.order_item_quantity" />
+            <argument type="service" id="sylius.checker.inventory.availability" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="sylius.manager.order" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacerInterface" alias="jpm_martin_sylius_subscription.order.renewal_placer" public="true" />
+
+        <!-- Replace this service, or point the interface alias elsewhere, to retry failed charges another way. -->
+        <service id="jpm_martin_sylius_subscription.cycle.retry_policy" class="JpmMartin\SyliusSubscriptionPlugin\Cycle\DelayListRetryPolicy">
+            <argument>%jpm_martin_sylius_subscription.retry_delays%</argument>
+            <argument>%jpm_martin_sylius_subscription.final_decline_codes%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Cycle\RetryPolicyInterface" alias="jpm_martin_sylius_subscription.cycle.retry_policy" />
+
+        <service id="jpm_martin_sylius_subscription.cycle.charger" class="JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleCharger">
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_charge_attempt" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Cycle\RetryPolicyInterface" />
+            <argument type="service" id="clock" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleChargerInterface" alias="jpm_martin_sylius_subscription.cycle.charger" />
+
+        <service id="jpm_martin_sylius_subscription.command_handler.process_subscription_cycle"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\ProcessSubscriptionCycleHandler"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="jpm_martin_sylius_subscription.gate.keeper" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_placer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.charger" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="clock" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.console.command.process_subscription_cycles"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Console\Command\ProcessSubscriptionCyclesCommand"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="sylius.command_bus" />
+            <argument type="service" id="clock" />
+            <tag name="console.command" />
+        </service>
+
+        <!-- A paid renewal order pays its cycle; the initial order's payment is handled in subscription.xml. -->
+        <service id="jpm_martin_sylius_subscription.listener.workflow.order.pay_cycle"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\PayCycleListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.listener.workflow.order.skip_cycle"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\SkipCycleListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order.completed.cancel" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.listener.workflow.subscription_cycle.cancel_uncharged_order"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\SubscriptionCycle\CancelUnchargedOrderListener"
+        >
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription_cycle.completed.cancel" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription_cycle.completed.fail" />
+        </service>
+    </services>
+</container>

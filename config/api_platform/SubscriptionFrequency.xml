@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+    The frequencies a cart of the request's channel can be repeated with, the same the cart page offers.
+    Only listed: a cart chooses one by its code, through PATCH /shop/orders/{tokenValue}/subscription-frequency.
+-->
+<resources
+    xmlns="https://api-platform.com/schema/metadata/resources-3.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://api-platform.com/schema/metadata/resources-3.0 https://api-platform.com/schema/metadata/resources-3.0.xsd"
+>
+    <resource class="%jpm_martin_sylius_subscription.model.subscription_frequency.class%" shortName="SubscriptionFrequency">
+        <operations>
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_frequency_get_collection"
+                class="ApiPlatform\Metadata\GetCollection"
+                uriTemplate="/shop/subscription-frequencies"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription_frequency_collection"
+                paginationEnabled="false"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription_frequency:index</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+        </operations>
+    </resource>
+</resources>

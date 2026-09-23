@@ -3,7 +3,236 @@
 <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <services>
         <defaults public="true" />
-        <!-- Put your Behat services here -->
 
+        <!-- Pages -->
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.product_variant.subscription_plans"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\ProductVariant\SubscriptionPlansPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription_plan.create"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\SubscriptionPlan\CreatePage"
+                 parent="sylius.behat.page.admin.crud.create"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_plan_create</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription_plan.update"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\SubscriptionPlan\UpdatePage"
+                 parent="sylius.behat.page.admin.crud.update"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_plan_update</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.product.subscription_plan_choice"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Product\SubscriptionPlanChoicePage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.cart.repeat_cart"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Cart\RepeatCartPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.checkout.subscription_consent"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Checkout\SubscriptionConsentPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.index"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\IndexPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.show"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ShowPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_frequency"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeFrequencyPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.index"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\IndexPage"
+                 parent="sylius.behat.page.admin.crud.index"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_index</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.show"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ShowPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_frequency"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeFrequencyPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.index"
+                 class="Sylius\Behat\Page\Admin\Crud\IndexPage"
+                 parent="sylius.behat.page.admin.crud.index"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_frequency_index</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.create"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\SubscriptionFrequency\CreatePage"
+                 parent="sylius.behat.page.admin.crud.create"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_frequency_create</argument>
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.update"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\SubscriptionFrequency\UpdatePage"
+                 parent="sylius.behat.page.admin.crud.update"
+        >
+            <argument type="string">jpm_martin_sylius_subscription_admin_subscription_frequency_update</argument>
+        </service>
+
+        <!-- Contexts -->
+
+        <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_frequency"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionFrequencyContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.repeatable_variant" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.cart_frequency" />
+            <argument type="service" id="sylius.factory.order" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.admin.managing_subscription_frequencies"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin\ManagingSubscriptionFrequenciesContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.index" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.create" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_frequency.update" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.admin.managing_subscriptions"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin\ManagingSubscriptionsContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.index" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.show" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_frequency" />
+            <argument type="service" id="sylius.behat.notification_checker.admin" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.factory.order" />
+            <argument type="service" id="sylius.factory.order_item" />
+            <argument type="service" id="sylius.factory.address" />
+            <argument type="service" id="sylius.factory.customer" />
+            <argument type="service" id="sylius.modifier.order_item_quantity" />
+            <argument type="service" id="sylius.modifier.order" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="sylius.repository.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.test.scripted_gateway" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.managing_my_subscriptions"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\ManagingMySubscriptionsContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.index" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.show" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_frequency" />
+            <argument type="service" id="sylius.behat.notification_checker.shop" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.domain.processing_renewals"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Domain\ProcessingRenewalsContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.console.command.process_subscription_cycles" />
+            <argument type="service" id="sylius.behat.context.setup.calendar" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_cart"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionCartContext"
+        >
+            <argument type="service" id="sylius.behat.context.setup.cart" />
+            <argument type="service" id="sylius.command_bus" />
+            <argument type="service" id="sylius.resolver.product_variant" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="security.token_storage" on-invalid="null" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.subscription_checkout"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\SubscriptionCheckoutContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.checkout.subscription_consent" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.api.shop.subscription_checkout"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Api\Shop\SubscriptionCheckoutContext"
+        >
+            <argument type="service" id="sylius.behat.api_platform_client.shop" />
+            <argument type="service" id="sylius.behat.request_factory" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.domain.subscription_consent"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Domain\SubscriptionConsentContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_consent" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.subscribing_to_products"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\SubscribingToProductsContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.product.subscription_plan_choice" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_plan"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionPlanContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="sylius.behat.shared_storage" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.admin.managing_subscription_plans"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin\ManagingSubscriptionPlansContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.product_variant.subscription_plans" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_plan.create" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_plan.update" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.repeating_a_cart"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\RepeatingACartContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.cart.repeat_cart" />
+            <argument type="service" id="sylius.behat.notification_checker.shop" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.admin.managing_repeatable_variants"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin\ManagingRepeatableVariantsContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.product_variant.subscription_plans" />
+        </service>
     </services>
 </container>

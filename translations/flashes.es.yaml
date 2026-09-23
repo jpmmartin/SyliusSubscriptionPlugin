@@ -1,0 +1,15 @@
+jpm_martin_sylius_subscription:
+    cart:
+        repeated: "Tu carrito se repetirá. Los productos marcados en él se renuevan con la frecuencia que has elegido."
+        not_repeated: "Tu carrito ya no se repetirá."
+        frequency_not_offered: "Esta frecuencia no se ofrece para tu carrito."
+    subscription:
+        cancelled: La suscripción se ha cancelado.
+        frequency_changed: Se ha cambiado la frecuencia de la suscripción.
+        suspended: La suscripción se ha suspendido.
+        reactivated: La suscripción se ha reactivado.
+    subscription_cycle:
+        retry_paid: Se ha cobrado la renovación.
+        retry_failed: No se ha podido cobrar la renovación.
+        retry_pending: La pasarela de pago todavía no ha confirmado el cobro. La renovación se actualizará cuando lo haga.
+        retry_not_allowed: Esta renovación no se puede reintentar.

@@ -1,0 +1,41 @@
+jpm_martin_sylius_subscription:
+    cart_frequency:
+        not_offered: "Esta frecuencia de suscripción no se ofrece para este carrito."
+    checkout:
+        account_required: Las suscripciones necesitan una cuenta. Inicia sesión o crea una cuenta para realizar este pedido.
+        payment_method_not_supported: 'El método de pago "%payment_method%" no admite suscripciones. Elige otro.'
+        consent_required: Acepta los cobros recurrentes de tus suscripciones para realizar este pedido.
+    subscription_plan:
+        code:
+            unique: Ya existe un plan de suscripción con este código.
+            not_blank: Introduce el código del plan.
+            regex: El código del plan solo puede contener letras, números, guiones y guiones bajos.
+        name:
+            not_blank: Introduce el nombre del plan.
+        interval_count:
+            positive: El intervalo debe ser al menos 1.
+        discount_percentage:
+            range: El descuento de suscriptor debe estar entre 0 y 100.
+        max_cycles:
+            positive: El máximo de ciclos debe ser al menos 1.
+    subscription_frequency:
+        code:
+            unique: Ya existe una frecuencia de suscripción con este código.
+            not_blank: Introduce el código de la frecuencia.
+            regex: El código de la frecuencia solo puede tener letras, números, guiones y guiones bajos.
+        name:
+            not_blank: Introduce el nombre de la frecuencia.
+        interval_count:
+            positive: El intervalo debe ser al menos 1.
+        discount_percentage:
+            range: El descuento de suscriptor debe estar entre 0 y 100.
+        max_cycles:
+            positive: El máximo de ciclos debe ser al menos 1.
+        channels:
+            min: Elige al menos un canal.
+    subscription_item:
+        product_variant:
+            not_available: Esta variante de producto no está disponible en esta tienda.
+        subscription_plan:
+            not_blank: Elige un plan de suscripción.
+            not_offered: Este plan de suscripción no se ofrece para esta variante de producto.

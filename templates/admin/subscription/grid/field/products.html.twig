@@ -1,0 +1,6 @@
+{% for item in data.items %}
+    <div class="{{ item.renewable ? '' : 'text-secondary' }}">
+        <strong>{{ item.productVariant.product.name }}</strong> × {{ item.quantity }}
+        <span class="fs-5 text-secondary">{{ item.productVariant.code }}</span>
+    </div>
+{% endfor %}

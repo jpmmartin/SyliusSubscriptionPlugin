@@ -1,0 +1,52 @@
+{% from '@SyliusShop/shared/macro/money.html.twig' import format %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
+
+{% set subscriptions = hookable_metadata.context.subscriptions %}
+
+{% if subscriptions is empty %}
+    <div class="alert alert-info" {{ sylius_test_html_attribute('no-subscriptions') }}>
+        {{ 'jpm_martin_sylius_subscription.ui.no_subscriptions'|trans }}
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table align-middle" {{ sylius_test_html_attribute('subscriptions') }}>
+            <thead>
+                <tr>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.products'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.frequency'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</th>
+                    <th>{{ 'sylius.ui.state'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.next_renewal'|trans }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscription in subscriptions %}
+                    {% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
+                    {% set products = subscription.items|map(item => item.productVariant.product.name)|join(', ') %}
+                    <tr {{ sylius_test_html_attribute('subscription', products) }}>
+                        <td {{ sylius_test_html_attribute('products') }}>
+                            {% for item in subscription.items %}
+                                <div class="{{ item.renewable ? '' : 'text-body-tertiary' }}" {{ sylius_test_html_attribute('item', item.productVariant.product.name) }}>
+                                    {{ item.productVariant.product.name }} × <span {{ sylius_test_html_attribute('item-quantity') }}>{{ item.quantity }}</span>
+                                    · <span {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</span>
+                                    {% include '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/shared/variant.html.twig' with { variant: item.productVariant } only %}
+                                </div>
+                            {% endfor %}
+                        </td>
+                        <td {{ sylius_test_html_attribute('frequency') }}>{{ frequency(subscription) }}</td>
+                        <td {{ sylius_test_html_attribute('price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</td>
+                        <td {{ sylius_test_html_attribute('state') }}>{{ label(subscription.state) }}</td>
+                        <td {{ sylius_test_html_attribute('next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|format_date : '—' }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-gray" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_show', { id: subscription.id }) }}" {{ sylius_test_html_attribute('show') }}>
+                                {{ 'sylius.ui.show'|trans }}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

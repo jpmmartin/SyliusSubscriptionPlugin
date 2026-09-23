@@ -1,1 +1,182 @@
-# Define your own admin routes here
+# A plan lives on one variant, so its pages hang off the variant's and always return to it. The
+# variant is resolved from the path and checked against the product, and the plan against the
+# variant: a plan id taken from another variant's page is a not-found, never an edit.
+
+jpm_martin_sylius_subscription_admin_subscription_plan_create:
+    path: /products/{productId}/variants/{variantId}/subscription-plans/new
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription_plan::createAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/create.html.twig"
+            form: JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionPlanType
+            factory:
+                method: createForVariant
+                arguments:
+                    - "expr:notFoundOnNull(service('sylius.repository.product_variant').findOneBy({'id': $variantId, 'product': $productId}))"
+            redirect:
+                route: sylius_admin_product_variant_update
+                parameters:
+                    productId: $productId
+                    id: $variantId
+            vars:
+                index:
+                    route:
+                        name: sylius_admin_product_variant_update
+                        parameters:
+                            productId: $productId
+                            id: $variantId
+
+jpm_martin_sylius_subscription_admin_subscription_plan_update:
+    path: /products/{productId}/variants/{variantId}/subscription-plans/{id}/edit
+    methods: [GET, PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription_plan::updateAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/update.html.twig"
+            form: JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionPlanType
+            repository:
+                method: findOneBy
+                arguments:
+                    - id: $id
+                      productVariant: $variantId
+            redirect:
+                route: sylius_admin_product_variant_update
+                parameters:
+                    productId: $productId
+                    id: $variantId
+            vars:
+                index:
+                    route:
+                        name: sylius_admin_product_variant_update
+                        parameters:
+                            productId: $productId
+                            id: $variantId
+
+jpm_martin_sylius_subscription_admin_subscription_plan_delete:
+    path: /products/{productId}/variants/{variantId}/subscription-plans/{id}
+    methods: [DELETE]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription_plan::deleteAction
+        _sylius:
+            section: admin
+            permission: true
+            repository:
+                method: findOneBy
+                arguments:
+                    - id: $id
+                      productVariant: $variantId
+            redirect:
+                route: sylius_admin_product_variant_update
+                parameters:
+                    productId: $productId
+                    id: $variantId
+
+# The subscriptions. Their state changes go through the subscription graph, so its listeners cancel or
+# schedule the open cycle whichever way the change is made.
+
+jpm_martin_sylius_subscription_admin_subscription_index:
+    path: /subscriptions/
+    methods: [GET]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::indexAction
+        _sylius:
+            section: admin
+            permission: true
+            grid: jpm_martin_sylius_subscription_admin_subscription
+            template: "@SyliusAdmin/shared/crud/index.html.twig"
+
+jpm_martin_sylius_subscription_admin_subscription_show:
+    path: /subscriptions/{id}
+    methods: [GET]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::showAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/show.html.twig"
+
+jpm_martin_sylius_subscription_admin_subscription_suspend:
+    path: /subscriptions/{id}/suspend
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: admin
+            permission: true
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: suspend
+            redirect:
+                route: jpm_martin_sylius_subscription_admin_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.suspended
+
+jpm_martin_sylius_subscription_admin_subscription_reactivate:
+    path: /subscriptions/{id}/reactivate
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: admin
+            permission: true
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: reactivate
+            redirect:
+                route: jpm_martin_sylius_subscription_admin_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.reactivated
+
+jpm_martin_sylius_subscription_admin_subscription_cancel:
+    path: /subscriptions/{id}/cancel
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: admin
+            permission: true
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: cancel
+            redirect:
+                route: jpm_martin_sylius_subscription_admin_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.cancelled
+
+jpm_martin_sylius_subscription_admin_subscription_change_frequency:
+    path: /subscriptions/{id}/change-frequency
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.change_subscription_frequency
+        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_frequency.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_admin_subscription_show
+        customer_only: false
+
+jpm_martin_sylius_subscription_admin_subscription_cycle_retry:
+    path: /subscriptions/{subscriptionId}/cycles/{id}/retry
+    methods: [POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.retry_subscription_cycle
+
+# The store's frequencies, with Sylius's resource routes and CRUD pages. A frequency in use cannot be
+# deleted: Sylius reports it, and it is disabled instead.
+jpm_martin_sylius_subscription_admin_subscription_frequency:
+    resource: |
+        alias: jpm_martin_sylius_subscription.subscription_frequency
+        section: admin
+        path: subscription-frequencies
+        templates: "@SyliusAdmin/shared/crud"
+        form: JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionFrequencyType
+        except: ['show']
+        redirect: update
+        grid: jpm_martin_sylius_subscription_admin_subscription_frequency
+        permission: true
+    type: sylius.resource

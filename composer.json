@@ -10,7 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "sylius/sylius": "^2.0"
+        "sylius/sylius": "^2.2"
     },
     "require-dev": {
         "behat/behat": "^3.16",
@@ -94,6 +94,17 @@
         "test-app-init": [
             "@database-reset",
             "@frontend-clear"
-        ]
+        ],
+        "check": [
+            "@ecs",
+            "@phpstan",
+            "@phpunit",
+            "@behat"
+        ],
+        "ecs": "vendor/bin/ecs check",
+        "phpstan": "vendor/bin/phpstan analyse",
+        "phpunit": "vendor/bin/phpunit",
+        "behat": "vendor/bin/behat --strict --no-interaction --tags=\"~@javascript&&~@mink:chromedriver\"",
+        "behat-js": "vendor/bin/behat --strict --no-interaction --tags=\"@javascript,@mink:chromedriver\""
     }
 }

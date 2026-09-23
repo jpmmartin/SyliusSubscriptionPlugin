@@ -1,0 +1,8 @@
+{# Only present when the order has subscription lines. #}
+{% set form = hookable_metadata.context.form %}
+
+{% if form.subscriptionConsent is defined %}
+    <div class="mb-4" {{ sylius_test_html_attribute('subscription-consent') }}>
+        {{ form_row(form.subscriptionConsent, sylius_test_form_attribute('subscription-consent-checkbox')) }}
+    </div>
+{% endif %}

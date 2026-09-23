@@ -1,0 +1,22 @@
+# The plan's own create and update pages are Sylius's shared CRUD pages. What changes: the trail,
+# which goes through the product and the variant the plan belongs to; a delete button in the update
+# page's header, outside the plan form; and no "show" button, because a plan has no page of its own
+# and Sylius's button would link the variant page with the plan's id.
+sylius_twig_hooks:
+    hooks:
+        'sylius_admin.subscription_plan.create.content.header':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_plan/header/breadcrumbs.html.twig'
+                priority: 100
+
+        'sylius_admin.subscription_plan.update.content.header':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_plan/header/breadcrumbs.html.twig'
+                priority: 100
+
+        'sylius_admin.subscription_plan.update.content.header.title_block.actions':
+            show:
+                enabled: false
+            delete:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_plan/update/header/delete.html.twig'
+                priority: 150

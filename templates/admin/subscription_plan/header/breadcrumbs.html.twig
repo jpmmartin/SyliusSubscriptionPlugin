@@ -1,0 +1,26 @@
+{#
+    A plan's pages sit under its variant, so the trail goes through the product and the variant.
+    Sylius's generic trail cannot be reused: it links the edited resource through a route that takes
+    only its id, and the variant page also needs the product.
+#}
+{% from '@SyliusAdmin/shared/helper/breadcrumbs.html.twig' import breadcrumbs %}
+
+{% set plan = hookable_metadata.context.resource %}
+{% set variant = plan.productVariant %}
+{% set product = variant.product %}
+
+{% set items = [
+    { name: 'sylius.ui.dashboard', url: path('sylius_admin_dashboard'), active: false },
+    { name: 'sylius.ui.products', url: path('sylius_admin_product_index'), active: false },
+    { name: product.name, url: path('sylius_admin_product_update', {id: product.id}), active: false },
+    { name: variant.name ?? variant.code, url: path('sylius_admin_product_variant_update', {productId: product.id, id: variant.id}), active: false },
+    { name: 'jpm_martin_sylius_subscription.ui.subscription_plans', active: false },
+] %}
+
+{% if plan.id is not null %}
+    {% set items = items|merge([{ name: plan.code, active: false }, { name: 'sylius.ui.edit', active: true }]) %}
+{% else %}
+    {% set items = items|merge([{ name: 'sylius.ui.new', active: true }]) %}
+{% endif %}
+
+{{ breadcrumbs(items) }}

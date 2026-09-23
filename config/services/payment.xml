@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <!-- Replace this service, or point the interface alias elsewhere, to charge renewals another way. -->
+        <service id="jpm_martin_sylius_subscription.payment.renewal_charger"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Payment\PaymentRequestRenewalCharger"
+        >
+            <argument type="service" id="sylius.factory.payment_request" />
+            <argument type="service" id="sylius.repository.payment_request" />
+            <argument type="service" id="Sylius\Bundle\PaymentBundle\Announcer\PaymentRequestAnnouncerInterface" />
+            <argument>%jpm_martin_sylius_subscription.payment_methods%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" alias="jpm_martin_sylius_subscription.payment.renewal_charger" />
+
+        <service id="jpm_martin_sylius_subscription.consent.recorder"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Consent\SubscriptionConsentRecorder"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_consent" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_consent" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription_consent" />
+            <argument type="service" id="translator" />
+            <argument type="service" id="clock" />
+            <argument>%jpm_martin_sylius_subscription.consent_version%</argument>
+            <tag name="kernel.reset" method="reset" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Consent\SubscriptionConsentRecorderInterface" alias="jpm_martin_sylius_subscription.consent.recorder" />
+    </services>
+</container>

@@ -1,0 +1,54 @@
+{% from '@SyliusAdmin/shared/helper/money.html.twig' import format %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/macro/state.html.twig' import label %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
+
+{% set subscription = hookable_metadata.context.resource %}
+{% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
+
+<div class="container-xl">
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title">{{ 'jpm_martin_sylius_subscription.ui.subscription'|trans }}</h3></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">{{ 'sylius.ui.state'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-state') }}>{{ label(subscription.state) }}</dd>
+                    <dt class="col-5">{{ 'sylius.ui.customer'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-customer') }}>{{ subscription.customer.email }}</dd>
+                    <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.frequency'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-frequency') }}>{{ frequency(subscription) }}</dd>
+                    <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</dd>
+                    <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.next_renewal'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|date('d-m-Y') : '-' }}</dd>
+                    <dt class="col-5">{{ 'sylius.ui.payment_method'|trans }}</dt>
+                    <dd class="col-7">{{ subscription.paymentMethod.name|default('-') }}</dd>
+                    <dt class="col-5">{{ 'sylius.ui.shipping_method'|trans }}</dt>
+                    <dd class="col-7">{{ subscription.shippingMethod.name|default('-') }}</dd>
+                    <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.consecutive_failed_cycles'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-consecutive-failed-cycles') }}>{{ subscription.consecutiveFailedCycles }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100" {{ sylius_test_html_attribute('consent') }}>
+            <div class="card-header"><h3 class="card-title">{{ 'jpm_martin_sylius_subscription.ui.consent'|trans }}</h3></div>
+            <div class="card-body">
+                {% if subscription.consentVersion is null %}
+                    <span class="text-secondary">{{ 'jpm_martin_sylius_subscription.ui.no_consent'|trans }}</span>
+                {% else %}
+                    <dl class="row">
+                        <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.consent_version'|trans }}</dt>
+                        <dd class="col-7" {{ sylius_test_html_attribute('consent-version') }}>{{ subscription.consentVersion }}</dd>
+                        <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.accepted_at'|trans }}</dt>
+                        <dd class="col-7" {{ sylius_test_html_attribute('consent-accepted-at') }}>{{ subscription.consentAcceptedAt|date('d-m-Y H:i') }}</dd>
+                    </dl>
+                    <blockquote class="text-secondary mb-0" {{ sylius_test_html_attribute('consent-text') }}>{{ subscription.consentText }}</blockquote>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>

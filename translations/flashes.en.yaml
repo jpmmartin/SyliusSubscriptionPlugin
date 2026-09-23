@@ -1,0 +1,15 @@
+jpm_martin_sylius_subscription:
+    cart:
+        repeated: "Your cart will be repeated. The products marked in it renew with the frequency you chose."
+        not_repeated: "Your cart will no longer be repeated."
+        frequency_not_offered: "This frequency is not offered for your cart."
+    subscription:
+        cancelled: The subscription has been cancelled.
+        frequency_changed: The subscription frequency has been changed.
+        suspended: The subscription has been suspended.
+        reactivated: The subscription has been reactivated.
+    subscription_cycle:
+        retry_paid: The renewal has been charged.
+        retry_failed: The renewal could not be charged.
+        retry_pending: The payment provider has not confirmed the charge yet. The renewal will be updated once it does.
+        retry_not_allowed: This renewal cannot be retried.

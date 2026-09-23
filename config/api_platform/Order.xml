@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+    The plugin's ways into a shop cart: a line on a subscription plan, the recurring-charge consent and
+    "Repeat this cart". They sit next to Sylius's own operations, such as
+    POST /shop/orders/{tokenValue}/items, which keeps serving one-off lines, and answer the same way:
+    the cart, serialized as Sylius serializes it.
+-->
+<resources
+    xmlns="https://api-platform.com/schema/metadata/resources-3.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://api-platform.com/schema/metadata/resources-3.0 https://api-platform.com/schema/metadata/resources-3.0.xsd"
+>
+    <resource class="%sylius.model.order.class%">
+        <operations>
+            <operation
+                name="jpm_martin_sylius_subscription_shop_order_subscription_item_post"
+                class="ApiPlatform\Metadata\Post"
+                uriTemplate="/shop/orders/{tokenValue}/subscription-items"
+                itemUriTemplate="/shop/orders/{tokenValue}"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\AddSubscriptionItemToCart"
+            >
+                <validationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription</value>
+                            </values>
+                        </value>
+                    </values>
+                </validationContext>
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:cart:add_subscription_item</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>sylius:shop:cart:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <!-- The API's counterpart of the consent checkbox on the last checkout step. Takes no fields. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_order_subscription_consent_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/orders/{tokenValue}/subscription-consent"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\AcceptSubscriptionConsent"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:cart:accept_subscription_consent</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>sylius:shop:cart:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <!-- "Repeat this cart": {"subscriptionFrequency": "<code>"}, or null to stop repeating it. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_order_subscription_frequency_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/orders/{tokenValue}/subscription-frequency"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\RepeatCart"
+            >
+                <validationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription</value>
+                            </values>
+                        </value>
+                    </values>
+                </validationContext>
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:cart:repeat</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>sylius:shop:cart:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+        </operations>
+    </resource>
+</resources>

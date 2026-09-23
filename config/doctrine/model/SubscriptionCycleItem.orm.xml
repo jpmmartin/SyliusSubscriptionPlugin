@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!-- What a cycle took into its order from one item of its subscription, or why it skipped it. -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleItem" table="jpm_martin_sylius_subscription_cycle_item">
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <field name="quantity" column="quantity" type="integer" />
+        <field name="unitPrice" column="unit_price" type="integer" />
+        <field name="skippedReason" column="skipped_reason" type="string" length="32" nullable="true" />
+
+        <many-to-one field="cycle" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface" inversed-by="items">
+            <join-column name="cycle_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+        <many-to-one field="subscriptionItem" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface">
+            <join-column name="subscription_item_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

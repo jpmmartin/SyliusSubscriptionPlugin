@@ -1,0 +1,11 @@
+{#
+    Only present when the selected variant has enabled plans; otherwise the variant is bought once
+    and nothing is rendered.
+#}
+{% set cart_item_form = hookable_metadata.context.form.cartItem %}
+
+{% if cart_item_form.subscriptionPlan is defined %}
+    <div class="mb-4" {{ sylius_test_html_attribute('subscription-plans') }}>
+        {{ form_row(cart_item_form.subscriptionPlan) }}
+    </div>
+{% endif %}

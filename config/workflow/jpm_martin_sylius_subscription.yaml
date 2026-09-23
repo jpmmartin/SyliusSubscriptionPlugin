@@ -1,0 +1,41 @@
+# Cancelled and completed are final. The graph is mapped to the Symfony Workflow adapter explicitly,
+# so it keeps working in a store whose default state machine adapter is winzou.
+framework:
+    workflows:
+        !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::GRAPH:
+            type: state_machine
+            marking_store:
+                type: method
+                property: state
+            supports:
+                - JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface
+            initial_marking: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
+            places:
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_CANCELLED
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_COMPLETED
+            transitions:
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_ACTIVATE:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_SUSPEND:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_REACTIVATE:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_CANCEL:
+                    from:
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_CANCELLED
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_COMPLETE:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_COMPLETED
+
+sylius_state_machine_abstraction:
+    graphs_to_adapters_mapping:
+        !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::GRAPH: symfony_workflow

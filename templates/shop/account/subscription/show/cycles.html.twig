@@ -1,0 +1,39 @@
+{% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
+
+{% set subscription = hookable_metadata.context.subscription %}
+
+<h2 class="h4 mb-3">{{ 'jpm_martin_sylius_subscription.ui.renewals'|trans }}</h2>
+<div class="table-responsive">
+    <table class="table align-middle" {{ sylius_test_html_attribute('cycles') }}>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{{ 'sylius.ui.date'|trans }}</th>
+                <th>{{ 'sylius.ui.state'|trans }}</th>
+                <th>{{ 'sylius.ui.order'|trans }}</th>
+                <th>{{ 'jpm_martin_sylius_subscription.ui.skipped'|trans }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cycle in subscription.cycles %}
+                <tr {{ sylius_test_html_attribute('cycle', cycle.number) }}>
+                    <td>{{ cycle.number }}</td>
+                    <td {{ sylius_test_html_attribute('date') }}>{{ cycle.scheduledAt|format_date }}</td>
+                    <td {{ sylius_test_html_attribute('state') }}>{{ label(cycle.state) }}</td>
+                    <td {{ sylius_test_html_attribute('order') }}>
+                        {% if cycle.order is not null and cycle.order.number is not null %}
+                            <a href="{{ path('sylius_shop_account_order_show', { number: cycle.order.number }) }}">#{{ cycle.order.number }}</a>
+                        {% endif %}
+                    </td>
+                    <td {{ sylius_test_html_attribute('skipped') }}>
+                        {% for cycle_item in cycle.items|filter(cycle_item => not cycle_item.included) %}
+                            <div {{ sylius_test_html_attribute('skipped-item', cycle_item.subscriptionItem.productVariant.product.name) }}>
+                                {{ cycle_item.subscriptionItem.productVariant.product.name }}: <span {{ sylius_test_html_attribute('skipped-reason') }}>{{ ('jpm_martin_sylius_subscription.ui.skipped_reason.' ~ cycle_item.skippedReason)|trans }}</span>
+                            </div>
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

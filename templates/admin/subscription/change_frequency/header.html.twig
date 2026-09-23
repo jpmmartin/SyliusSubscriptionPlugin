@@ -1,0 +1,18 @@
+{% from '@SyliusAdmin/shared/helper/breadcrumbs.html.twig' import breadcrumbs %}
+{% import '@SyliusAdmin/shared/helper/header.html.twig' as header %}
+
+{% set subscription = hookable_metadata.context.resource %}
+
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        {{ breadcrumbs([
+            { name: 'sylius.ui.dashboard', url: path('sylius_admin_dashboard'), active: false },
+            { name: 'jpm_martin_sylius_subscription.ui.subscriptions', url: path('jpm_martin_sylius_subscription_admin_subscription_index'), active: false },
+            { name: '#' ~ subscription.id, url: path('jpm_martin_sylius_subscription_admin_subscription_show', { id: subscription.id }), active: false },
+            { name: 'jpm_martin_sylius_subscription.ui.change_frequency', active: true },
+        ]) }}
+        <div class="row g-2 align-items-center">
+            <div class="col">{{ header.h1('jpm_martin_sylius_subscription.ui.change_frequency'|trans) }}</div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <service id="jpm_martin_sylius_subscription.management.frequency_changer" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChanger">
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="sylius.calculator.product_variant_price" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerInterface" alias="jpm_martin_sylius_subscription.management.frequency_changer" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.management.cycle_retrier" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrier">
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_placer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.charger" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface" alias="jpm_martin_sylius_subscription.management.cycle_retrier" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_frequency_change" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionFrequencyChangeType">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <tag name="form.type" />
+        </service>
+
+        <!-- Both the customer's account and the admin route here; each route says which subscriptions it may reach. -->
+        <service id="jpm_martin_sylius_subscription.controller.change_subscription_frequency"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\ChangeSubscriptionFrequencyAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <argument type="service" id="form.factory" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="twig" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.retry_subscription_cycle"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\RetrySubscriptionCycleAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.cycle_retrier" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription_cycle" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.twig.extension.subscription" class="JpmMartin\SyliusSubscriptionPlugin\Twig\SubscriptionExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.cycle_retrier" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <tag name="twig.extension" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.menu.shop_account" class="JpmMartin\SyliusSubscriptionPlugin\Menu\ShopAccountMenuListener">
+            <tag name="kernel.event_listener" event="sylius.menu.shop.account" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.menu.admin_main" class="JpmMartin\SyliusSubscriptionPlugin\Menu\AdminMainMenuListener">
+            <tag name="kernel.event_listener" event="sylius.menu.admin.main" />
+        </service>
+    </services>
+</container>

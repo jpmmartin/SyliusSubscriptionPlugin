@@ -1,0 +1,18 @@
+{% set subscription = hookable_metadata.context.subscription %}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    {% if jpm_martin_sylius_subscription_frequencies_to_change_to(subscription) is not empty %}
+        <a class="btn btn-outline-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_change_frequency', { id: subscription.id }) }}" {{ sylius_test_html_attribute('change-frequency') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.change_frequency'|trans }}
+        </a>
+    {% endif %}
+    {% if sylius_sm_can(subscription, 'jpm_martin_sylius_subscription', 'cancel') %}
+        <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_cancel', { id: subscription.id }) }}">
+            <input type="hidden" name="_method" value="PUT">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token(subscription.id) }}">
+            <button type="submit" class="btn btn-outline-danger" {{ sylius_test_html_attribute('cancel') }}>
+                {{ 'jpm_martin_sylius_subscription.ui.cancel_subscription'|trans }}
+            </button>
+        </form>
+    {% endif %}
+</div>

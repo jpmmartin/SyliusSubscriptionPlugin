@@ -1,0 +1,7 @@
+{% set open_cycle = jpm_martin_sylius_subscription_open_cycle(data) %}
+
+{% if open_cycle is null %}
+    <span class="text-secondary">-</span>
+{% else %}
+    {{ open_cycle.scheduledAt|date('d-m-Y') }}
+{% endif %}

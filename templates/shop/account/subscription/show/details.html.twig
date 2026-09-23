@@ -1,0 +1,25 @@
+{% from '@SyliusShop/shared/macro/money.html.twig' import format %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
+
+{% set subscription = hookable_metadata.context.subscription %}
+{% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
+
+<div class="mb-4">
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'sylius.ui.state'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-state') }}>{{ label(subscription.state) }}</div>
+    </div>
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.frequency'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-frequency') }}>{{ frequency(subscription) }}</div>
+    </div>
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</div>
+    </div>
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.next_renewal'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|format_date : '—' }}</div>
+    </div>
+</div>

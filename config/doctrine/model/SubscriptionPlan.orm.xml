@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!--
+        A way of subscribing to one variant. It hangs off the variant instead of being a variant of
+        its own, so the one-off purchase and the subscription of the same article share one stock.
+    -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlan" table="jpm_martin_sylius_subscription_plan">
+        <unique-constraints>
+            <unique-constraint name="uniq_jpm_martin_sylius_subscription_plan_code" columns="code" />
+        </unique-constraints>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <field name="code" column="code" type="string" length="255" />
+        <field name="name" column="name" type="string" length="255" />
+        <field name="intervalCount" column="interval_count" type="integer" />
+        <field name="intervalUnit" column="interval_unit" type="string" length="8" enum-type="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit" />
+        <field name="discountPercentage" column="discount_percentage" type="integer" />
+        <field name="maxCycles" column="max_cycles" type="integer" nullable="true" />
+        <field name="enabled" column="enabled" type="boolean" />
+
+        <!-- A plan means nothing without its variant. A variant that still has subscriptions cannot
+             be deleted anyway: the subscriptions reference the plan. -->
+        <many-to-one field="productVariant" target-entity="Sylius\Component\Core\Model\ProductVariantInterface">
+            <join-column name="product_variant_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription_frequency_collection"
+                 class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionFrequencyCollectionProvider"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <tag name="api_platform.state_provider" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.command_handler.add_subscription_item_to_cart"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\AddSubscriptionItemToCartHandler"
+        >
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="sylius.repository.product_variant" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="sylius.modifier.order" />
+            <argument type="service" id="sylius.factory.order_item" />
+            <argument type="service" id="sylius.modifier.order_item_quantity" />
+            <argument type="service" id="Sylius\Bundle\ApiBundle\Context\UserContextInterface" on-invalid="null" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.command_handler.repeat_cart"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\RepeatCartHandler"
+        >
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionFrequencyOfferedValidator">
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <tag name="validator.constraint_validator" />
+        </service>
+
+        <!-- The same priority as Sylius's own shop normalizers, ahead of API Platform's. -->
+        <service id="jpm_martin_sylius_subscription.serializer.normalizer.subscription_order_item"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Serializer\SubscriptionOrderItemNormalizer"
+        >
+            <argument type="service" id="sylius.section_resolver.uri_based" />
+            <argument type="collection">
+                <argument>sylius:shop:cart:show</argument>
+                <argument>sylius:shop:order:account:show</argument>
+                <argument>sylius:shop:order_item:show</argument>
+            </argument>
+            <tag name="serializer.normalizer" priority="64" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.command_handler.accept_subscription_consent"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\AcceptSubscriptionConsentHandler"
+        >
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionCheckoutRequirementsValidator">
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" />
+            <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <tag name="validator.constraint_validator" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.form.extension.checkout_complete" class="JpmMartin\SyliusSubscriptionPlugin\Form\Extension\SubscriptionConsentCompleteTypeExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <tag name="form.type_extension" />
+        </service>
+
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionItemAddableValidator">
+            <argument type="service" id="sylius.repository.product_variant" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="sylius.repository.order" />
+            <tag name="validator.constraint_validator" />
+        </service>
+    </services>
+</container>

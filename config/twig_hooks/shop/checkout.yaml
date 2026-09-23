@@ -1,0 +1,8 @@
+# The recurring-charge consent, after the notes and before the button that places the order. Sylius
+# closes this form without rendering the rest, so the field has to be placed by a hook.
+sylius_twig_hooks:
+    hooks:
+        'sylius_shop.checkout.complete.content.form':
+            jpm_martin_sylius_subscription_consent:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/checkout/complete/subscription_consent.html.twig'
+                priority: 50
