@@ -142,12 +142,34 @@ jobs:
                 name: Run Behat with JavaScript
                 run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" || vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" --rerun
 
+            # What made a page answer 500 is only in the application's log: print it here, and keep the
+            # log with Behat's pages and screenshots.
+            -
+                name: Show the application's errors
+                if: failure()
+                run: |
+                    mkdir -p etc/build
+                    cp var/log/test.log etc/build/ 2>/dev/null || true
+                    grep -h "CRITICAL" var/log/test.log || echo "No critical error in var/log/test.log."
+
+            # An artifact's name may not contain ":", which the database does, nor "^", which the
+            # Symfony version does.
+            -
+                name: Name the Behat logs
+                id: behat-logs
+                if: failure()
+                run: echo "name=behat-logs-php-${MATRIX_PHP}-symfony-${MATRIX_SYMFONY#^}-${MATRIX_DATABASE/:/-}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+                env:
+                    MATRIX_PHP: ${{ matrix.php }}
+                    MATRIX_SYMFONY: ${{ matrix.symfony }}
+                    MATRIX_DATABASE: ${{ matrix.database }}
+
             -
                 name: Upload Behat logs
                 uses: actions/upload-artifact@v4
                 if: failure()
                 with:
-                    name: "Behat logs - PHP ${{ matrix.php }} - Symfony ${{ matrix.symfony }} - ${{ matrix.database }} - ${{ github.run_id }}"
+                    name: ${{ steps.behat-logs.outputs.name }}
                     path: etc/build/
                     if-no-files-found: ignore
                     compression-level: 6
