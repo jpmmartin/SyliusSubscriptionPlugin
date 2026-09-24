@@ -84,7 +84,7 @@
             <argument type="service" id="sylius.command_bus" />
             <argument type="service" id="clock" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
-            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription_cycle" />
             <argument>%jpm_martin_sylius_subscription.missed_cycles%</argument>
             <tag name="console.command" />
         </service>
