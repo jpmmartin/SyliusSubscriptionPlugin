@@ -7,6 +7,12 @@
 >
     <!-- One of the store's frequencies, offered in the channels it is given, as a payment method is. -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequency" table="jpm_martin_sylius_subscription_frequency">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <unique-constraints>
             <unique-constraint name="uniq_jpm_martin_sylius_subscription_frequency_code" columns="code" />
         </unique-constraints>

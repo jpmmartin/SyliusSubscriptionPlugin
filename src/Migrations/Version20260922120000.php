@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
@@ -66,7 +67,7 @@ final class Version20260922120000 extends AbstractMigration
     /** A plan hangs off its variant and goes with it. */
     private function createPlanTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_plan');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_plan');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('product_variant_id', 'integer');
@@ -98,7 +99,7 @@ final class Version20260922120000 extends AbstractMigration
      */
     private function createSubscriptionTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('customer_id', 'integer');
@@ -140,7 +141,7 @@ final class Version20260922120000 extends AbstractMigration
     /** A cycle goes with its subscription; losing its order keeps the cycle and its history. */
     private function createCycleTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_cycle');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_cycle');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('subscription_id', 'integer');
@@ -166,7 +167,7 @@ final class Version20260922120000 extends AbstractMigration
 
     private function createChargeAttemptTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_charge_attempt');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_charge_attempt');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('cycle_id', 'integer');
@@ -183,7 +184,7 @@ final class Version20260922120000 extends AbstractMigration
 
     private function createConsentTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_consent');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_consent');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('order_id', 'integer');
@@ -194,5 +195,18 @@ final class Version20260922120000 extends AbstractMigration
 
         $table->addForeignKeyConstraint('sylius_order', ['order_id'], ['id'], ['onDelete' => 'CASCADE']);
         $table->addUniqueIndex(['order_id'], 'uniq_jpm_martin_sylius_subscription_consent_order');
+    }
+
+    /**
+     * In utf8mb4, as Sylius's own tables are, so text takes any character, emojis included; left to
+     * itself, Doctrine would create a MySQL or MariaDB table in utf8mb3. PostgreSQL ignores both.
+     */
+    private function createTable(Schema $schema, string $name): Table
+    {
+        $table = $schema->createTable($name);
+        $table->addOption('charset', 'utf8mb4');
+        $table->addOption('collation', 'utf8mb4_unicode_ci');
+
+        return $table;
     }
 }

@@ -143,11 +143,21 @@ jobs:
                 name: Run Behat without JavaScript
                 run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="~@javascript&&~@mink:chromedriver"
 
-            # A browser scenario that fails is run once more, as Sylius's PluginSkeleton does; one
-            # that only passes the second time still shows in this step's log.
+            # A browser scenario that fails is run once more, as Sylius's PluginSkeleton does. If it then
+            # passes, the job stays green but the run carries a warning naming it; if it fails again,
+            # the job fails.
             -
                 name: Run Behat with JavaScript
-                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" || vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" --rerun
+                run: |
+                    set -o pipefail
+                    mkdir -p etc/build
+                    behat() { vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" "$@"; }
+                    if behat | tee etc/build/behat-javascript.log; then
+                        exit 0
+                    fi
+                    failed=$(sed 's/\x1b\[[0-9;]*m//g' etc/build/behat-javascript.log | grep -oE 'features/[^ ]+\.feature:[0-9]+' | sort -u | paste -sd ' ' - || true)
+                    behat --rerun
+                    echo "::warning title=Browser scenarios passed only on a second try::${failed:-See the log of the step Run Behat with JavaScript.}"
 
             # What made a page answer 500 is only in the application's log: print it here, and keep the
             # log with Behat's pages and screenshots.

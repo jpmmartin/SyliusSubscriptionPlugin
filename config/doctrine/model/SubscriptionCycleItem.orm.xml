@@ -7,6 +7,12 @@
 >
     <!-- What a cycle took into its order from one item of its subscription, or why it skipped it. -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleItem" table="jpm_martin_sylius_subscription_cycle_item">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <id name="id" column="id" type="integer">
             <generator strategy="IDENTITY" />
         </id>

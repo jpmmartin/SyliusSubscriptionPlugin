@@ -12,6 +12,12 @@
         deliveries of the same message, from creating two orders or charging twice.
     -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycle" table="jpm_martin_sylius_subscription_cycle">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <unique-constraints>
             <!-- A cycle number is taken once per subscription, held by the database. -->
             <unique-constraint name="uniq_jpm_martin_sylius_subscription_cycle_number" columns="subscription_id,number" />

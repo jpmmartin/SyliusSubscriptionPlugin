@@ -10,6 +10,12 @@
         cannot be deleted, only disabled.
     -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\CartFrequency" table="jpm_martin_sylius_subscription_cart_frequency">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <id name="id" column="id" type="integer">
             <generator strategy="IDENTITY" />
         </id>
