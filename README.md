@@ -449,9 +449,10 @@ other's date.
 `.github/workflows/build.yaml` runs on every push and pull request:
 
 - once, `composer validate --strict`, ECS and PHPStan;
-- for each database above, with PHP 8.3 and Symfony 7.4, and on PostgreSQL 17 with PHP 8.2 and
-  Symfony 6.4 and with PHP 8.5 and Symfony 7.4: the container lint, the migrations' round trip,
-  PHPUnit, and Behat without and with JavaScript.
+- for each database above with PHP 8.3 and Symfony 7.4, and on PostgreSQL 17 with PHP 8.2 and
+  Symfony 6.4, and with PHP 8.4 and 8.5 and Symfony 7.4 (ten runs, every supported database, PHP and
+  Symfony at least once): the container lint, the migrations' round trip, PHPUnit, and Behat without
+  and with JavaScript.
 
 The test application is built by Sylius's own action, as in Sylius's PluginSkeleton, which migrates
 MariaDB as if it were MySQL; the tests then run with MariaDB named in `DATABASE_URL`, as a store
