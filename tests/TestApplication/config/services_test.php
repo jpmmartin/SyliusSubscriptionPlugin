@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Event\EventCollector;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Event\PublishThenFailHandler;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Gate\ScriptedCycleGate;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedGateway;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestCommandProvider;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestHandler;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Readme\TellTheCustomerAboutTheRenewal;
 
 return function (ContainerConfigurator $container) {
     if (str_starts_with($container->env(), 'test')) {
@@ -20,6 +23,25 @@ return function (ContainerConfigurator $container) {
             ->set('jpm_martin_sylius_subscription.test.cycle_gate', ScriptedCycleGate::class)
                 ->public()
                 ->tag('jpm_martin_sylius_subscription.cycle_gate')
+        ;
+
+        // Every event of the plugin, as a store's handler would receive it.
+        $services
+            ->set('jpm_martin_sylius_subscription.test.event_collector', EventCollector::class)
+                ->public()
+                ->tag('messenger.message_handler', ['bus' => 'sylius.event_bus'])
+        ;
+        $services
+            ->set('jpm_martin_sylius_subscription.test.publish_then_fail_handler', PublishThenFailHandler::class)
+                ->args([service('jpm_martin_sylius_subscription.event.publisher')])
+                ->tag('messenger.message_handler', ['bus' => 'sylius.command_bus'])
+        ;
+
+        // The README's example handler, as a store with autoconfiguration registers it.
+        $services
+            ->set(TellTheCustomerAboutTheRenewal::class)
+                ->autowire()
+                ->autoconfigure()
         ;
 
         // The "scripted" gateway factory: a card gateway whose answers the tests decide.

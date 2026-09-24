@@ -68,6 +68,11 @@ interface SubscriptionCycleInterface extends ResourceInterface, TimestampableInt
 
     public function setHoldReason(?string $holdReason): void;
 
+    /** When the renewal of this cycle was announced, so it is announced once; null until then. */
+    public function getRenewalNoticeAt(): ?\DateTimeImmutable;
+
+    public function setRenewalNoticeAt(?\DateTimeImmutable $renewalNoticeAt): void;
+
     /** When the scheduler should next try to charge, retry or reconcile this cycle. */
     public function getNextAttemptAt(): ?\DateTimeImmutable;
 

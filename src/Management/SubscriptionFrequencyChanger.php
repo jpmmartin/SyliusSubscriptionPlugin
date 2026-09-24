@@ -11,6 +11,8 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionTermsInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionFrequencyChanged;
 use JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\SubscriptionPlanPriceProcessor;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionFrequencyRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
@@ -39,6 +41,7 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         private readonly SubscriptionFrequencyRepositoryInterface $frequencyRepository,
         private readonly ProductVariantPricesCalculatorInterface $productVariantPricesCalculator,
         private readonly SubscriptionSchedulerInterface $scheduler,
+        private readonly EventPublisher $eventPublisher,
     ) {
     }
 
@@ -72,6 +75,12 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         $subscription->setDeliveryIntervalUnit($interval->unit);
         $subscription->setScheduleAnchorAt($openCycle->getScheduledAt());
         $subscription->setScheduleAnchorCycle($openCycle->getNumber());
+
+        $subscriptionId = $subscription->getId();
+        if (null === $subscriptionId) {
+            return;
+        }
+        $this->eventPublisher->publish(new SubscriptionFrequencyChanged($subscriptionId, $interval->count, $interval->unit->value));
     }
 
     /**

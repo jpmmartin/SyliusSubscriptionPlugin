@@ -24,6 +24,14 @@ interface SubscriptionCycleRepositoryInterface extends RepositoryInterface
      */
     public function findDue(\DateTimeImmutable $now): array;
 
+    /**
+     * The scheduled cycles of active subscriptions due after $now and by $until whose renewal has not been
+     * announced yet, read with their version.
+     *
+     * @return list<array{id: int, version: int}>
+     */
+    public function findToAnnounce(\DateTimeImmutable $now, \DateTimeImmutable $until): array;
+
     /** The cycle, unless it was changed since it was read at $version: then someone else has dealt with it. */
     public function findUnchangedSince(int $id, int $version): ?SubscriptionCycleInterface;
 

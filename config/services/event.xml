@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <!-- The plugin's events, published on Sylius's event bus for the store to listen to. -->
+        <service id="jpm_martin_sylius_subscription.event.publisher" class="JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher">
+            <argument type="service" id="sylius.event_bus" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.listener.workflow.publish_lifecycle_events"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\PublishLifecycleEventsListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+            <argument type="service" id="logger" on-invalid="ignore" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed" method="onSubscriptionTransition" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription_cycle.completed" method="onCycleTransition" />
+        </service>
+    </services>
+</container>

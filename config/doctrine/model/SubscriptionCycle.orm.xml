@@ -36,6 +36,7 @@
         <field name="scheduledAt" column="scheduled_at" type="datetime_immutable" />
         <field name="state" column="state" type="string" length="24" />
         <field name="holdUntil" column="hold_until" type="datetime_immutable" nullable="true" />
+        <field name="renewalNoticeAt" column="renewal_notice_at" type="datetime_immutable" nullable="true" />
         <field name="holdReason" column="hold_reason" type="text" nullable="true" />
         <field name="nextAttemptAt" column="next_attempt_at" type="datetime_immutable" nullable="true" />
         <field name="cancellationReason" column="cancellation_reason" type="text" nullable="true" />

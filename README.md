@@ -48,6 +48,9 @@ with all of them, charged without the customer present, with retries when a char
   allows: suspend, reactivate, cancel, change the frequency and retry a failed renewal.
 - **Committed cycles**: a read-only query of what the active subscriptions of a variant will renew
   within a horizon, for planning stock.
+- **Events, no emails**: the plugin tells no customer anything. It publishes an event of its own at every
+  moment of a subscription's life, a renewal coming up and a declined charge that will be retried
+  included, for the store to tell its customers as it sees fit. See [Events](#events).
 
 ## Requirements
 
@@ -67,6 +70,9 @@ with all of them, charged without the customer present, with retries when a char
   `sylius_order`. Its own graphs are always run by Symfony Workflow.
 - A payment gateway that can charge a stored payment method without the customer. See
   [Charging renewals](#charging-renewals).
+- **Your own customer notices.** The plugin sends no email, not even before charging a renewal. Listen to
+  its [events](#events) to tell your customers that a renewal is coming, that a charge was declined or
+  that their subscription changed; charging without telling them is what brings chargebacks.
 
 ## Installation
 
@@ -160,6 +166,9 @@ jpm_martin_sylius_subscription:
     # Cycles failed in a row after which a subscription is suspended: a positive integer, or null to
     # never suspend. A paid cycle and a reactivation start the count afresh.
     suspend_after_failed_cycles: 3
+    # Days before a renewal at which RenewalUpcoming is published, once per cycle; null never publishes
+    # it. See "Events".
+    renewal_notice_days: 3
     # What becomes of the dates of a calendar that came before a cycle could be scheduled on them:
     # skip, charge or skip_late. See "Missed dates".
     missed_cycles: skip
@@ -395,6 +404,94 @@ horizon, each with its subscription, item, date and quantity, never past the cyc
 or frequency still allows. It follows the missed cycle policy: a date the policy will skip is not
 returned, nor a cycle it will cancel.
 
+## Events
+
+The plugin sends no email, SMS or any other notice to customers: what to say, in which words and through
+which channel is the store's. It publishes instead an event of its own at every moment of a
+subscription's life, as a Symfony Messenger message on `sylius.event_bus`, the bus Sylius publishes its
+own events on. Each event is a class of `JpmMartin\SyliusSubscriptionPlugin\Event` with public,
+read-only properties: identifiers and simple data, never entities, so it can go through an asynchronous
+transport. Every one implements `SubscriptionEventInterface`, whose `getSubscriptionId()` gives the
+subscription; listen to that interface to receive them all.
+
+| Event | Published when | Data besides `subscriptionId` |
+|---|---|---|
+| `SubscriptionActivated` | the subscription is activated: its initial order was paid | — |
+| `SubscriptionSuspended` | it is suspended, by an administrator or after failed cycles in a row | — |
+| `SubscriptionReactivated` | it is reactivated | — |
+| `SubscriptionCancelled` | it is cancelled, by its customer or an administrator | — |
+| `SubscriptionCompleted` | it ends: no item has a cycle left to renew | — |
+| `SubscriptionFrequencyChanged` | its frequency changes | `intervalCount`, `intervalUnit` (`day`, `week`, `month` or `year`) |
+| `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
+| `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
+| `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
+| `RenewalChargeDeclined` | a charge is declined or not attempted, and will be retried | `cycleId`, `cycleNumber`, `orderId`, `nextAttemptAt`, `reason`, `code` |
+| `RenewalPaid` | the renewal order is paid | `cycleId`, `cycleNumber`, `orderId` |
+| `RenewalFailed` | the cycle fails: retries run out, a gate rejects it, its hold expires or nothing could be renewed | `cycleId`, `cycleNumber`, `orderId` (null without an order), `reason` |
+| `RenewalRetried` | an administrator retries a failed cycle; `RenewalPaid` or `RenewalFailed` follows with its new order | `cycleId`, `cycleNumber` |
+| `RenewalCancelled` | the cycle is cancelled: its order was cancelled before being paid, the subscription stopped or the cycle was skipped as late | `cycleId`, `cycleNumber`, `orderId` and `reason`, each null when there is none |
+
+The renewal events come from renewals only: the first cycle is the initial order, paid when the
+subscription is activated. The last retry that is declined publishes `RenewalFailed`, not
+`RenewalChargeDeclined`, and an administrator's retry, which is charged once, never publishes
+`RenewalChargeDeclined`. `RenewalUpcoming` is published by `jpm-martin:subscription:process-cycles` on
+its first run within `renewal_notice_days` of a scheduled cycle of an active subscription, and not for
+a cycle that is already due. So it reaches your customers only if the command runs at least once a day
+or so.
+
+A handler, in a store with autoconfiguration:
+
+```php
+namespace App\Subscription;
+
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalUpcoming;
+use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionRepositoryInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+
+#[AsMessageHandler(bus: 'sylius.event_bus')]
+final class TellTheCustomerAboutTheRenewal
+{
+    /** @param SubscriptionRepositoryInterface<SubscriptionInterface> $subscriptions */
+    public function __construct(private readonly SubscriptionRepositoryInterface $subscriptions)
+    {
+    }
+
+    public function __invoke(RenewalUpcoming $event): void
+    {
+        $subscription = $this->subscriptions->find($event->subscriptionId);
+        if (!$subscription instanceof SubscriptionInterface) {
+            return;
+        }
+
+        // Email $subscription->getCustomer() that it renews on $event->scheduledAt, with your own sender.
+    }
+}
+```
+
+When they are delivered:
+
+- An event published while the command processes a cycle is delivered once that cycle's change is
+  stored and committed, as Sylius's own events are, and not at all if it fails.
+- An event of anything done outside the command, such as an administrator suspending a subscription, the
+  customer changing its frequency or the checkout activating it, is handled while that request runs,
+  before its changes are stored.
+- A handler run synchronously that throws makes the command report its cycle as failed although the
+  cycle was stored. Running the command again does not charge it twice, since the cycle changed, but the
+  report misleads.
+
+So route the events you send notices from to an asynchronous transport:
+
+```yaml
+framework:
+    messenger:
+        routing:
+            'JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface': async
+```
+
+Publishing never stops what happens to a subscription: a transition of a subscription, cycle or renewal
+order that is not stored yet, which no flow of the plugin makes, publishes nothing and is logged.
+
 ## Upgrading
 
 From a version that charged each missed date, one per run of the command, the default is now to skip
@@ -414,7 +511,8 @@ From a version with one subscription per order line:
 ## Known limitations
 
 - Renewal orders are placed from code, and Sylius sends its order confirmation email only from the
-  shop's checkout and the API's, so no confirmation email is sent for them.
+  shop's checkout and the API's, so no confirmation is sent for them. Send your own from `RenewalPaid`;
+  see [Events](#events).
 - An order that skips the payment step cannot start a subscription: the plugin needs the payment
   method it will charge the renewals with.
 - With `missed_cycles: charge`, the dates a subscription missed while the command did not run are

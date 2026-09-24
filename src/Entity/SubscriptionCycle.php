@@ -31,6 +31,8 @@ class SubscriptionCycle implements SubscriptionCycleInterface
 
     protected ?\DateTimeImmutable $nextAttemptAt = null;
 
+    protected ?\DateTimeImmutable $renewalNoticeAt = null;
+
     protected ?string $cancellationReason = null;
 
     protected ?int $version = 1;
@@ -126,6 +128,16 @@ class SubscriptionCycle implements SubscriptionCycleInterface
     public function setHoldReason(?string $holdReason): void
     {
         $this->holdReason = $holdReason;
+    }
+
+    public function getRenewalNoticeAt(): ?\DateTimeImmutable
+    {
+        return $this->renewalNoticeAt;
+    }
+
+    public function setRenewalNoticeAt(?\DateTimeImmutable $renewalNoticeAt): void
+    {
+        $this->renewalNoticeAt = $renewalNoticeAt;
     }
 
     public function getNextAttemptAt(): ?\DateTimeImmutable
