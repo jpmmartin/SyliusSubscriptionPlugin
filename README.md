@@ -463,8 +463,9 @@ MariaDB as if it were MySQL; the tests then run with MariaDB named in `DATABASE_
 configures it. A failing combination does not stop the others, and the Behat logs and screenshots of
 a failed run are kept as an artifact. A browser scenario that fails is run once more: if it then
 passes, the run stays green but carries a warning for each scenario that failed, with its title and
-at its line in the feature file; if it fails again, the job fails. GitHub shows ten warnings a step,
-so past ten scenarios the tenth warning names the rest, each with its file and line.
+at its line in the feature file; if it fails again, the job fails. A scenario broken by a hook, which
+Behat lists without its title, adds a warning pointing to the step's log. GitHub shows ten warnings a
+step, so past that the last warning names the rest, each with its file and line.
 
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with
