@@ -437,7 +437,9 @@ subscription is activated. The last retry that is declined publishes `RenewalFai
 `RenewalChargeDeclined`. `RenewalUpcoming` is published by `jpm-martin:subscription:process-cycles` on
 its first run within `renewal_notice_days` of a scheduled cycle of an active subscription, and not for
 a cycle that is already due. So it reaches your customers only if the command runs at least once a day
-or so.
+or so. A subscription that renews more often than that, every day for instance, has its next cycle
+within the notice as soon as it is scheduled: that cycle is announced in the same run that charged the
+one before, so less than `renewal_notice_days` ahead.
 
 A handler, in a store with autoconfiguration:
 
@@ -474,13 +476,17 @@ When they are delivered:
 - An event published while the command processes a cycle is delivered once that cycle's change is
   stored and committed, as Sylius's own events are, and not at all if it fails.
 - An event of anything done outside the command, such as an administrator suspending a subscription, the
-  customer changing its frequency or the checkout activating it, is handled while that request runs,
-  before its changes are stored.
-- A handler run synchronously that throws makes the command report its cycle as failed although the
-  cycle was stored. Running the command again does not charge it twice, since the cycle changed, but the
-  report misleads.
+  customer cancelling it or changing its frequency, or the payment of its initial order activating it,
+  may be handled while that request runs, before its changes are stored. It waits for them only when
+  the action is itself a message of one of Sylius's command buses, which commit before delivering.
+- A handler run synchronously that throws:
+  - in the command, makes it report the cycle as failed although the cycle was stored. Running the
+    command again does not charge it twice, since the cycle changed, but the report misleads;
+  - anywhere else, stops the action, and its change is not stored: while your mail service is down, a
+    customer could not cancel their subscription, nor an administrator suspend one.
 
-So route the events you send notices from to an asynchronous transport:
+So route the events you send notices from to an asynchronous transport, where a notice that fails is
+retried by the worker instead of stopping what happens to a subscription:
 
 ```yaml
 framework:
@@ -489,8 +495,9 @@ framework:
             'JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface': async
 ```
 
-Publishing never stops what happens to a subscription: a transition of a subscription, cycle or renewal
-order that is not stored yet, which no flow of the plugin makes, publishes nothing and is logged.
+The plugin itself never stops a transition to publish its event: one of a subscription, cycle or
+renewal order that is not stored yet, which no flow of the plugin makes, publishes nothing and is
+logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
 
