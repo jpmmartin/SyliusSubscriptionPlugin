@@ -9,13 +9,18 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
+use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Webmozart\Assert\Assert;
 
 /**
  * The next cycle's number follows the last one, whatever became of it, and its date comes from the
- * calendar, so a failed or late cycle never moves the ones after it.
+ * calendar, so a failed or late cycle never moves the ones after it. When that date has already come,
+ * the missed cycle policy says how many of the dates that came to skip: a skipped date creates no
+ * cycle, it only moves the cycle number the anchor stands for, as reactivating does.
  */
 final class SubscriptionScheduler implements SubscriptionSchedulerInterface
 {
@@ -30,6 +35,9 @@ final class SubscriptionScheduler implements SubscriptionSchedulerInterface
         private readonly FactoryInterface $cycleFactory,
         private readonly SubscriptionCalendarInterface $calendar,
         private readonly StateMachineInterface $stateMachine,
+        private readonly MissedCyclePolicyInterface $missedCyclePolicy,
+        private readonly ClockInterface $clock,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
     }
 
@@ -65,11 +73,45 @@ final class SubscriptionScheduler implements SubscriptionSchedulerInterface
             $number = max($number, $cycle->getNumber() + 1);
         }
 
+        $skipped = $this->skipMissedDates($subscription, $number);
+
         $next = $this->cycleFactory->createNew();
         Assert::isInstanceOf($next, SubscriptionCycleInterface::class);
         $next->setNumber($number);
-        $next->setScheduledAt($this->calendar->dateOfCycle($subscription, $number));
+        $scheduledAt = $this->calendar->dateOfCycle($subscription, $number);
+        $next->setScheduledAt($scheduledAt);
         $subscription->addCycle($next);
+
+        if (0 < $skipped) {
+            $this->logger->warning('Subscription {subscription} skipped {skipped} date(s) of its calendar that had already come; its next cycle is on {date}.', [
+                'subscription' => $subscription->getId(),
+                'skipped' => $skipped,
+                'date' => $scheduledAt->format(\DateTimeInterface::ATOM),
+            ]);
+        }
+    }
+
+    /** @return int how many dates were skipped */
+    private function skipMissedDates(SubscriptionInterface $subscription, int $number): int
+    {
+        $now = $this->clock->now();
+        $skipped = $this->missedCyclePolicy->datesToSkip($subscription, $number, $now);
+        if (0 === $skipped) {
+            return 0;
+        }
+
+        $come = $this->calendar->countDatesUntil($subscription, $number, $now);
+        if ($skipped < 0 || $skipped > $come) {
+            throw new \LogicException(\sprintf(
+                'The missed cycle policy may skip from 0 to the %d date(s) of subscription %s that have come, not %d.',
+                $come,
+                (string) $subscription->getId(),
+                $skipped,
+            ));
+        }
+        $subscription->setScheduleAnchorCycle($subscription->getScheduleAnchorCycle() - $skipped);
+
+        return $skipped;
     }
 
     public function findOpenCycle(SubscriptionInterface $subscription): ?SubscriptionCycleInterface

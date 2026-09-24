@@ -72,6 +72,8 @@
             <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
             <argument type="service" id="sylius_abstraction.state_machine" />
             <argument type="service" id="clock" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 
@@ -81,6 +83,9 @@
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
             <argument type="service" id="sylius.command_bus" />
             <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument>%jpm_martin_sylius_subscription.missed_cycles%</argument>
             <tag name="console.command" />
         </service>
 

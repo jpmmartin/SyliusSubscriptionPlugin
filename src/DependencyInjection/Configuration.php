@@ -84,6 +84,11 @@ final class Configuration implements ConfigurationInterface
                         ->thenInvalid('The number of failed cycles in a row before suspending must be a positive integer, or null to never suspend; got %s.')
                     ->end()
                 ->end()
+                ->enumNode('missed_cycles')
+                    ->info('What the default missed cycle policy does with the dates of a calendar that passed before a cycle could be scheduled on them, as after the cycles command stopped for a while. "skip": the late cycle is charged once and the next goes to the first date to come. "charge": each passed date is charged, one per run of the command. "skip_late": as "skip", and a scheduled cycle whose next date has also passed is cancelled instead of charged.')
+                    ->values(['skip', 'charge', 'skip_late'])
+                    ->defaultValue('skip')
+                ->end()
                 // Removed: kept only to point a store that still sets it to its replacement.
                 ->variableNode('on_failure')
                     ->validate()
