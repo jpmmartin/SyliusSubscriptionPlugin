@@ -21,6 +21,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $config['final_decline_codes']);
         self::assertSame(3, $config['suspend_after_failed_cycles']);
         self::assertSame('skip', $config['missed_cycles']);
+        self::assertSame(3, $config['renewal_notice_days']);
         self::assertSame('1', $config['consent_version']);
         self::assertArrayNotHasKey('on_failure', $config);
     }
@@ -61,6 +62,28 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         $this->process(['missed_cycles' => 'charge_all']);
+    }
+
+    public function testAStoreCanChooseWhenToAnnounceARenewalOrNeverToAnnounceIt(): void
+    {
+        self::assertSame(7, $this->process(['renewal_notice_days' => 7])['renewal_notice_days']);
+        self::assertNull($this->process(['renewal_notice_days' => null])['renewal_notice_days']);
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function invalidRenewalNoticeDays(): iterable
+    {
+        yield 'zero' => [0];
+        yield 'negative' => [-3];
+        yield 'not a number' => ['three'];
+    }
+
+    #[DataProvider('invalidRenewalNoticeDays')]
+    public function testItRejectsRenewalNoticeDaysThatAreNotAPositiveInteger(mixed $days): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['renewal_notice_days' => $days]);
     }
 
     public function testAStoreCanChooseNeverToRetry(): void

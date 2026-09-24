@@ -193,7 +193,7 @@ final class MissedCycleDatesTest extends LifecycleTestCase
 
         self::assertStringContainsString('1 due subscription cycle(s) are more than one interval late', $display);
         self::assertStringContainsString('(missed_cycles: skip)', $display);
-        self::assertStringContainsString('2 due subscription cycle(s) processed, 0 failed.', $display);
+        self::assertStringContainsString('2 due subscription cycle(s) processed, 0 renewal(s) announced, 0 failed.', $display);
     }
 
     public function testTheCommandSaysNothingAboutLateCyclesWhenNoneIs(): void
@@ -205,7 +205,7 @@ final class MissedCycleDatesTest extends LifecycleTestCase
         $display = $this->displayOf($this->runTheCycleCommand());
 
         self::assertStringNotContainsString('late', $display, 'Three days late is less than an interval.');
-        self::assertStringContainsString('1 due subscription cycle(s) processed, 0 failed.', $display);
+        self::assertStringContainsString('1 due subscription cycle(s) processed, 0 renewal(s) announced, 0 failed.', $display);
     }
 
     public function testAPolicyThatSkipsDatesThatHaveNotComeIsRefused(): void

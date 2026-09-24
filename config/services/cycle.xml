@@ -59,6 +59,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
             <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Cycle\RetryPolicyInterface" />
             <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleChargerInterface" alias="jpm_martin_sylius_subscription.cycle.charger" />
 
@@ -86,7 +87,17 @@
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
             <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription_cycle" />
             <argument>%jpm_martin_sylius_subscription.missed_cycles%</argument>
+            <argument>%jpm_martin_sylius_subscription.renewal_notice_days%</argument>
             <tag name="console.command" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.command_handler.notify_upcoming_renewal"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\NotifyUpcomingRenewalHandler"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+            <argument type="service" id="clock" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 
         <!-- A paid renewal order pays its cycle; the initial order's payment is handled in subscription.xml. -->

@@ -49,11 +49,12 @@ final class CycleGateKeeper implements CycleGateKeeperInterface
             return true;
         }
 
-        if ($this->stateMachine->can($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_HOLD)) {
-            $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_HOLD);
-            $cycle->setHoldUntil($until);
-        }
+        // Set before the transition is applied, so its event carries them.
         $cycle->setHoldReason(implode(' ', $reasons));
+        if ($this->stateMachine->can($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_HOLD)) {
+            $cycle->setHoldUntil($until);
+            $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_HOLD);
+        }
 
         $holdUntil = $cycle->getHoldUntil();
         if (null !== $holdUntil && $this->clock->now() >= $holdUntil) {

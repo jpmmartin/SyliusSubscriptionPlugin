@@ -6,6 +6,8 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Cycle;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttemptInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher;
+use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalChargeDeclined;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\ChargeOutcome;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface;
 use Psr\Clock\ClockInterface;
@@ -26,6 +28,7 @@ final class CycleCharger implements CycleChargerInterface
         private readonly CycleFailureHandlerInterface $failureHandler,
         private readonly RetryPolicyInterface $retryPolicy,
         private readonly ClockInterface $clock,
+        private readonly EventPublisher $eventPublisher,
     ) {
     }
 
@@ -102,5 +105,22 @@ final class CycleCharger implements CycleChargerInterface
         }
 
         $cycle->setNextAttemptAt($nextAttemptAt);
+
+        // Publishing never stops a charge: a cycle not stored yet has no identifier to carry.
+        $subscriptionId = $cycle->getSubscription()?->getId();
+        $cycleId = $cycle->getId();
+        $orderId = $cycle->getOrder()?->getId();
+        if (null === $subscriptionId || null === $cycleId || null === $orderId) {
+            return;
+        }
+        $this->eventPublisher->publish(new RenewalChargeDeclined(
+            $subscriptionId,
+            $cycleId,
+            $cycle->getNumber(),
+            (int) $orderId,
+            $nextAttemptAt,
+            $outcome->reason,
+            $outcome->code,
+        ));
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Console\Command;
 
 use Doctrine\Persistence\ObjectManager;
+use JpmMartin\SyliusSubscriptionPlugin\Command\NotifyUpcomingRenewal;
 use JpmMartin\SyliusSubscriptionPlugin\Command\ProcessSubscriptionCycle;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
@@ -25,6 +26,9 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *
  * It also says how many of the due cycles are more than one interval late, which is what the store
  * sees after its scheduler stopped for a while; the missed cycle policy decides what becomes of them.
+ *
+ * Then it announces the renewals due within renewal_notice_days that have not been announced yet: one
+ * NotifyUpcomingRenewal message each, handled the same way, so each renewal is announced once.
  */
 #[AsCommand(name: 'jpm-martin:subscription:process-cycles', description: 'Processes the subscription cycles that are due.')]
 final class ProcessSubscriptionCyclesCommand extends Command
@@ -37,6 +41,7 @@ final class ProcessSubscriptionCyclesCommand extends Command
         private readonly SubscriptionCalendarInterface $calendar,
         private readonly ObjectManager $entityManager,
         private readonly string $missedCycles,
+        private readonly ?int $renewalNoticeDays = null,
     ) {
         parent::__construct();
     }
@@ -70,9 +75,26 @@ final class ProcessSubscriptionCyclesCommand extends Command
             }
         }
 
-        $io->success(\sprintf('%d due subscription cycle(s) processed, %d failed.', \count($due) - $failed, $failed));
+        $announced = 0;
+        $failedNotices = 0;
+        if (null !== $this->renewalNoticeDays) {
+            // Read after the due cycles, so a cycle scheduled by one of them is announced too if it is near.
+            $now = $this->clock->now();
+            $until = \DateTimeImmutable::createFromInterface($now)->add(new \DateInterval(\sprintf('P%dD', $this->renewalNoticeDays)));
+            foreach ($this->cycleRepository->findToAnnounce($now, $until) as $cycle) {
+                try {
+                    $this->commandBus->dispatch(new NotifyUpcomingRenewal($cycle['id'], $cycle['version']));
+                    ++$announced;
+                } catch (\Throwable $exception) {
+                    ++$failedNotices;
+                    $io->error(\sprintf('Renewal notice of subscription cycle %d: %s', $cycle['id'], $exception->getMessage()));
+                }
+            }
+        }
 
-        return 0 === $failed ? Command::SUCCESS : Command::FAILURE;
+        $io->success(\sprintf('%d due subscription cycle(s) processed, %d renewal(s) announced, %d failed.', \count($due) - $failed, $announced, $failed + $failedNotices));
+
+        return 0 === $failed + $failedNotices ? Command::SUCCESS : Command::FAILURE;
     }
 
     /**

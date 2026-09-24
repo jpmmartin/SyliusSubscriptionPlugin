@@ -41,6 +41,30 @@ class SubscriptionCycleRepository extends EntityRepository implements Subscripti
         return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'version' => (int) $row['version']], $rows);
     }
 
+    public function findToAnnounce(\DateTimeImmutable $now, \DateTimeImmutable $until): array
+    {
+        /** @var list<array{id: int|string, version: int|string}> $rows */
+        $rows = $this->createQueryBuilder('o')
+            ->select('o.id AS id', 'o.version AS version')
+            ->innerJoin('o.subscription', 'subscription')
+            ->andWhere('subscription.state = :active')
+            ->andWhere('o.state = :scheduled')
+            ->andWhere('o.scheduledAt > :now')
+            ->andWhere('o.scheduledAt <= :until')
+            ->andWhere('o.renewalNoticeAt IS NULL')
+            ->setParameter('active', SubscriptionInterface::STATE_ACTIVE)
+            ->setParameter('scheduled', SubscriptionCycleInterface::STATE_SCHEDULED)
+            ->setParameter('now', $now)
+            ->setParameter('until', $until)
+            ->addOrderBy('o.scheduledAt', 'ASC')
+            ->addOrderBy('o.id', 'ASC')
+            ->getQuery()
+            ->getArrayResult()
+        ;
+
+        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'version' => (int) $row['version']], $rows);
+    }
+
     public function findUnchangedSince(int $id, int $version): ?SubscriptionCycleInterface
     {
         try {
