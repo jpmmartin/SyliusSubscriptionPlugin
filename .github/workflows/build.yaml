@@ -144,8 +144,9 @@ jobs:
                 run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="~@javascript&&~@mink:chromedriver"
 
             # A browser scenario that fails is run once more, as Sylius's PluginSkeleton does. If it then
-            # passes, the job stays green but the run carries a warning naming it; if it fails again,
-            # the job fails.
+            # passes, the job stays green but the run carries a warning for each scenario that failed,
+            # with its title and at its line; if it fails again, the job fails. GitHub shows ten
+            # warnings a step, so past ten the tenth names the rest.
             -
                 name: Run Behat with JavaScript
                 run: |
@@ -155,9 +156,34 @@ jobs:
                     if behat | tee etc/build/behat-javascript.log; then
                         exit 0
                     fi
-                    failed=$(sed 's/\x1b\[[0-9;]*m//g' etc/build/behat-javascript.log | grep -oE 'features/[^ ]+\.feature:[0-9]+' | sort -u | paste -sd ' ' - || true)
+                    # Each failure in Behat's summary starts "001 Scenario: <title> # <file>:<line>"; the
+                    # line of the step that failed follows it, indented, and is left out.
+                    mapfile -t failed < <(sed 's/\x1b\[[0-9;]*m//g' etc/build/behat-javascript.log \
+                        | sed -nE 's/^[0-9]{3,} (.*[^ ]) +# ([^ ]+\.feature:[0-9]+)$/\2 \1/p' | awk '!seen[$1]++')
                     behat --rerun
-                    echo "::warning title=Browser scenarios passed only on a second try::${failed:-See the log of the step Run Behat with JavaScript.}"
+                    if [ ${#failed[@]} -eq 0 ]; then
+                        echo "::warning title=Browser scenarios passed only on a second try::See the log of the step Run Behat with JavaScript."
+                        exit 0
+                    fi
+                    # Escaped as GitHub's own toolkit does: "%" in a message, and ":" and "," too in a property.
+                    rest=()
+                    for i in "${!failed[@]}"; do
+                        location=${failed[$i]%% *}
+                        name=${failed[$i]#* }
+                        name=${name//%/%25}
+                        if [ ${#failed[@]} -gt 10 ] && [ "$i" -ge 9 ]; then
+                            rest+=("$name (${location//%/%25})")
+                            continue
+                        fi
+                        file=${location%:*}
+                        file=${file//%/%25}
+                        file=${file//:/%3A}
+                        file=${file//,/%2C}
+                        echo "::warning file=$file,line=${location##*:},title=Browser scenario passed only on a second try::$name"
+                    done
+                    if [ ${#rest[@]} -gt 0 ]; then
+                        echo "::warning title=Browser scenarios passed only on a second try::$(printf '%s; ' "${rest[@]}" | sed 's/; $//')"
+                    fi
 
             # What made a page answer 500 is only in the application's log: print it here, and keep the
             # log with Behat's pages and screenshots.
