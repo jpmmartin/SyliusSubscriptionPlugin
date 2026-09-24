@@ -58,6 +58,10 @@ with all of them, charged without the customer present, with retries when a char
   regard to case, as Sylius's own are: `MONTHLY` and `monthly` are the same code there. On MariaDB,
   name it in `serverVersion`, as Doctrine asks (`?serverVersion=mariadb-11.4.2`): given a bare number,
   Doctrine takes MariaDB for MySQL and misreads column defaults when comparing schemas.
+- On MySQL and MariaDB, the plugin's tables are created in `utf8mb4` with `utf8mb4_unicode_ci`, as
+  Sylius's are, so their text takes any character, emojis included. The connection has to carry them
+  too: set `charset: utf8mb4` in your Doctrine connection if you want emojis anywhere, in Sylius's
+  tables as in the plugin's.
 - The Symfony Workflow state machine adapter for Sylius's order graphs, which is Sylius 2's default:
   the plugin reacts to the workflow events of `sylius_order_checkout`, `sylius_order_payment` and
   `sylius_order`. Its own graphs are always run by Symfony Workflow.
@@ -456,8 +460,10 @@ other's date.
 
 The test application is built by Sylius's own action, as in Sylius's PluginSkeleton, which migrates
 MariaDB as if it were MySQL; the tests then run with MariaDB named in `DATABASE_URL`, as a store
-configures it. A failing combination does not stop the others, a browser scenario that fails is run
-once more, and the Behat logs and screenshots of a failed run are kept as an artifact.
+configures it. A failing combination does not stop the others, and the Behat logs and screenshots of
+a failed run are kept as an artifact. A browser scenario that fails is run once more: if it then
+passes, the run stays green but carries a warning naming the scenario; if it fails again, the job
+fails.
 
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with

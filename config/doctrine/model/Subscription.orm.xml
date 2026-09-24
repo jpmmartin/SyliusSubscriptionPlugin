@@ -12,6 +12,12 @@
         equal, so a prepaid plan can be added without reshaping the table.
     -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\Subscription" table="jpm_martin_sylius_subscription">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <indexes>
             <index name="idx_jpm_martin_sylius_subscription_state" columns="state" />
         </indexes>

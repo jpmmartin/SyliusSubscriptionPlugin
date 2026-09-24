@@ -22,7 +22,7 @@ final class Version20260923120300 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $frequency = $schema->createTable('jpm_martin_sylius_subscription_frequency');
+        $frequency = $this->createTable($schema, 'jpm_martin_sylius_subscription_frequency');
         $frequency->addColumn('id', 'integer', ['autoincrement' => true]);
         $frequency->addColumn('code', 'string', ['length' => 255]);
         $frequency->addColumn('name', 'string', ['length' => 255]);
@@ -34,21 +34,21 @@ final class Version20260923120300 extends AbstractMigration
         $frequency->setPrimaryKey(['id']);
         $frequency->addUniqueIndex(['code'], 'uniq_jpm_martin_sylius_subscription_frequency_code');
 
-        $channels = $schema->createTable('jpm_martin_sylius_subscription_frequency_channels');
+        $channels = $this->createTable($schema, 'jpm_martin_sylius_subscription_frequency_channels');
         $channels->addColumn('frequency_id', 'integer');
         $channels->addColumn('channel_id', 'integer');
         $channels->setPrimaryKey(['frequency_id', 'channel_id']);
         $channels->addForeignKeyConstraint('jpm_martin_sylius_subscription_frequency', ['frequency_id'], ['id'], ['onDelete' => 'CASCADE']);
         $channels->addForeignKeyConstraint('sylius_channel', ['channel_id'], ['id'], ['onDelete' => 'CASCADE']);
 
-        $repeatable = $schema->createTable('jpm_martin_sylius_subscription_repeatable_variant');
+        $repeatable = $this->createTable($schema, 'jpm_martin_sylius_subscription_repeatable_variant');
         $repeatable->addColumn('id', 'integer', ['autoincrement' => true]);
         $repeatable->addColumn('product_variant_id', 'integer');
         $repeatable->setPrimaryKey(['id']);
         $repeatable->addUniqueIndex(['product_variant_id']);
         $repeatable->addForeignKeyConstraint('sylius_product_variant', ['product_variant_id'], ['id'], ['onDelete' => 'CASCADE']);
 
-        $cart = $schema->createTable('jpm_martin_sylius_subscription_cart_frequency');
+        $cart = $this->createTable($schema, 'jpm_martin_sylius_subscription_cart_frequency');
         $cart->addColumn('id', 'integer', ['autoincrement' => true]);
         $cart->addColumn('order_id', 'integer');
         $cart->addColumn('frequency_id', 'integer');
@@ -91,5 +91,18 @@ final class Version20260923120300 extends AbstractMigration
             }
         }
         $table->dropColumn($column);
+    }
+
+    /**
+     * In utf8mb4, as Sylius's own tables are, so text takes any character, emojis included; left to
+     * itself, Doctrine would create a MySQL or MariaDB table in utf8mb3. PostgreSQL ignores both.
+     */
+    private function createTable(Schema $schema, string $name): Table
+    {
+        $table = $schema->createTable($name);
+        $table->addOption('charset', 'utf8mb4');
+        $table->addOption('collation', 'utf8mb4_unicode_ci');
+
+        return $table;
     }
 }

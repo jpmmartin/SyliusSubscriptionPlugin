@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
@@ -59,7 +60,7 @@ final class Version20260923120000 extends AbstractMigration
     /** An item goes with its subscription; its variant and plan are restricted, like the subscription's were. */
     private function createItemTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_item');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_item');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('subscription_id', 'integer');
@@ -79,7 +80,7 @@ final class Version20260923120000 extends AbstractMigration
 
     private function createCycleItemTable(Schema $schema): void
     {
-        $table = $schema->createTable('jpm_martin_sylius_subscription_cycle_item');
+        $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_cycle_item');
 
         $table->addColumn('id', 'integer', ['autoincrement' => true]);
         $table->addColumn('cycle_id', 'integer');
@@ -91,5 +92,18 @@ final class Version20260923120000 extends AbstractMigration
 
         $table->addForeignKeyConstraint('jpm_martin_sylius_subscription_cycle', ['cycle_id'], ['id'], ['onDelete' => 'CASCADE']);
         $table->addForeignKeyConstraint('jpm_martin_sylius_subscription_item', ['subscription_item_id'], ['id'], ['onDelete' => 'CASCADE']);
+    }
+
+    /**
+     * In utf8mb4, as Sylius's own tables are, so text takes any character, emojis included; left to
+     * itself, Doctrine would create a MySQL or MariaDB table in utf8mb3. PostgreSQL ignores both.
+     */
+    private function createTable(Schema $schema, string $name): Table
+    {
+        $table = $schema->createTable($name);
+        $table->addOption('charset', 'utf8mb4');
+        $table->addOption('collation', 'utf8mb4_unicode_ci');
+
+        return $table;
     }
 }

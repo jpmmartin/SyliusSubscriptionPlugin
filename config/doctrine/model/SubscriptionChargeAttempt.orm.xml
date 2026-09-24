@@ -7,6 +7,12 @@
 >
     <!-- Every call to the renewal charger for a cycle, and its answer: the history an administrator reads. -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttempt" table="jpm_martin_sylius_subscription_charge_attempt">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <id name="id" column="id" type="integer">
             <generator strategy="IDENTITY" />
         </id>

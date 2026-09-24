@@ -7,6 +7,12 @@
 >
     <!-- A row per variant the store lets customers repeat; kept by the plugin, so the store's variant is left alone. -->
     <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\RepeatableVariant" table="jpm_martin_sylius_subscription_repeatable_variant">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
         <id name="id" column="id" type="integer">
             <generator strategy="IDENTITY" />
         </id>
