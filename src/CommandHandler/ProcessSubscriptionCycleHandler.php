@@ -13,9 +13,12 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateKeeperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
 use Psr\Clock\ClockInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * Takes a due cycle one step further. A cycle that changed since it was found due has been dealt with
@@ -24,10 +27,15 @@ use Sylius\Abstraction\StateMachine\StateMachineInterface;
  *
  * An administrator's retry is charged once, by the retry itself: here it is only reconciled, even
  * while its subscription is suspended.
+ *
+ * A scheduled cycle the missed cycle policy no longer holds due is cancelled without an order, and the
+ * next is scheduled: it is not a failed cycle.
  */
 final class ProcessSubscriptionCycleHandler
 {
     public const NOTHING_TO_RENEW = 'None of the subscription\'s items could be renewed.';
+
+    public const MISSED = 'Skipped: the date of the cycle after it had come too before it could be renewed.';
 
     /** @param SubscriptionCycleRepositoryInterface<SubscriptionCycleInterface> $cycleRepository */
     public function __construct(
@@ -38,6 +46,8 @@ final class ProcessSubscriptionCycleHandler
         private readonly CycleFailureHandlerInterface $failureHandler,
         private readonly StateMachineInterface $stateMachine,
         private readonly ClockInterface $clock,
+        private readonly MissedCyclePolicyInterface $missedCyclePolicy,
+        private readonly SubscriptionSchedulerInterface $scheduler,
     ) {
     }
 
@@ -51,6 +61,12 @@ final class ProcessSubscriptionCycleHandler
         $now = $this->clock->now();
 
         if (SubscriptionCycleInterface::STATE_SCHEDULED === $cycle->getState() && $cycle->getScheduledAt() > $now) {
+            return;
+        }
+
+        if (SubscriptionCycleInterface::STATE_SCHEDULED === $cycle->getState() && !$this->missedCyclePolicy->isStillDue($cycle, $now)) {
+            $this->skip($cycle);
+
             return;
         }
 
@@ -84,6 +100,16 @@ final class ProcessSubscriptionCycleHandler
         $state = $cycle->getSubscription()?->getState();
 
         return SubscriptionInterface::STATE_ACTIVE === $state || ($cycle->isManualRetry() && SubscriptionInterface::STATE_SUSPENDED === $state);
+    }
+
+    private function skip(SubscriptionCycleInterface $cycle): void
+    {
+        $cycle->setCancellationReason(self::MISSED);
+        $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_CANCEL);
+
+        $subscription = $cycle->getSubscription();
+        Assert::notNull($subscription);
+        $this->scheduler->scheduleNext($subscription);
     }
 
     private function placeAndCharge(SubscriptionCycleInterface $cycle): void

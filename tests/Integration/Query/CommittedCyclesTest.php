@@ -6,8 +6,15 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Query;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit;
 use JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCycle;
+use JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCyclesQuery;
 use JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCyclesQueryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionRepositoryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\ConfigurableMissedCyclePolicy;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCycles;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionCalendarInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
+use Psr\Clock\ClockInterface;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Lifecycle\LifecycleTestCase;
 
 /**
@@ -125,10 +132,45 @@ final class CommittedCyclesTest extends LifecycleTestCase
         );
     }
 
-    /** @return list<array{string, int}> the date and quantity of each committed Coffee cycle */
-    private function committedCoffee(string $horizon): array
+    public function testASubscriptionBehindItsCalendarCommitsItsOpenCycleAndThenTheDatesToComeOnly(): void
     {
-        $query = self::getContainer()->get(CommittedCyclesQueryInterface::class);
+        // The open cycles, of 1 and 10 February, are charged when the command runs again; the dates from
+        // March to 10 June have come and are skipped.
+        $this->itIsNow('2027-06-10 09:00');
+
+        self::assertSame(
+            [['2027-02-01', 1], ['2027-02-10', 1], ['2027-07-01', 1], ['2027-07-10', 1]],
+            $this->committedCoffee('P1M'),
+        );
+    }
+
+    public function testWhenTheLateCycleIsSkippedTooItIsNotCommitted(): void
+    {
+        $this->itIsNow('2027-06-10 09:00');
+
+        self::assertSame(
+            [['2027-07-01', 1], ['2027-07-10', 1]],
+            $this->committedCoffee('P1M', MissedCycles::SkipLate),
+        );
+    }
+
+    public function testWhenEachMissedDateIsChargedEachIsCommitted(): void
+    {
+        $this->itIsNow('2027-06-10 09:00');
+
+        self::assertSame(
+            [
+                ['2027-02-01', 1], ['2027-02-10', 1], ['2027-03-01', 1], ['2027-03-10', 1], ['2027-04-01', 1], ['2027-04-10', 1],
+                ['2027-05-01', 1], ['2027-05-10', 1], ['2027-06-01', 1], ['2027-06-10', 1], ['2027-07-01', 1], ['2027-07-10', 1],
+            ],
+            $this->committedCoffee('P1M', MissedCycles::Charge),
+        );
+    }
+
+    /** @return list<array{string, int}> the date and quantity of each committed cycle of Coffee */
+    private function committedCoffee(string $horizon, ?MissedCycles $missedCycles = null): array
+    {
+        $query = null === $missedCycles ? self::getContainer()->get(CommittedCyclesQueryInterface::class) : $this->queryWith($missedCycles);
         self::assertInstanceOf(CommittedCyclesQueryInterface::class, $query);
         $this->entityManager()->clear();
         $coffee = $this->entityManager()->find($this->coffee::class, $this->coffee->getId());
@@ -138,5 +180,20 @@ final class CommittedCyclesTest extends LifecycleTestCase
             static fn (CommittedCycle $cycle): array => [$cycle->date->format('Y-m-d'), $cycle->quantity],
             $query->forProductVariant($coffee, new \DateInterval($horizon)),
         );
+    }
+
+    private function queryWith(MissedCycles $missedCycles): CommittedCyclesQuery
+    {
+        $container = self::getContainer();
+        /** @var SubscriptionRepositoryInterface<\JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface> $subscriptions */
+        $subscriptions = $container->get('jpm_martin_sylius_subscription.repository.subscription');
+        /** @var SubscriptionSchedulerInterface $scheduler */
+        $scheduler = $container->get('jpm_martin_sylius_subscription.schedule.scheduler');
+        /** @var SubscriptionCalendarInterface $calendar */
+        $calendar = $container->get('jpm_martin_sylius_subscription.schedule.calendar');
+        /** @var ClockInterface $clock */
+        $clock = $container->get('clock');
+
+        return new CommittedCyclesQuery($subscriptions, $scheduler, $calendar, $clock, new ConfigurableMissedCyclePolicy($calendar, $missedCycles));
     }
 }

@@ -14,4 +14,10 @@ interface SubscriptionCalendarInterface
      * activation, or the open cycle when the plan was changed.
      */
     public function dateOfCycle(SubscriptionInterface $subscription, int $number): \DateTimeImmutable;
+
+    /**
+     * How many dates in a row, from cycle $fromNumber's, have come by $now: 0 when cycle $fromNumber's
+     * date is still to come. A date equal to $now has come.
+     */
+    public function countDatesUntil(SubscriptionInterface $subscription, int $fromNumber, \DateTimeImmutable $now): int;
 }

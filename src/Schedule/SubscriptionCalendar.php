@@ -27,6 +27,16 @@ final class SubscriptionCalendar implements SubscriptionCalendarInterface
         };
     }
 
+    public function countDatesUntil(SubscriptionInterface $subscription, int $fromNumber, \DateTimeImmutable $now): int
+    {
+        $count = 0;
+        while ($this->dateOfCycle($subscription, $fromNumber + $count) <= $now) {
+            ++$count;
+        }
+
+        return $count;
+    }
+
     /** On the same day of the month, or on the last day of a month too short for it, at the same time. */
     private static function addMonths(\DateTimeImmutable $date, int $months): \DateTimeImmutable
     {

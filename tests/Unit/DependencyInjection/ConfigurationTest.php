@@ -20,6 +20,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame([1, 3, 7], $config['retry_delays']);
         self::assertSame([], $config['final_decline_codes']);
         self::assertSame(3, $config['suspend_after_failed_cycles']);
+        self::assertSame('skip', $config['missed_cycles']);
         self::assertSame('1', $config['consent_version']);
         self::assertArrayNotHasKey('on_failure', $config);
     }
@@ -39,6 +40,27 @@ final class ConfigurationTest extends TestCase
         self::assertSame(['stolen_card', 'lost_card'], $config['final_decline_codes']);
         self::assertSame(5, $config['suspend_after_failed_cycles']);
         self::assertSame('2026-09', $config['consent_version']);
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function missedCycles(): iterable
+    {
+        yield 'skip the dates that passed' => ['skip'];
+        yield 'charge each date that passed' => ['charge'];
+        yield 'skip the late cycle too' => ['skip_late'];
+    }
+
+    #[DataProvider('missedCycles')]
+    public function testItAcceptsEachWayOfDealingWithMissedCycles(string $missedCycles): void
+    {
+        self::assertSame($missedCycles, $this->process(['missed_cycles' => $missedCycles])['missed_cycles']);
+    }
+
+    public function testItRejectsAnUnknownWayOfDealingWithMissedCycles(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['missed_cycles' => 'charge_all']);
     }
 
     public function testAStoreCanChooseNeverToRetry(): void

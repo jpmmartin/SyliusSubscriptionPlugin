@@ -34,8 +34,18 @@
             <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_cycle" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
             <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" />
+            <argument type="service" id="clock" />
+            <argument type="service" id="logger" on-invalid="ignore" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface" alias="jpm_martin_sylius_subscription.schedule.scheduler" />
+
+        <!-- Replace this service, or point the interface alias elsewhere, to deal with the dates that passed another way. -->
+        <service id="jpm_martin_sylius_subscription.schedule.missed_cycle_policy" class="JpmMartin\SyliusSubscriptionPlugin\Schedule\ConfigurableMissedCyclePolicy">
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
+            <argument>%jpm_martin_sylius_subscription.missed_cycles%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" alias="jpm_martin_sylius_subscription.schedule.missed_cycle_policy" />
 
         <!-- The subscription graph's own side effects, whichever code applies the transition. -->
         <service id="jpm_martin_sylius_subscription.listener.workflow.subscription.start_schedule"
@@ -87,6 +97,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
             <argument type="service" id="clock" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCyclesQueryInterface" alias="jpm_martin_sylius_subscription.query.committed_cycles" public="true" />
     </services>

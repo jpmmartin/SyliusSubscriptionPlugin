@@ -38,11 +38,9 @@ final class ResumeScheduleListener
             $nextNumber = max($nextNumber, $cycle->getNumber() + 1);
         }
 
-        $calendarIndex = $nextNumber;
-        while ($this->calendar->dateOfCycle($subscription, $calendarIndex) <= $now) {
-            ++$calendarIndex;
-        }
-        $subscription->setScheduleAnchorCycle($subscription->getScheduleAnchorCycle() - ($calendarIndex - $nextNumber));
+        $subscription->setScheduleAnchorCycle(
+            $subscription->getScheduleAnchorCycle() - $this->calendar->countDatesUntil($subscription, $nextNumber, $now),
+        );
 
         $this->scheduler->scheduleNext($subscription);
     }

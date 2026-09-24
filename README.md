@@ -160,6 +160,9 @@ jpm_martin_sylius_subscription:
     # Cycles failed in a row after which a subscription is suspended: a positive integer, or null to
     # never suspend. A paid cycle and a reactivation start the count afresh.
     suspend_after_failed_cycles: 3
+    # What becomes of the dates of a calendar that came before a cycle could be scheduled on them:
+    # skip, charge or skip_late. See "Missed dates".
+    missed_cycles: skip
     # Version of the consent text. Raise it whenever you change the text.
     consent_version: '1'
 ```
@@ -268,6 +271,39 @@ decides when to give up on them, and failing the cycle cancels them. Every other
 included, expires as before. If your store decorates or replaces that service too, keep renewal orders
 awaiting payment out of it.
 
+## Missed dates
+
+A cycle's date comes from its subscription's calendar, so a late charge never moves the cycles after
+it. When a cycle is settled, paid, failed or cancelled, the next goes on the calendar's next date. That
+date may already have come: after `jpm-martin:subscription:process-cycles` stopped running for a
+while, or when a cycle of a short interval spent longer than its interval being retried. What becomes
+of such dates is decided by `JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface`,
+and the default policy does what `missed_cycles` says:
+
+- `skip`, the default: the late cycle is charged once, and the next goes on the first date to come. The
+  calendar keeps its day and time, and skipped dates create no cycle and use up no plan or frequency.
+  After the command stopped from 1 March to 10 June, a monthly subscription due on 1 March is charged
+  once on 10 June and renews next on 1 July. A weekly cycle that runs out of retries on day 7, after its
+  time, skips the date that came meanwhile.
+- `charge`: each date that came is charged, one per run of the command, each with its own order.
+- `skip_late`: as `skip`, and a scheduled cycle whose next date has come too is cancelled instead of
+  charged, without an order and without counting as a failed cycle. A cycle held by a gate is never
+  skipped: its wait is deliberate.
+
+The command says how many of the due cycles are more than one interval late, and each skip is logged
+as a warning with the subscription and its next date.
+
+To decide it another way, implement `MissedCyclePolicyInterface` and point the interface's alias at your
+service. `datesToSkip()` is asked, before a cycle is scheduled, how many of the dates that have come to
+skip, from 0 up to all of them; `isStillDue()` is asked whether a scheduled cycle that is due is still
+processed.
+
+```yaml
+services:
+    App\Subscription\MyMissedCyclePolicy: ~
+    JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface: '@App\Subscription\MyMissedCyclePolicy'
+```
+
 ## Gates
 
 Before a cycle places its order, every gate is asked whether it passes, waits until a date (with a
@@ -356,9 +392,13 @@ accepted for it.
 `JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCyclesQueryInterface::forProductVariant($variant, new \DateInterval('P3M'))`
 returns, by date, the cycles the items of a variant in active subscriptions will renew within the
 horizon, each with its subscription, item, date and quantity, never past the cycles the item's plan
-or frequency still allows.
+or frequency still allows. It follows the missed cycle policy: a date the policy will skip is not
+returned, nor a cycle it will cancel.
 
 ## Upgrading
+
+From a version that charged each missed date, one per run of the command, the default is now to skip
+them; see "Missed dates". Set `missed_cycles: charge` to keep charging them. Nothing needs migrating.
 
 From a version without store frequencies, `doctrine:migrations:migrate` adds their tables and columns;
 nothing else changes, and every existing subscription keeps its plans.
@@ -377,8 +417,8 @@ From a version with one subscription per order line:
   shop's checkout and the API's, so no confirmation email is sent for them.
 - An order that skips the payment step cannot start a subscription: the plugin needs the payment
   method it will charge the renewals with.
-- A cycle's date never moves with a late charge. If the command does not run for a while, the overdue
-  cycles of a subscription are processed one per run, each with its own order.
+- With `missed_cycles: charge`, the dates a subscription missed while the command did not run are
+  processed one per run, each with its own order and its own charge.
 - Changing the frequency is not offered while the open cycle's order is awaiting payment, because that
   order keeps the old prices. It is only offered for intervals every item can move to: an item on a
   plan to an enabled plan of its variant, an item repeated with a store frequency to another enabled
