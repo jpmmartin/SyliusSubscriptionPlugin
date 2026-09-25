@@ -299,6 +299,12 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
     }
 
+    #[Then('/^I should not be able to pay its renewal #(\d+) now$/')]
+    public function iShouldNotBeAbleToPayItsRenewalNow(int $number): void
+    {
+        Assert::false($this->showPage->canPayRenewalNow($number), \sprintf('Renewal #%d can still be paid now.', $number));
+    }
+
     #[Then('/^its renewal #(\d+) should be marked as paid by me$/')]
     public function itsRenewalShouldBeMarkedAsPaidByMe(int $number): void
     {

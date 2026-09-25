@@ -6,6 +6,8 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Payment;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry;
+use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
+use JpmMartin\SyliusSubscriptionPlugin\Twig\SubscriptionExtension;
 use Sylius\Behat\Context\Setup\PaymentContext;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -41,6 +43,18 @@ final class ChangingTheCardTest extends LifecycleTestCase
         $this->entityManager()->flush();
 
         self::assertNull($this->registry()->urlFor($subscription));
+    }
+
+    public function testTheAccountOffersNothingForASubscriptionThatEnded(): void
+    {
+        $subscription = $this->coffeeSubscription();
+        $this->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_CANCEL);
+        $this->entityManager()->flush();
+
+        self::assertNotNull($this->registry()->urlFor($subscription), 'The integration still supports its method.');
+        $extension = self::getContainer()->get('jpm_martin_sylius_subscription.twig.extension.subscription');
+        self::assertInstanceOf(SubscriptionExtension::class, $extension);
+        self::assertNull($extension->getCardUpdateUrl($subscription));
     }
 
     private function coffeeSubscription(): SubscriptionInterface
