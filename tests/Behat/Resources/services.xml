@@ -67,6 +67,16 @@
                  parent="sylius.behat.symfony_page"
         />
 
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_address"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeAddressPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_address"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeAddressPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
         <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_frequency"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeFrequencyPage"
                  parent="sylius.behat.symfony_page"
@@ -125,6 +135,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.index" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.show" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_address" />
             <argument type="service" id="sylius.behat.notification_checker.admin" />
         </service>
 
@@ -156,6 +167,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.index" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.show" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_address" />
             <argument type="service" id="sylius.behat.notification_checker.shop" />
             <argument type="service" id="sylius.behat.shared_storage" />
         </service>

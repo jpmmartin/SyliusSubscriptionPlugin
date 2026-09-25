@@ -1,0 +1,8 @@
+{# An address on one line, as the address book lists it when the addresses are changed. #}
+{% macro one_line(address) %}
+    {%- if address is null -%}
+        -
+    {%- else -%}
+        {{ address.firstName }} {{ address.lastName }}, {{ address.street }}, {{ address.postcode }} {{ address.city }}, {{ address.countryCode }}
+    {%- endif -%}
+{% endmacro %}

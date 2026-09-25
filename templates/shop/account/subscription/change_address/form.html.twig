@@ -1,0 +1,18 @@
+{% set subscription = hookable_metadata.context.subscription %}
+{% set form = hookable_metadata.context.form %}
+{% set offers = hookable_metadata.context.offers %}
+
+{{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+    {{ form_errors(form) }}
+    {% if form.addressBookEntry is defined %}
+        {{ form_row(form.addressBookEntry, sylius_test_form_attribute('address-book-entry')) }}
+    {% endif %}
+    <div {{ sylius_test_html_attribute('shipping-address') }}>{{ form_row(form.shippingAddress) }}</div>
+    {{ form_row(form.differentBillingAddress, sylius_test_form_attribute('different-billing-address')) }}
+    <div {{ sylius_test_html_attribute('billing-address') }}>{{ form_row(form.billingAddress) }}</div>
+    {% include '@JpmMartinSyliusSubscriptionPlugin/shared/address_change/shipping_methods.html.twig' with { form, offers, currency: subscription.currencyCode, money_macro: '@SyliusShop/shared/macro/money.html.twig' } only %}
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('confirm-address-change') }}>{{ 'jpm_martin_sylius_subscription.ui.change_address'|trans }}</button>
+        <a class="btn btn-outline-gray" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_show', { id: subscription.id }) }}">{{ 'sylius.ui.cancel'|trans }}</a>
+    </div>
+{{ form_end(form) }}

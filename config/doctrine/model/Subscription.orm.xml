@@ -65,6 +65,21 @@
         <many-to-one field="shippingMethod" target-entity="Sylius\Component\Core\Model\ShippingMethodInterface">
             <join-column name="shipping_method_id" referenced-column-name="id" nullable="true" />
         </many-to-one>
+        <!-- Its own copies, as an order's; empty until they are changed, so the renewals take the last order's. -->
+        <one-to-one field="shippingAddress" target-entity="Sylius\Component\Addressing\Model\AddressInterface" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <join-column name="shipping_address_id" referenced-column-name="id" nullable="true" />
+        </one-to-one>
+        <one-to-one field="billingAddress" target-entity="Sylius\Component\Addressing\Model\AddressInterface" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <join-column name="billing_address_id" referenced-column-name="id" nullable="true" />
+        </one-to-one>
 
         <one-to-many field="items" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface" mapped-by="subscription">
             <cascade>

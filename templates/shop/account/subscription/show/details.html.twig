@@ -1,6 +1,7 @@
 {% from '@SyliusShop/shared/macro/money.html.twig' import format %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/address.html.twig' import one_line %}
 
 {% set subscription = hookable_metadata.context.subscription %}
 {% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
@@ -21,5 +22,13 @@
     <div class="row mb-1">
         <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.next_renewal'|trans }}</div>
         <div class="col" {{ sylius_test_html_attribute('subscription-next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|format_date : '—' }}</div>
+    </div>
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'sylius.ui.shipping_address'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-shipping-address') }}>{{ one_line(jpm_martin_sylius_subscription_renewal_shipping_address(subscription)) }}</div>
+    </div>
+    <div class="row mb-1">
+        <div class="col-12 col-sm-4">{{ 'sylius.ui.billing_address'|trans }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-billing-address') }}>{{ one_line(jpm_martin_sylius_subscription_renewal_billing_address(subscription)) }}</div>
     </div>
 </div>

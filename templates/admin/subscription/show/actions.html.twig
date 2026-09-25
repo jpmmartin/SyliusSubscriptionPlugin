@@ -7,6 +7,11 @@
                 {{ 'jpm_martin_sylius_subscription.ui.change_frequency'|trans }}
             </a>
         {% endif %}
+        {% if jpm_martin_sylius_subscription_can_change_address(subscription) %}
+            <a class="btn" href="{{ path('jpm_martin_sylius_subscription_admin_subscription_change_address', { id: subscription.id }) }}" {{ sylius_test_html_attribute('change-address') }}>
+                {{ 'jpm_martin_sylius_subscription.ui.change_address'|trans }}
+            </a>
+        {% endif %}
         {% set renewal_to_skip = jpm_martin_sylius_subscription_renewal_to_skip(subscription) %}
         {% if renewal_to_skip is not null %}
             <form method="post" action="{{ path('jpm_martin_sylius_subscription_admin_subscription_skip_renewal', { id: subscription.id }) }}" class="d-inline">

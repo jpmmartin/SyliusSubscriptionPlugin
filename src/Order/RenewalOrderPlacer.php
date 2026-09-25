@@ -31,19 +31,22 @@ use Webmozart\Assert\Assert;
  *
  * Stock is checked for what the order takes of each variant altogether, so two items of the same
  * variant never take more than there is.
+ *
+ * The order is addressed to the subscription's own addresses once they were changed, and to its last
+ * order's until then; either way to copies, so the order keeps them whatever happens to the originals.
  */
 final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
 {
     /**
      * @param FactoryInterface<OrderInterface> $orderFactory
      * @param FactoryInterface<OrderItemInterface> $orderItemFactory
-     * @param FactoryInterface<AddressInterface> $addressFactory
      * @param FactoryInterface<SubscriptionCycleItemInterface> $cycleItemFactory
      */
     public function __construct(
         private readonly FactoryInterface $orderFactory,
         private readonly FactoryInterface $orderItemFactory,
-        private readonly FactoryInterface $addressFactory,
+        private readonly AddressCopier $addressCopier,
+        private readonly RenewalAddressesResolver $addressesResolver,
         private readonly FactoryInterface $cycleItemFactory,
         private readonly OrderItemQuantityModifierInterface $quantityModifier,
         private readonly AvailabilityCheckerInterface $availabilityChecker,
@@ -62,16 +65,16 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
             return null;
         }
 
-        $lastOrder = $this->lastOrderOf($subscription);
-        Assert::notNull($lastOrder, 'A subscription renews with the addresses of its last order.');
+        $lastOrder = $this->addressesResolver->lastOrderOf($subscription);
+        Assert::notNull($lastOrder, 'A subscription renews in the locale, and until they are changed with the addresses, of its last order.');
 
         $order = $this->orderFactory->createNew();
         $order->setChannel($subscription->getChannel());
         $order->setCustomer($subscription->getCustomer());
         $order->setCurrencyCode($subscription->getCurrencyCode());
         $order->setLocaleCode($lastOrder->getLocaleCode());
-        $order->setShippingAddress($this->copyOf($lastOrder->getShippingAddress()));
-        $order->setBillingAddress($this->copyOf($lastOrder->getBillingAddress()));
+        $order->setShippingAddress($this->copyOf($this->addressesResolver->shippingAddress($subscription)));
+        $order->setBillingAddress($this->copyOf($this->addressesResolver->billingAddress($subscription)));
 
         foreach ($taken as $item) {
             $line = $this->orderItemFactory->createNew();
@@ -168,40 +171,10 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         return null;
     }
 
-    private function lastOrderOf(SubscriptionInterface $subscription): ?OrderInterface
-    {
-        $lastOrder = null;
-        $lastNumber = 0;
-        foreach ($subscription->getCycles() as $cycle) {
-            if (null !== $cycle->getOrder() && $cycle->getNumber() > $lastNumber) {
-                $lastOrder = $cycle->getOrder();
-                $lastNumber = $cycle->getNumber();
-            }
-        }
-
-        return $lastOrder;
-    }
-
     /** A new address with the same details: an address belongs to one order only. */
     private function copyOf(?AddressInterface $address): ?AddressInterface
     {
-        if (null === $address) {
-            return null;
-        }
-
-        $copy = $this->addressFactory->createNew();
-        $copy->setFirstName($address->getFirstName());
-        $copy->setLastName($address->getLastName());
-        $copy->setPhoneNumber($address->getPhoneNumber());
-        $copy->setCompany($address->getCompany());
-        $copy->setStreet($address->getStreet());
-        $copy->setCity($address->getCity());
-        $copy->setPostcode($address->getPostcode());
-        $copy->setCountryCode($address->getCountryCode());
-        $copy->setProvinceCode($address->getProvinceCode());
-        $copy->setProvinceName($address->getProvinceName());
-
-        return $copy;
+        return null === $address ? null : $this->addressCopier->copy($address);
     }
 
     private function canApplyCheckout(OrderInterface $order, string $transition): bool

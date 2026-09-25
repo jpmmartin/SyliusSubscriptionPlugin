@@ -1,7 +1,7 @@
 # The subscriptions list and page are Sylius's shared CRUD pages. The page adds the actions its state
 # allows to the header, and below it the details, the accepted consent, the products and the renewals
-# with what each took in or skipped and every charge attempt. Changing the frequency has a page of its
-# own, in the admin's layout.
+# with what each took in or skipped and every charge attempt. Changing the frequency and changing the
+# addresses have pages of their own, in the admin's layout.
 sylius_twig_hooks:
     hooks:
         'sylius_admin.subscription.show.content.header.title_block':
@@ -26,4 +26,12 @@ sylius_twig_hooks:
                 priority: 300
             form:
                 template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_frequency/form.html.twig'
+                priority: 100
+
+        'jpm_martin_sylius_subscription.admin.subscription_address_change.update.content':
+            header:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_address/header.html.twig'
+                priority: 300
+            form:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_address/form.html.twig'
                 priority: 100

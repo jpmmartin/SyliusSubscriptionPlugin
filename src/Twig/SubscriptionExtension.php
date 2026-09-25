@@ -6,9 +6,11 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Twig;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionAddressChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipperInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use Twig\Extension\AbstractExtension;
@@ -21,6 +23,8 @@ final class SubscriptionExtension extends AbstractExtension
         private readonly SubscriptionCycleRetrierInterface $cycleRetrier,
         private readonly SubscriptionSchedulerInterface $scheduler,
         private readonly SubscriptionRenewalSkipperInterface $renewalSkipper,
+        private readonly SubscriptionAddressChangerInterface $addressChanger,
+        private readonly RenewalAddressesResolver $addressesResolver,
     ) {
     }
 
@@ -31,6 +35,9 @@ final class SubscriptionExtension extends AbstractExtension
             new TwigFunction('jpm_martin_sylius_subscription_frequencies_to_change_to', $this->getFrequenciesToChangeTo(...)),
             new TwigFunction('jpm_martin_sylius_subscription_can_retry_cycle', $this->canRetryCycle(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_to_skip', $this->getRenewalToSkip(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_can_change_address', $this->canChangeAddress(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_renewal_shipping_address', $this->addressesResolver->shippingAddress(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_renewal_billing_address', $this->addressesResolver->billingAddress(...)),
         ];
     }
 
@@ -49,6 +56,11 @@ final class SubscriptionExtension extends AbstractExtension
     public function canRetryCycle(SubscriptionCycleInterface $cycle): bool
     {
         return $this->cycleRetrier->canRetry($cycle);
+    }
+
+    public function canChangeAddress(SubscriptionInterface $subscription): bool
+    {
+        return $this->addressChanger->canChange($subscription);
     }
 
     /** The renewal the customer can skip now, whose date the skip button shows; null when none can. */

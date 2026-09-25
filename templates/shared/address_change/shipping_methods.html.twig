@@ -1,0 +1,19 @@
+{#
+    The shipping methods that reach the new address, with what each would cost the next renewal, asked
+    for when the current one does not reach it. The field carries the chosen method's code; money_macro is
+    the shop's or the admin's money helper.
+#}
+{% import money_macro as money %}
+
+{% if offers is not empty %}
+    <fieldset class="mb-3" {{ sylius_test_html_attribute('shipping-methods') }}>
+        <legend class="h6">{{ 'jpm_martin_sylius_subscription.ui.choose_shipping_method'|trans }}</legend>
+        {% for offer in offers %}
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="subscription-shipping-method-{{ offer.method.code }}" name="{{ form.shippingMethod.vars.full_name }}" value="{{ offer.method.code }}" {{ sylius_test_html_attribute('shipping-method', offer.method.name) }}{{ form.shippingMethod.vars.value == offer.method.code ? ' checked' }}>
+                <label class="form-check-label" for="subscription-shipping-method-{{ offer.method.code }}">{{ offer.method.name }}: {{ money.format(offer.cost, currency) }}</label>
+            </div>
+        {% endfor %}
+    </fieldset>
+{% endif %}
+{% do form.shippingMethod.setRendered() %}

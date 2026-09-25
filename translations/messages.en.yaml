@@ -53,6 +53,12 @@ jpm_martin_sylius_subscription:
             not_in_channel: Not sold in this channel
         cancel_subscription: Cancel subscription
         subscriptions: Subscriptions
+        change_address: Change address
+        change_address_help: 'The new addresses apply from the next renewal whose order is not placed yet.'
+        another_address: Another address
+        different_billing_address: Bill to a different address
+        choose_shipping_method: 'The current shipping method does not reach this address. Choose how it will be shipped:'
+        no_shipping_method_reaches: No shipping method reaches this address.
         pause: Pause
         resume: Resume
         skip_renewal: 'Skip the renewal of %date%'

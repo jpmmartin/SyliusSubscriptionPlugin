@@ -41,13 +41,14 @@ with all of them, charged without the customer present, with retries when a char
   An administrator can retry a failed cycle; cancelling a renewal order before it is paid skips that
   renewal.
 - **Customer account**: the customer's subscriptions with their products, their renewals and what each
-  skipped; pausing and resuming them, skipping the next renewal, cancelling and changing how often
-  they renew. See [Pausing and skipping](#pausing-and-skipping).
+  skipped and where they are shipped; pausing and resuming them, skipping the next renewal,
+  cancelling, and changing how often and where they renew. See
+  [Pausing and skipping](#pausing-and-skipping) and [Changing the address](#changing-the-address).
 - **Admin**: a list filterable by state, customer, variant (of any of the products) and next renewal,
   and a page with the products, the consent, the failed renewals in a row, every renewal with what it
-  took in or skipped and each charge attempt (date, outcome and reason), and the actions the state
-  allows: pause, resume, suspend, reactivate, cancel, skip the next renewal, change the frequency and
-  retry a failed renewal.
+  took in or skipped and each charge attempt (date, outcome and reason), where it is shipped, and the
+  actions the state allows: pause, resume, suspend, reactivate, cancel, skip the next renewal, change
+  the frequency, change the address and retry a failed renewal.
 - **Committed cycles**: a read-only query of what the active subscriptions of a variant will renew
   within a horizon, for planning stock.
 - **Events, no emails**: the plugin tells no customer anything. It publishes an event of its own at every
@@ -274,6 +275,29 @@ cancelled cycle between them. With none set, there is no limit. A skip cannot be
 The skip is a service, `SubscriptionRenewalSkipperInterface`: replace it to let customers skip
 another way.
 
+## Changing the address
+
+A renewal goes to the addresses of the subscription's last order until they are changed. A customer
+changes them from their account, and an administrator from the subscription's page, for a subscription
+that is neither cancelled nor completed:
+
+- the shipping address is one of the customer's address book or a new one; billing goes there too
+  unless another billing address is given;
+- the subscription keeps copies, so editing the address book afterwards changes nothing, and a new
+  address is not added to the book;
+- they apply from the next renewal whose order is not placed yet: an order already placed, for
+  instance one awaiting a retry, keeps its addresses.
+
+When the subscription's shipping method does not reach the new shipping address, the form lists the
+methods that do, the same ones the checkout would offer for its items there, each with what it would
+cost the next renewal at today's prices, and the subscription moves to the one chosen. When none
+reaches it, the change is refused and nothing changes. A subscription that ships nothing only changes
+its addresses.
+
+Changing where a subscription ships is the first thing a stolen account does: listen to
+`SubscriptionAddressChanged` and tell the customer. The change is a service,
+`SubscriptionAddressChangerInterface`: replace it to change addresses another way.
+
 ## Retrying failed charges
 
 What becomes of a charge that was declined or not attempted is decided by
@@ -456,6 +480,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionCancelled` | it is cancelled, by its customer or an administrator | — |
 | `SubscriptionCompleted` | it ends: no item has a cycle left to renew | — |
 | `SubscriptionFrequencyChanged` | its frequency changes | `intervalCount`, `intervalUnit` (`day`, `week`, `month` or `year`) |
+| `SubscriptionAddressChanged` | its addresses change, by its customer or an administrator | `shippingMethodChanged` |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
@@ -511,11 +536,11 @@ When they are delivered:
 - An event published while the command processes a cycle is delivered once that cycle's change is
   stored and committed, as Sylius's own events are, and not at all if it fails.
 - An event of anything done outside the command, such as an administrator suspending a subscription, the
-  customer cancelling it or changing its frequency, or the payment of its initial order activating it,
-  may be handled while that request runs, before its changes are stored. It waits for them only when
-  the action is itself a message of one of Sylius's command buses, which commit before delivering:
-  skipping a renewal is one, so `RenewalSkipped` is delivered once the skip is stored, and not at all
-  if the cycles command changed the cycle meanwhile.
+  customer cancelling it or changing its frequency or its address, or the payment of its initial order
+  activating it, may be handled while that request runs, before its changes are stored. It waits for
+  them only when the action is itself a message of one of Sylius's command buses, which commit before
+  delivering: skipping a renewal is one, so `RenewalSkipped` is delivered once the skip is stored, and
+  not at all if the cycles command changed the cycle meanwhile.
 - A handler run synchronously that throws:
   - in the command, makes it report the cycle as failed although the cycle was stored. Running the
     command again does not charge it twice, since the cycle changed, but the report misleads;
@@ -537,6 +562,10 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without the subscription's own addresses, `doctrine:migrations:migrate` adds them,
+empty: every subscription keeps renewing to its last order's addresses until they are changed. Going
+back down deletes the addresses the subscriptions had of their own.
 
 From a version without pausing, `doctrine:migrations:migrate` adds whether each cycle was skipped, with
 no cycle skipped before. Subscriptions gain the `paused` state: a store that shows the states in its
