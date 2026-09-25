@@ -17,7 +17,9 @@ use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionActivated;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCancelled;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCompleted;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionPaused;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionReactivated;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionResumed;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionSuspended;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
@@ -55,6 +57,8 @@ final class PublishLifecycleEventsListener
 
         $published = match ($transition) {
             SubscriptionTransitions::TRANSITION_ACTIVATE => new SubscriptionActivated($subscriptionId),
+            SubscriptionTransitions::TRANSITION_PAUSE => new SubscriptionPaused($subscriptionId),
+            SubscriptionTransitions::TRANSITION_RESUME => new SubscriptionResumed($subscriptionId),
             SubscriptionTransitions::TRANSITION_SUSPEND => new SubscriptionSuspended($subscriptionId),
             SubscriptionTransitions::TRANSITION_REACTIVATE => new SubscriptionReactivated($subscriptionId),
             SubscriptionTransitions::TRANSITION_CANCEL => new SubscriptionCancelled($subscriptionId),
@@ -92,7 +96,8 @@ final class PublishLifecycleEventsListener
             SubscriptionCycleTransitions::TRANSITION_PAY => new RenewalPaid($subscriptionId, $cycleId, $number, (int) $orderId),
             SubscriptionCycleTransitions::TRANSITION_FAIL => new RenewalFailed($subscriptionId, $cycleId, $number, $orderId, $cycle->getCancellationReason()),
             SubscriptionCycleTransitions::TRANSITION_RETRY => new RenewalRetried($subscriptionId, $cycleId, $number),
-            SubscriptionCycleTransitions::TRANSITION_CANCEL => new RenewalCancelled($subscriptionId, $cycleId, $number, $orderId, $cycle->getCancellationReason()),
+            // A skipped renewal is announced by the skipper, once the next date is known.
+            SubscriptionCycleTransitions::TRANSITION_CANCEL => $cycle->isSkipped() ? null : new RenewalCancelled($subscriptionId, $cycleId, $number, $orderId, $cycle->getCancellationReason()),
             default => null,
         };
 

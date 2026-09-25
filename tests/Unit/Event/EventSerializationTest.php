@@ -11,13 +11,16 @@ use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalHeld;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalOrderPlaced;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalPaid;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalRetried;
+use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalSkipped;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalUpcoming;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionActivated;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCancelled;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCompleted;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionFrequencyChanged;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionPaused;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionReactivated;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionResumed;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionSuspended;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -35,6 +38,8 @@ final class EventSerializationTest extends TestCase
         $at = new \DateTimeImmutable('2027-03-01 09:00:00');
 
         yield 'activated' => [new SubscriptionActivated(7)];
+        yield 'paused' => [new SubscriptionPaused(7)];
+        yield 'resumed' => [new SubscriptionResumed(7)];
         yield 'suspended' => [new SubscriptionSuspended(7)];
         yield 'reactivated' => [new SubscriptionReactivated(7)];
         yield 'cancelled' => [new SubscriptionCancelled(7)];
@@ -50,6 +55,7 @@ final class EventSerializationTest extends TestCase
         yield 'failed without an order' => [new RenewalFailed(7, 11, 2, null, 'The prescription has expired.')];
         yield 'retried' => [new RenewalRetried(7, 11, 2)];
         yield 'cancelled cycle' => [new RenewalCancelled(7, 11, 2, null, null)];
+        yield 'skipped' => [new RenewalSkipped(7, 11, 2, $at, new \DateTimeImmutable('2027-04-01 09:00:00'))];
     }
 
     #[DataProvider('events')]

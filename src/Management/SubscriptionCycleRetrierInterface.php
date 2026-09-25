@@ -9,7 +9,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 /** An administrator's second chance for a failed cycle, outside the schedule. */
 interface SubscriptionCycleRetrierInterface
 {
-    /** A failed cycle of an active or suspended subscription. */
+    /** A failed cycle of an active, paused or suspended subscription. */
     public function canRetry(SubscriptionCycleInterface $cycle): bool;
 
     /**

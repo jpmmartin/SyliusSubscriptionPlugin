@@ -167,6 +167,7 @@
             <argument type="service" id="sylius.behat.context.setup.calendar" />
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="sylius.behat.shared_storage" />
+            <argument type="service" id="jpm_martin_sylius_subscription.test.scripted_gateway" />
         </service>
 
         <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_cart"

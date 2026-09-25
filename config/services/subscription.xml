@@ -63,6 +63,7 @@
         >
             <argument type="service" id="sylius_abstraction.state_machine" />
             <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed.cancel" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed.pause" />
             <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed.suspend" />
         </service>
 
@@ -73,6 +74,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
             <argument type="service" id="clock" />
             <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed.reactivate" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.completed.resume" />
         </service>
 
         <!-- The initial order drives its subscriptions. -->

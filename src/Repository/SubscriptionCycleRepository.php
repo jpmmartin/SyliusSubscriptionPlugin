@@ -23,11 +23,11 @@ class SubscriptionCycleRepository extends EntityRepository implements Subscripti
         $rows = $this->createQueryBuilder('o')
             ->select('o.id AS id', 'o.version AS version')
             ->innerJoin('o.subscription', 'subscription')
-            // An administrator's retry is still reconciled while its subscription is suspended.
-            ->andWhere('subscription.state = :active OR (subscription.state = :suspended AND o.manualRetry = true)')
+            // An administrator's retry is still reconciled while its subscription is paused or suspended.
+            ->andWhere('subscription.state = :active OR (subscription.state IN (:stopped) AND o.manualRetry = true)')
             ->andWhere('(o.state = :scheduled AND o.scheduledAt <= :now) OR o.state = :onHold OR (o.state = :awaitingPayment AND o.nextAttemptAt <= :now)')
             ->setParameter('active', SubscriptionInterface::STATE_ACTIVE)
-            ->setParameter('suspended', SubscriptionInterface::STATE_SUSPENDED)
+            ->setParameter('stopped', [SubscriptionInterface::STATE_PAUSED, SubscriptionInterface::STATE_SUSPENDED])
             ->setParameter('scheduled', SubscriptionCycleInterface::STATE_SCHEDULED)
             ->setParameter('onHold', SubscriptionCycleInterface::STATE_ON_HOLD)
             ->setParameter('awaitingPayment', SubscriptionCycleInterface::STATE_AWAITING_PAYMENT)

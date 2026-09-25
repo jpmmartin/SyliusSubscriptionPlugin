@@ -22,6 +22,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame(3, $config['suspend_after_failed_cycles']);
         self::assertSame('skip', $config['missed_cycles']);
         self::assertSame(3, $config['renewal_notice_days']);
+        self::assertNull($config['max_consecutive_skips'], 'No limit on the renewals a customer skips in a row.');
         self::assertSame('1', $config['consent_version']);
         self::assertArrayNotHasKey('on_failure', $config);
     }
@@ -84,6 +85,28 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         $this->process(['renewal_notice_days' => $days]);
+    }
+
+    public function testAStoreCanLimitTheRenewalsSkippedInARow(): void
+    {
+        self::assertSame(2, $this->process(['max_consecutive_skips' => 2])['max_consecutive_skips']);
+        self::assertNull($this->process(['max_consecutive_skips' => null])['max_consecutive_skips']);
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function invalidMaxConsecutiveSkips(): iterable
+    {
+        yield 'zero' => [0];
+        yield 'negative' => [-1];
+        yield 'not a number' => ['two'];
+    }
+
+    #[DataProvider('invalidMaxConsecutiveSkips')]
+    public function testItRejectsAMaximumOfSkipsInARowThatIsNotAPositiveInteger(mixed $skips): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['max_consecutive_skips' => $skips]);
     }
 
     public function testAStoreCanChooseNeverToRetry(): void

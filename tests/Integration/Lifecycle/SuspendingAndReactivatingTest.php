@@ -69,6 +69,26 @@ final class SuspendingAndReactivatingTest extends LifecycleTestCase
         self::assertSame('2027-05-31 09:00', $calendar->dateOfCycle($subscription, $cycles[2]->getNumber() + 1)->format('Y-m-d H:i'));
     }
 
+    public function testASubscriptionReactivatedBeforeTheDateOfItsCancelledCycleRenewsOnThatDate(): void
+    {
+        $subscription = $this->monthlyCoffeeActivatedOn('2027-01-01 09:00');
+
+        $this->itIsNow('2027-01-20 09:00');
+        $this->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND);
+        $this->entityManager()->flush();
+
+        $this->itIsNow('2027-01-25 09:00');
+        $this->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_REACTIVATE);
+        $this->entityManager()->flush();
+
+        self::assertSame([1 => 'paid', 2 => 'cancelled', 3 => 'scheduled'], $this->cycleStates($subscription));
+        self::assertSame(
+            '2027-02-01 09:00',
+            $this->storedCycles($subscription)[2]->getScheduledAt()?->format('Y-m-d H:i'),
+            'The first date of its calendar after 25 January, although the cancelled cycle 2 had it.',
+        );
+    }
+
     private function monthlyCoffeeActivatedOn(string $dateTime): SubscriptionInterface
     {
         $this->itIsNow($dateTime);

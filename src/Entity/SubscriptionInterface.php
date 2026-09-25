@@ -27,6 +27,9 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
 
     public const STATE_ACTIVE = 'active';
 
+    /** Paused by its customer: generates no cycles until it is resumed. */
+    public const STATE_PAUSED = 'paused';
+
     /** Generates no cycles until an administrator reactivates it. */
     public const STATE_SUSPENDED = 'suspended';
 

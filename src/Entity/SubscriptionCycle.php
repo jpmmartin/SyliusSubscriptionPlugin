@@ -39,6 +39,8 @@ class SubscriptionCycle implements SubscriptionCycleInterface
 
     protected bool $manualRetry = false;
 
+    protected bool $skipped = false;
+
     /** @var Collection<int, SubscriptionChargeAttemptInterface> */
     protected Collection $attempts;
 
@@ -215,5 +217,15 @@ class SubscriptionCycle implements SubscriptionCycleInterface
     public function setManualRetry(bool $manualRetry): void
     {
         $this->manualRetry = $manualRetry;
+    }
+
+    public function isSkipped(): bool
+    {
+        return $this->skipped;
+    }
+
+    public function setSkipped(bool $skipped): void
+    {
+        $this->skipped = $skipped;
     }
 }

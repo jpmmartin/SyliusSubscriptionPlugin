@@ -30,9 +30,14 @@ final class SubscriptionStateMachineTest extends StateMachineGraphTestCase
                 SubscriptionTransitions::TRANSITION_CANCEL => SubscriptionInterface::STATE_CANCELLED,
             ],
             SubscriptionInterface::STATE_ACTIVE => [
+                SubscriptionTransitions::TRANSITION_PAUSE => SubscriptionInterface::STATE_PAUSED,
                 SubscriptionTransitions::TRANSITION_SUSPEND => SubscriptionInterface::STATE_SUSPENDED,
                 SubscriptionTransitions::TRANSITION_CANCEL => SubscriptionInterface::STATE_CANCELLED,
                 SubscriptionTransitions::TRANSITION_COMPLETE => SubscriptionInterface::STATE_COMPLETED,
+            ],
+            SubscriptionInterface::STATE_PAUSED => [
+                SubscriptionTransitions::TRANSITION_RESUME => SubscriptionInterface::STATE_ACTIVE,
+                SubscriptionTransitions::TRANSITION_CANCEL => SubscriptionInterface::STATE_CANCELLED,
             ],
             SubscriptionInterface::STATE_SUSPENDED => [
                 SubscriptionTransitions::TRANSITION_REACTIVATE => SubscriptionInterface::STATE_ACTIVE,

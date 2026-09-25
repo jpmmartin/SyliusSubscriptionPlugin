@@ -55,6 +55,11 @@ final class ShowPage extends SymfonyPage
         $this->getElement('transition', ['%transition%' => $transition])->press();
     }
 
+    public function skipRenewal(): void
+    {
+        $this->getElement('skip_renewal')->press();
+    }
+
     public function changeFrequency(): void
     {
         $this->getElement('change_frequency')->click();
@@ -102,6 +107,7 @@ final class ShowPage extends SymfonyPage
             'cycle' => '[data-test-cycle="%number%"]',
             'detail' => '[data-test-subscription-%detail%]',
             'item' => '[data-test-item="%product%"]',
+            'skip_renewal' => 'button[data-test-skip-renewal]',
             'transition' => 'button[data-test-%transition%]',
         ]);
     }

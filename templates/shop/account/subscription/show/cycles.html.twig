@@ -19,7 +19,7 @@
                 <tr {{ sylius_test_html_attribute('cycle', cycle.number) }}>
                     <td>{{ cycle.number }}</td>
                     <td {{ sylius_test_html_attribute('date') }}>{{ cycle.scheduledAt|format_date }}</td>
-                    <td {{ sylius_test_html_attribute('state') }}>{{ label(cycle.state) }}</td>
+                    <td {{ sylius_test_html_attribute('state') }}>{{ label(cycle.skipped ? 'skipped' : cycle.state) }}</td>
                     <td {{ sylius_test_html_attribute('order') }}>
                         {% if cycle.order is not null and cycle.order.number is not null %}
                             <a href="{{ path('sylius_shop_account_order_show', { number: cycle.order.number }) }}">#{{ cycle.order.number }}</a>

@@ -12,12 +12,12 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
 use Webmozart\Assert\Assert;
 
 /**
- * A cancelled or suspended subscription has no open cycle left: a suspended one generates no cycles
- * until it is reactivated. Cancelling the cycle also cancels its order while nothing has been charged
+ * A cancelled, paused or suspended subscription has no open cycle left: a paused or suspended one
+ * generates no cycles until it is resumed or reactivated. Cancelling the cycle also cancels its order while nothing has been charged
  * on it; paid cycles and their orders are left alone.
  *
- * An administrator's retry still awaiting the gateway's answer survives a suspension, since the
- * scheduler keeps reconciling the retries of suspended subscriptions; a cancellation takes it too,
+ * An administrator's retry still awaiting the gateway's answer survives a pause or a suspension, since
+ * the scheduler keeps reconciling the retries of paused and suspended subscriptions; a cancellation takes it too,
  * since nothing follows the cycles of a cancelled subscription any more.
  */
 final class CancelOpenCycleListener
@@ -31,9 +31,9 @@ final class CancelOpenCycleListener
         $subscription = $event->getSubject();
         Assert::isInstanceOf($subscription, SubscriptionInterface::class);
 
-        $suspending = SubscriptionTransitions::TRANSITION_SUSPEND === $event->getTransition()?->getName();
+        $stopping = \in_array($event->getTransition()?->getName(), [SubscriptionTransitions::TRANSITION_PAUSE, SubscriptionTransitions::TRANSITION_SUSPEND], true);
         foreach ($subscription->getCycles() as $cycle) {
-            if ($suspending && $cycle->isManualRetry()) {
+            if ($stopping && $cycle->isManualRetry()) {
                 continue;
             }
 

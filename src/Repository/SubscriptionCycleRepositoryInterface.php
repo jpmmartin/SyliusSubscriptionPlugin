@@ -17,7 +17,7 @@ interface SubscriptionCycleRepositoryInterface extends RepositoryInterface
     /**
      * The open cycles of active subscriptions that have something to do now: scheduled ones whose
      * date has come, held ones, which are asked again on every run, and those awaiting payment whose
-     * next attempt is due; and an administrator's retry to reconcile, even in a suspended subscription.
+     * next attempt is due; and an administrator's retry to reconcile, even in a paused or suspended subscription.
      * Read with their version, so each is processed only if nothing changed it since.
      *
      * @return list<array{id: int, version: int}>

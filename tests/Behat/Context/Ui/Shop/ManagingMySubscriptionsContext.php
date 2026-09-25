@@ -55,6 +55,19 @@ final class ManagingMySubscriptionsContext implements Context
         $this->showPage->cancel();
     }
 
+    #[When('/^I (pause|resume) this subscription$/')]
+    public function iApplyToThisSubscription(string $transition): void
+    {
+        $this->showPage->apply($transition);
+    }
+
+    #[When('/^I skip its renewal of "([^"]+)"$/')]
+    public function iSkipItsRenewalOf(string $date): void
+    {
+        Assert::contains((string) $this->showPage->getSkipRenewalButton(), $date);
+        $this->showPage->skipRenewal();
+    }
+
     #[When('I start changing its frequency')]
     public function iStartChangingItsFrequency(): void
     {
@@ -174,10 +187,24 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::same($this->changeFrequencyPage->getOfferedFrequencies(), [$frequency]);
     }
 
-    #[Then('I should be notified that the subscription has been cancelled')]
-    public function iShouldBeNotifiedThatTheSubscriptionHasBeenCancelled(): void
+    #[Then('/^I should be notified that the subscription has been (cancelled|paused|resumed)$/')]
+    public function iShouldBeNotifiedThatTheSubscriptionHasBeen(string $state): void
     {
-        $this->notificationChecker->checkNotification('The subscription has been cancelled.', NotificationType::success());
+        $this->notificationChecker->checkNotification(\sprintf('The subscription has been %s.', $state), NotificationType::success());
+    }
+
+    #[Then('I should be notified that the renewal has been skipped')]
+    public function iShouldBeNotifiedThatTheRenewalHasBeenSkipped(): void
+    {
+        $this->notificationChecker->checkNotification('The renewal has been skipped.', NotificationType::success());
+    }
+
+    #[Then('I should not be able to pause or resume it, nor skip its next renewal')]
+    public function iShouldNotBeAbleToPauseResumeOrSkip(): void
+    {
+        Assert::false($this->showPage->canApply('pause'), 'Pausing is offered.');
+        Assert::false($this->showPage->canApply('resume'), 'Resuming is offered.');
+        Assert::null($this->showPage->getSkipRenewalButton(), 'Skipping is offered.');
     }
 
     #[Then('I should be notified that the subscription frequency has been changed')]

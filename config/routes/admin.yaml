@@ -100,6 +100,40 @@ jpm_martin_sylius_subscription_admin_subscription_show:
             permission: true
             template: "@SyliusAdmin/shared/crud/show.html.twig"
 
+jpm_martin_sylius_subscription_admin_subscription_pause:
+    path: /subscriptions/{id}/pause
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: admin
+            permission: true
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: pause
+            redirect:
+                route: jpm_martin_sylius_subscription_admin_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.paused
+
+jpm_martin_sylius_subscription_admin_subscription_resume:
+    path: /subscriptions/{id}/resume
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: admin
+            permission: true
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: resume
+            redirect:
+                route: jpm_martin_sylius_subscription_admin_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.resumed
+
 jpm_martin_sylius_subscription_admin_subscription_suspend:
     path: /subscriptions/{id}/suspend
     methods: [PUT]
@@ -157,6 +191,14 @@ jpm_martin_sylius_subscription_admin_subscription_change_frequency:
     defaults:
         _controller: jpm_martin_sylius_subscription.controller.change_subscription_frequency
         template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_frequency.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_admin_subscription_show
+        customer_only: false
+
+jpm_martin_sylius_subscription_admin_subscription_skip_renewal:
+    path: /subscriptions/{id}/skip-renewal
+    methods: [POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.skip_subscription_renewal
         redirect_route: jpm_martin_sylius_subscription_admin_subscription_show
         customer_only: false
 
