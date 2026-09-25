@@ -139,6 +139,69 @@ final class RetryingAFailedCycleTest extends LifecycleTestCase
         self::assertSame([1 => 'paid', 2 => 'paid', 3 => 'paid', 4 => 'cancelled'], $this->cycleStates($subscription), 'No cycle is scheduled.');
     }
 
+    public function testASuccessfulRetryLeavesAPausedSubscriptionPaused(): void
+    {
+        $this->failTheFebruaryCycle();
+        $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_PAUSE);
+        $this->entityManager()->flush();
+
+        $this->itIsNow('2027-02-10 11:00');
+        self::assertTrue($this->retrier()->canRetry($this->cycle(2)));
+        $this->retry($this->cycle(2));
+
+        self::assertSame(SubscriptionCycleInterface::STATE_PAID, $this->cycle(2)->getState());
+        $subscription = $this->subscription();
+        self::assertSame(SubscriptionInterface::STATE_PAUSED, $subscription->getState());
+        self::assertSame([1 => 'paid', 2 => 'paid', 3 => 'cancelled'], $this->cycleStates($subscription), 'A paused subscription schedules nothing.');
+    }
+
+    public function testAPausedSubscriptionWhoseRetryPaidItsLastCycleCompletesWhenResumed(): void
+    {
+        $this->coffeeMonthly->setMaxCycles(3);
+        $this->entityManager()->flush();
+        $this->failTheFebruaryCycle();
+        $this->itIsNow('2027-03-01 09:00');
+        $this->runTheCycleCommand();
+        $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_PAUSE);
+        $this->entityManager()->flush();
+
+        $this->itIsNow('2027-03-10 11:00');
+        $this->retry($this->cycle(2));
+        self::assertSame(SubscriptionInterface::STATE_PAUSED, $this->subscription()->getState(), 'The retry leaves a paused subscription paused.');
+        self::assertFalse($this->onlyItemOf($this->subscription())->isRenewable());
+
+        $this->itIsNow('2027-03-20 11:00');
+        $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_RESUME);
+        $this->entityManager()->flush();
+
+        $subscription = $this->subscription();
+        self::assertSame(SubscriptionInterface::STATE_COMPLETED, $subscription->getState());
+        self::assertSame([1 => 'paid', 2 => 'paid', 3 => 'paid', 4 => 'cancelled'], $this->cycleStates($subscription), 'No cycle is scheduled.');
+    }
+
+    public function testARetryWithNoAnswerIsReconciledByTheSchedulerWhileTheSubscriptionIsPaused(): void
+    {
+        $this->failTheFebruaryCycle();
+        $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_PAUSE);
+        $this->entityManager()->flush();
+
+        $this->scriptedGateway()->willAnswer(ScriptedGateway::NO_ANSWER);
+        $this->itIsNow('2027-02-10 11:00');
+        $this->retry($this->cycle(2));
+        self::assertSame(SubscriptionCycleInterface::STATE_AWAITING_PAYMENT, $this->cycle(2)->getState());
+
+        $this->scriptedGateway()->willAnswer(ScriptedGateway::APPROVE);
+        $this->itIsNow('2027-02-10 12:00');
+        $this->runTheCycleCommand();
+
+        self::assertSame(SubscriptionCycleInterface::STATE_PAID, $this->cycle(2)->getState(), 'The retry is reconciled while paused.');
+        self::assertSame(
+            ['capture', 'capture', 'capture', 'capture', 'capture', 'status'],
+            $this->scriptedGateway()->requests(),
+        );
+        self::assertSame(SubscriptionInterface::STATE_PAUSED, $this->subscription()->getState());
+    }
+
     public function testARetryWithNoAnswerIsReconciledByTheSchedulerEvenWhileTheSubscriptionIsSuspendedAndNeverChargedAgain(): void
     {
         $this->failTheFebruaryCycle();
@@ -201,6 +264,24 @@ final class RetryingAFailedCycleTest extends LifecycleTestCase
         self::assertSame(SubscriptionInterface::STATE_SUSPENDED, $this->subscription()->getState());
     }
 
+    public function testPausingTheSubscriptionLeavesARetryAwaitingItsOutcomeToBeReconciled(): void
+    {
+        $this->failTheFebruaryCycle();
+        $this->scriptedGateway()->willAnswer(ScriptedGateway::NO_ANSWER);
+        $this->itIsNow('2027-02-10 11:00');
+        $this->retry($this->cycle(2));
+
+        $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_PAUSE);
+        $this->entityManager()->flush();
+        self::assertSame([1 => 'paid', 2 => 'awaiting_payment', 3 => 'cancelled'], $this->cycleStates($this->subscription()), 'Only the open cycle is cancelled.');
+
+        $this->itIsNow('2027-02-10 12:00');
+        $this->runTheCycleCommand();
+
+        self::assertSame(SubscriptionCycleInterface::STATE_PAID, $this->cycle(2)->getState());
+        self::assertSame(SubscriptionInterface::STATE_PAUSED, $this->subscription()->getState());
+    }
+
     public function testASuspensionForFailuresInARowLeavesARetryAwaitingItsOutcomeToBeReconciled(): void
     {
         $this->gate()->decide(GateDecision::reject('The prescription has expired.'));
@@ -256,7 +337,7 @@ final class RetryingAFailedCycleTest extends LifecycleTestCase
         self::assertCount(4, $cycle->getAttempts(), 'Nothing was charged.');
     }
 
-    public function testOnlyAFailedCycleOfAnActiveOrSuspendedSubscriptionCanBeRetried(): void
+    public function testOnlyAFailedCycleOfAnActivePausedOrSuspendedSubscriptionCanBeRetried(): void
     {
         $this->failTheFebruaryCycle();
         $retrier = $this->retrier();

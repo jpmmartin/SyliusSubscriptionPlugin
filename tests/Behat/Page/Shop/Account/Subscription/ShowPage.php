@@ -42,6 +42,28 @@ final class ShowPage extends SymfonyPage
         $this->getElement('cancel')->press();
     }
 
+    /** Pause or resume, whichever the button says. */
+    public function canApply(string $transition): bool
+    {
+        return $this->hasElement($transition);
+    }
+
+    public function apply(string $transition): void
+    {
+        $this->getElement($transition)->press();
+    }
+
+    /** The text of the button that skips the next renewal, which says its date; null when it is not offered. */
+    public function getSkipRenewalButton(): ?string
+    {
+        return $this->hasElement('skip_renewal') ? trim($this->getElement('skip_renewal')->getText()) : null;
+    }
+
+    public function skipRenewal(): void
+    {
+        $this->getElement('skip_renewal')->press();
+    }
+
     public function canChangeFrequency(): bool
     {
         return $this->hasElement('change_frequency');
@@ -84,6 +106,9 @@ final class ShowPage extends SymfonyPage
             'cycle' => '[data-test-cycle="%number%"]',
             'detail' => '[data-test-subscription-%detail%]',
             'item' => '[data-test-item="%product%"]',
+            'pause' => 'button[data-test-pause]',
+            'resume' => 'button[data-test-resume]',
+            'skip_renewal' => 'button[data-test-skip-renewal]',
         ]);
     }
 }

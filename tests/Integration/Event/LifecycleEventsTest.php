@@ -13,16 +13,20 @@ use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalHeld;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalOrderPlaced;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalPaid;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalRetried;
+use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalSkipped;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionActivated;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCancelled;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionCompleted;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionFrequencyChanged;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionPaused;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionReactivated;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionResumed;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionSuspended;
 use JpmMartin\SyliusSubscriptionPlugin\Gate\GateDecision;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
 use Sylius\Component\Order\OrderTransitions;
@@ -67,6 +71,42 @@ final class LifecycleEventsTest extends LifecycleTestCase
             new SubscriptionReactivated($this->subscriptionId),
             new SubscriptionCancelled($this->subscriptionId),
             new RenewalCancelled($this->subscriptionId, (int) $next->getId(), 3, null, null),
+        ], $this->collector()->events());
+    }
+
+    public function testPausingAndResumingPublishTheirOwnMomentsAndThePausedCycleCancelledNotASuspension(): void
+    {
+        $this->collector()->clear();
+        [, $open] = $this->storedCycles($this->subscription());
+        $openId = (int) $open->getId();
+
+        $this->itIsNow('2027-01-20 09:00');
+        $this->transition(SubscriptionTransitions::TRANSITION_PAUSE);
+        $this->itIsNow('2027-03-10 09:00');
+        $this->transition(SubscriptionTransitions::TRANSITION_RESUME);
+
+        self::assertEquals([
+            new SubscriptionPaused($this->subscriptionId),
+            new RenewalCancelled($this->subscriptionId, $openId, 2, null, null),
+            new SubscriptionResumed($this->subscriptionId),
+        ], $this->collector()->events());
+        self::assertSame([], $this->collector()->events(SubscriptionSuspended::class));
+        self::assertSame([], $this->collector()->events(SubscriptionReactivated::class));
+    }
+
+    public function testASkippedRenewalIsPublishedWithTheDateAfterItAndNotAsACancelledCycle(): void
+    {
+        $this->collector()->clear();
+        [, $open] = $this->storedCycles($this->subscription());
+
+        $this->itIsNow('2027-01-20 09:00');
+        $skipper = self::getContainer()->get(SubscriptionRenewalSkipperInterface::class);
+        self::assertInstanceOf(SubscriptionRenewalSkipperInterface::class, $skipper);
+        $skipper->skip($this->subscription());
+        $this->entityManager()->flush();
+
+        self::assertEquals([
+            new RenewalSkipped($this->subscriptionId, (int) $open->getId(), 2, new \DateTimeImmutable('2027-02-01 09:00'), new \DateTimeImmutable('2027-03-01 09:00')),
         ], $this->collector()->events());
     }
 

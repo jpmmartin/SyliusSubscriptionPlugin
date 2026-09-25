@@ -41,11 +41,13 @@ with all of them, charged without the customer present, with retries when a char
   An administrator can retry a failed cycle; cancelling a renewal order before it is paid skips that
   renewal.
 - **Customer account**: the customer's subscriptions with their products, their renewals and what each
-  skipped, cancelling and changing how often they renew.
+  skipped; pausing and resuming them, skipping the next renewal, cancelling and changing how often
+  they renew. See [Pausing and skipping](#pausing-and-skipping).
 - **Admin**: a list filterable by state, customer, variant (of any of the products) and next renewal,
   and a page with the products, the consent, the failed renewals in a row, every renewal with what it
   took in or skipped and each charge attempt (date, outcome and reason), and the actions the state
-  allows: suspend, reactivate, cancel, change the frequency and retry a failed renewal.
+  allows: pause, resume, suspend, reactivate, cancel, skip the next renewal, change the frequency and
+  retry a failed renewal.
 - **Committed cycles**: a read-only query of what the active subscriptions of a variant will renew
   within a horizon, for planning stock.
 - **Events, no emails**: the plugin tells no customer anything. It publishes an event of its own at every
@@ -169,6 +171,8 @@ jpm_martin_sylius_subscription:
     # Days before a renewal at which RenewalUpcoming is published, once per cycle; null never publishes
     # it. See "Events".
     renewal_notice_days: 3
+    # Renewals in a row a customer may skip; null sets no limit. See "Pausing and skipping".
+    max_consecutive_skips: ~
     # What becomes of the dates of a calendar that came before a cycle could be scheduled on them:
     # skip, charge or skip_late. See "Missed dates".
     missed_cycles: skip
@@ -241,6 +245,34 @@ scheduled, without counting as a failure: that renewal is skipped.
 
 Suspending a subscription cancels its open cycle but leaves alone a retry still awaiting the gateway's
 answer, which the scheduler keeps reconciling. Cancelling the subscription cancels that retry too.
+
+A suspended or a paused subscription is taken up again on the first date of its calendar after that
+day, even when that date is the one of the cycle the suspension or the pause cancelled.
+
+## Pausing and skipping
+
+A customer pauses an active subscription from their account, and resumes it when they want: a pause
+has no end date. An administrator can do both on the customer's behalf. A pause is not a suspension:
+
+- pausing is the customer's, and so is resuming; a suspension, by an administrator or after failed
+  cycles in a row, is lifted only by an administrator reactivating the subscription;
+- pausing cancels the open cycle, and its order if nothing was charged on it, like a suspension, and
+  leaves alone an administrator's retry still awaiting the gateway's answer;
+- a paused subscription generates no cycles and no renewal notices;
+- resuming schedules the next cycle on the first date of its calendar after that day, and keeps the
+  failed cycles in a row: pausing changes nothing about the payment method, so it is no way around
+  the suspension.
+
+A customer, or an administrator on their behalf, can also skip the next renewal of an active
+subscription while its order has not been placed: its cycle is cancelled, marked as skipped, and the
+next cycle keeps its date on the calendar. A skipped renewal is neither a failure nor a charge, so it
+does not use up a plan's maximum. Once the renewal's order is placed, for instance while its charge
+awaits a retry, it can no longer be skipped. `max_consecutive_skips` limits how many renewals in a
+row can be skipped: those skipped right before the open cycle, with no paid, failed or otherwise
+cancelled cycle between them. With none set, there is no limit. A skip cannot be undone.
+
+The skip is a service, `SubscriptionRenewalSkipperInterface`: replace it to let customers skip
+another way.
 
 ## Retrying failed charges
 
@@ -417,6 +449,8 @@ subscription; listen to that interface to receive them all.
 | Event | Published when | Data besides `subscriptionId` |
 |---|---|---|
 | `SubscriptionActivated` | the subscription is activated: its initial order was paid | — |
+| `SubscriptionPaused` | it is paused, by its customer or an administrator on the customer's behalf | — |
+| `SubscriptionResumed` | the paused subscription is resumed | — |
 | `SubscriptionSuspended` | it is suspended, by an administrator or after failed cycles in a row | — |
 | `SubscriptionReactivated` | it is reactivated | — |
 | `SubscriptionCancelled` | it is cancelled, by its customer or an administrator | — |
@@ -429,7 +463,8 @@ subscription; listen to that interface to receive them all.
 | `RenewalPaid` | the renewal order is paid | `cycleId`, `cycleNumber`, `orderId` |
 | `RenewalFailed` | the cycle fails: retries run out, a gate rejects it, its hold expires or nothing could be renewed | `cycleId`, `cycleNumber`, `orderId` (null without an order), `reason` |
 | `RenewalRetried` | an administrator retries a failed cycle; `RenewalPaid` or `RenewalFailed` follows with its new order | `cycleId`, `cycleNumber` |
-| `RenewalCancelled` | the cycle is cancelled: its order was cancelled before being paid, the subscription stopped or the cycle was skipped as late | `cycleId`, `cycleNumber`, `orderId` and `reason`, each null when there is none |
+| `RenewalSkipped` | the next renewal is skipped, by the customer or an administrator; published instead of `RenewalCancelled` | `cycleId`, `cycleNumber`, `scheduledAt`, `nextScheduledAt` |
+| `RenewalCancelled` | the cycle is cancelled: its order was cancelled before being paid, the subscription was paused, suspended or cancelled, or the cycle was skipped as late | `cycleId`, `cycleNumber`, `orderId` and `reason`, each null when there is none |
 
 The renewal events come from renewals only: the first cycle is the initial order, paid when the
 subscription is activated. The last retry that is declined publishes `RenewalFailed`, not
@@ -478,7 +513,9 @@ When they are delivered:
 - An event of anything done outside the command, such as an administrator suspending a subscription, the
   customer cancelling it or changing its frequency, or the payment of its initial order activating it,
   may be handled while that request runs, before its changes are stored. It waits for them only when
-  the action is itself a message of one of Sylius's command buses, which commit before delivering.
+  the action is itself a message of one of Sylius's command buses, which commit before delivering:
+  skipping a renewal is one, so `RenewalSkipped` is delivered once the skip is stored, and not at all
+  if the cycles command changed the cycle meanwhile.
 - A handler run synchronously that throws:
   - in the command, makes it report the cycle as failed although the cycle was stored. Running the
     command again does not charge it twice, since the cycle changed, but the report misleads;
@@ -500,6 +537,11 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without pausing, `doctrine:migrations:migrate` adds whether each cycle was skipped, with
+no cycle skipped before. Subscriptions gain the `paused` state: a store that shows the states in its
+own templates or translations has one more to add. Before going back to a version without it, resume
+or cancel the paused subscriptions, since that version's graph does not know the state.
 
 From a version that charged each missed date, one per run of the command, the default is now to skip
 them; see "Missed dates". Set `missed_cycles: charge` to keep charging them. Nothing needs migrating.

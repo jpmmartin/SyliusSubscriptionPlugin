@@ -50,6 +50,56 @@ jpm_martin_sylius_subscription_shop_account_subscription_cancel:
                     id: $id
             flash: jpm_martin_sylius_subscription.subscription.cancelled
 
+jpm_martin_sylius_subscription_shop_account_subscription_pause:
+    path: /account/subscriptions/{id}/pause
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: shop_account
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: pause
+            repository:
+                method: findOneByIdAndCustomer
+                arguments:
+                    - $id
+                    - "expr:service('sylius.context.customer').getCustomer()"
+            redirect:
+                route: jpm_martin_sylius_subscription_shop_account_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.paused
+
+jpm_martin_sylius_subscription_shop_account_subscription_resume:
+    path: /account/subscriptions/{id}/resume
+    methods: [PUT]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
+        _sylius:
+            section: shop_account
+            state_machine:
+                graph: jpm_martin_sylius_subscription
+                transition: resume
+            repository:
+                method: findOneByIdAndCustomer
+                arguments:
+                    - $id
+                    - "expr:service('sylius.context.customer').getCustomer()"
+            redirect:
+                route: jpm_martin_sylius_subscription_shop_account_subscription_show
+                parameters:
+                    id: $id
+            flash: jpm_martin_sylius_subscription.subscription.resumed
+
+jpm_martin_sylius_subscription_shop_account_subscription_skip_renewal:
+    path: /account/subscriptions/{id}/skip-renewal
+    methods: [POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.skip_subscription_renewal
+        redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
+        customer_only: true
+
 jpm_martin_sylius_subscription_shop_account_subscription_change_frequency:
     path: /account/subscriptions/{id}/change-frequency
     methods: [GET, POST]

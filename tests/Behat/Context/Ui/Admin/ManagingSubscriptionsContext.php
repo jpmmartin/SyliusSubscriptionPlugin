@@ -16,7 +16,7 @@ use Webmozart\Assert\Assert;
 
 final class ManagingSubscriptionsContext implements Context
 {
-    private const TRANSITIONS = ['suspend' => 'suspend', 'reactivate' => 'reactivate', 'cancel' => 'cancel'];
+    private const TRANSITIONS = ['pause' => 'pause', 'resume' => 'resume', 'suspend' => 'suspend', 'reactivate' => 'reactivate', 'cancel' => 'cancel'];
 
     public function __construct(
         private readonly IndexPage $indexPage,
@@ -59,10 +59,16 @@ final class ManagingSubscriptionsContext implements Context
         $this->indexPage->showSubscriptionOf($email);
     }
 
-    #[When('/^I (suspend|reactivate|cancel) it$/')]
+    #[When('/^I (pause|resume|suspend|reactivate|cancel) it$/')]
     public function iApplyToIt(string $transition): void
     {
         $this->showPage->apply(self::TRANSITIONS[$transition]);
+    }
+
+    #[When('I skip its next renewal')]
+    public function iSkipItsNextRenewal(): void
+    {
+        $this->showPage->skipRenewal();
     }
 
     #[When('/^I change its frequency to "([^"]+)"$/')]
@@ -177,7 +183,7 @@ final class ManagingSubscriptionsContext implements Context
         }
     }
 
-    #[Then('/^I should be notified that it has been (suspended|reactivated|cancelled)$/')]
+    #[Then('/^I should be notified that it has been (paused|resumed|suspended|reactivated|cancelled)$/')]
     public function iShouldBeNotifiedThatItHasBeen(string $state): void
     {
         $this->notificationChecker->checkNotification(\sprintf('The subscription has been %s.', $state), NotificationType::success());
@@ -187,6 +193,12 @@ final class ManagingSubscriptionsContext implements Context
     public function iShouldBeNotifiedThatItsFrequencyHasBeenChanged(): void
     {
         $this->notificationChecker->checkNotification('The subscription frequency has been changed.', NotificationType::success());
+    }
+
+    #[Then('I should be notified that the renewal has been skipped')]
+    public function iShouldBeNotifiedThatTheRenewalHasBeenSkipped(): void
+    {
+        $this->notificationChecker->checkNotification('The renewal has been skipped.', NotificationType::success());
     }
 
     #[Then('I should be notified that the renewal has been charged')]

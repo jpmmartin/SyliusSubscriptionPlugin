@@ -103,4 +103,12 @@ interface SubscriptionCycleInterface extends ResourceInterface, TimestampableInt
     public function isManualRetry(): bool;
 
     public function setManualRetry(bool $manualRetry): void;
+
+    /**
+     * Cancelled because its customer, or an administrator on the customer's behalf, skipped this renewal:
+     * neither a failure nor a charge, and counted in the skips in a row.
+     */
+    public function isSkipped(): bool;
+
+    public function setSkipped(bool $skipped): void;
 }

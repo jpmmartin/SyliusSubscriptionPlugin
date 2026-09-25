@@ -2,7 +2,7 @@
 Feature: Managing my subscriptions
     In order to decide what I keep receiving and how often
     As a Customer
-    I want to see my subscriptions in my account, cancel them and change how often they renew
+    I want to see my subscriptions in my account, pause, resume or cancel them, skip a renewal and change how often they renew
 
     Background:
         Given the store operates on a single channel in "United States"
@@ -76,6 +76,45 @@ Feature: Managing my subscriptions
         And I should not be able to cancel it again
         When the renewals due on "2027-02-01 09:00" are processed
         Then no renewal order should have been placed for it
+
+    @ui
+    Scenario: Pausing a subscription before it renews
+        Given it is "2027-01-20 09:00" now
+        When I view my subscription to "Coffee"
+        And I pause this subscription
+        Then I should be notified that the subscription has been paused
+        And this subscription should be "Paused"
+        And its renewal #2 should be "Cancelled" on "Feb 1, 2027"
+        When the renewals due on "2027-02-01 09:00" are processed
+        Then no renewal order should have been placed for it
+
+    @ui
+    Scenario: Resuming a paused subscription on the first date of its calendar
+        Given my subscription has been paused
+        And it is "2027-03-10 12:00" now
+        When I view my subscription to "Coffee"
+        And I resume this subscription
+        Then I should be notified that the subscription has been resumed
+        And this subscription should be "Active"
+        And it should next renew on "Apr 1, 2027"
+
+    @ui
+    Scenario: Skipping the next renewal
+        Given it is "2027-01-20 09:00" now
+        When I view my subscription to "Coffee"
+        And I skip its renewal of "Feb 1, 2027"
+        Then I should be notified that the renewal has been skipped
+        And its renewal #2 should be "Skipped" on "Feb 1, 2027"
+        And it should next renew on "Mar 1, 2027"
+        When the renewals due on "2027-02-01 09:00" are processed
+        Then no renewal order should have been placed for it
+
+    @ui
+    Scenario: Not being offered to resume a subscription suspended after three failed renewals in a row
+        Given the next 3 renewals of my subscription failed
+        When I view my subscription to "Coffee"
+        Then this subscription should be "Suspended"
+        And I should not be able to pause or resume it, nor skip its next renewal
 
     @ui
     Scenario: Changing from monthly to quarterly halfway through the month

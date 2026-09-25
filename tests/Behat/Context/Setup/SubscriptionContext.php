@@ -77,11 +77,28 @@ final class SubscriptionContext implements Context
     ) {
     }
 
-    #[Given('/^the subscription of "([^"]+)" has been (suspended|cancelled)$/')]
+    #[Given('/^the subscription of "([^"]+)" has been (suspended|cancelled|paused)$/')]
     public function theSubscriptionOfHasBeen(string $email, string $state): void
     {
-        $subscription = $this->subscriptionOf($email);
-        $transition = 'suspended' === $state ? SubscriptionTransitions::TRANSITION_SUSPEND : SubscriptionTransitions::TRANSITION_CANCEL;
+        $this->bring($this->subscriptionOf($email), $state);
+    }
+
+    #[Given('my subscription has been paused')]
+    public function mySubscriptionHasBeenPaused(): void
+    {
+        $subscription = $this->sharedStorage->get('subscription');
+        Assert::isInstanceOf($subscription, SubscriptionInterface::class);
+
+        $this->bring($subscription, 'paused');
+    }
+
+    private function bring(SubscriptionInterface $subscription, string $state): void
+    {
+        $transition = match ($state) {
+            'suspended' => SubscriptionTransitions::TRANSITION_SUSPEND,
+            'paused' => SubscriptionTransitions::TRANSITION_PAUSE,
+            default => SubscriptionTransitions::TRANSITION_CANCEL,
+        };
 
         $this->stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, $transition);
         $this->entityManager->flush();

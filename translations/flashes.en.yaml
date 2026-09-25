@@ -8,8 +8,13 @@ jpm_martin_sylius_subscription:
         frequency_changed: The subscription frequency has been changed.
         suspended: The subscription has been suspended.
         reactivated: The subscription has been reactivated.
+        paused: The subscription has been paused.
+        resumed: The subscription has been resumed.
     subscription_cycle:
         retry_paid: The renewal has been charged.
         retry_failed: The renewal could not be charged.
         retry_pending: The payment provider has not confirmed the charge yet. The renewal will be updated once it does.
         retry_not_allowed: This renewal cannot be retried.
+        skipped: The renewal has been skipped.
+        skip_not_allowed: This renewal cannot be skipped.
+        skip_conflict: The renewal changed while you were skipping it. Please try again.

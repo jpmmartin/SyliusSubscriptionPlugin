@@ -23,7 +23,7 @@
                         <td>{{ cycle.number }}</td>
                         <td>{{ cycle.scheduledAt|date('d-m-Y') }}</td>
                         <td>
-                            {{ label(cycle.state) }}
+                            {{ label(cycle.skipped ? 'skipped' : cycle.state) }}
                             {% if cycle.state == 'on_hold' %}
                                 <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('hold') }}>{{ 'jpm_martin_sylius_subscription.ui.held_until'|trans({ '%date%': cycle.holdUntil|date('d-m-Y') }) }}: {{ cycle.holdReason }}</div>
                             {% endif %}

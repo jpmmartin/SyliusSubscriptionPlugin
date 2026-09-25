@@ -1,4 +1,5 @@
-# Cancelled and completed are final. The graph is mapped to the Symfony Workflow adapter explicitly,
+# Cancelled and completed are final. A pause is the customer's and a suspension the administrator's or
+# the failed cycles', so a paused subscription is resumed and a suspended one reactivated. The graph is mapped to the Symfony Workflow adapter explicitly,
 # so it keeps working in a store whose default state machine adapter is winzou.
 framework:
     workflows:
@@ -13,12 +14,19 @@ framework:
             places:
                 - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
                 - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PAUSED
                 - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
                 - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_CANCELLED
                 - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_COMPLETED
             transitions:
                 !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_ACTIVATE:
                     from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_PAUSE:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                    to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PAUSED
+                !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_RESUME:
+                    from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PAUSED
                     to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
                 !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_SUSPEND:
                     from: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
@@ -30,6 +38,7 @@ framework:
                     from:
                         - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PENDING
                         - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_ACTIVE
+                        - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_PAUSED
                         - !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_SUSPENDED
                     to: !php/const JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface::STATE_CANCELLED
                 !php/const JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions::TRANSITION_COMPLETE:

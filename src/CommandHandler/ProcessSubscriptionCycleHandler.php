@@ -26,7 +26,7 @@ use Webmozart\Assert\Assert;
  * changes is stored with the cycle's version checked, so two handlers can never both go ahead.
  *
  * An administrator's retry is charged once, by the retry itself: here it is only reconciled, even
- * while its subscription is suspended.
+ * while its subscription is paused or suspended.
  *
  * A scheduled cycle the missed cycle policy no longer holds due is cancelled without an order, and the
  * next is scheduled: it is not a failed cycle.
@@ -99,7 +99,9 @@ final class ProcessSubscriptionCycleHandler
     {
         $state = $cycle->getSubscription()?->getState();
 
-        return SubscriptionInterface::STATE_ACTIVE === $state || ($cycle->isManualRetry() && SubscriptionInterface::STATE_SUSPENDED === $state);
+        return SubscriptionInterface::STATE_ACTIVE === $state || (
+            $cycle->isManualRetry() && \in_array($state, [SubscriptionInterface::STATE_PAUSED, SubscriptionInterface::STATE_SUSPENDED], true)
+        );
     }
 
     private function skip(SubscriptionCycleInterface $cycle): void

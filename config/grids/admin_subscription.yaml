@@ -61,6 +61,7 @@ sylius_grid:
                         choices:
                             jpm_martin_sylius_subscription.ui.state.pending: pending
                             jpm_martin_sylius_subscription.ui.state.active: active
+                            jpm_martin_sylius_subscription.ui.state.paused: paused
                             jpm_martin_sylius_subscription.ui.state.suspended: suspended
                             jpm_martin_sylius_subscription.ui.state.cancelled: cancelled
                             jpm_martin_sylius_subscription.ui.state.completed: completed

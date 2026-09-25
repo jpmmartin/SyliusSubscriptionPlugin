@@ -21,7 +21,7 @@ use Webmozart\Assert\Assert;
  */
 final class SubscriptionCycleRetrier implements SubscriptionCycleRetrierInterface
 {
-    private const RETRIABLE_SUBSCRIPTION_STATES = [SubscriptionInterface::STATE_ACTIVE, SubscriptionInterface::STATE_SUSPENDED];
+    private const RETRIABLE_SUBSCRIPTION_STATES = [SubscriptionInterface::STATE_ACTIVE, SubscriptionInterface::STATE_PAUSED, SubscriptionInterface::STATE_SUSPENDED];
 
     public function __construct(
         private readonly StateMachineInterface $stateMachine,
@@ -39,7 +39,7 @@ final class SubscriptionCycleRetrier implements SubscriptionCycleRetrierInterfac
 
     public function retry(SubscriptionCycleInterface $cycle): void
     {
-        Assert::true($this->canRetry($cycle), 'Only a failed cycle of an active or suspended subscription can be retried.');
+        Assert::true($this->canRetry($cycle), 'Only a failed cycle of an active, paused or suspended subscription can be retried.');
 
         $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_RETRY);
         $cycle->setManualRetry(true);

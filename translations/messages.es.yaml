@@ -53,6 +53,9 @@ jpm_martin_sylius_subscription:
             not_in_channel: No se vende en este canal
         cancel_subscription: Cancelar suscripción
         subscriptions: Suscripciones
+        pause: Pausar
+        resume: Reanudar
+        skip_renewal: 'Saltarse la renovación del %date%'
         suspend: Suspender
         reactivate: Reactivar
         cancel: Cancelar suscripción
@@ -74,6 +77,7 @@ jpm_martin_sylius_subscription:
         state:
             pending: Pendiente
             active: Activa
+            paused: Pausada
             suspended: Suspendida
             cancelled: Cancelada
             completed: Terminada
@@ -82,6 +86,7 @@ jpm_martin_sylius_subscription:
             awaiting_payment: Pendiente de pago
             paid: Cobrada
             failed: Fallida
+            skipped: Saltada
         interval_unit:
             day: día(s)
             week: semana(s)

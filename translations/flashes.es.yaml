@@ -8,8 +8,13 @@ jpm_martin_sylius_subscription:
         frequency_changed: Se ha cambiado la frecuencia de la suscripción.
         suspended: La suscripción se ha suspendido.
         reactivated: La suscripción se ha reactivado.
+        paused: La suscripción se ha pausado.
+        resumed: La suscripción se ha reanudado.
     subscription_cycle:
         retry_paid: Se ha cobrado la renovación.
         retry_failed: No se ha podido cobrar la renovación.
         retry_pending: La pasarela de pago todavía no ha confirmado el cobro. La renovación se actualizará cuando lo haga.
         retry_not_allowed: Esta renovación no se puede reintentar.
+        skipped: Se ha saltado la renovación.
+        skip_not_allowed: Esta renovación no se puede saltar.
+        skip_conflict: La renovación ha cambiado mientras la saltabas. Inténtalo de nuevo.

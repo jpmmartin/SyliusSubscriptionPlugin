@@ -7,7 +7,16 @@
                 {{ 'jpm_martin_sylius_subscription.ui.change_frequency'|trans }}
             </a>
         {% endif %}
-        {% for transition in ['suspend', 'reactivate', 'cancel'] %}
+        {% set renewal_to_skip = jpm_martin_sylius_subscription_renewal_to_skip(subscription) %}
+        {% if renewal_to_skip is not null %}
+            <form method="post" action="{{ path('jpm_martin_sylius_subscription_admin_subscription_skip_renewal', { id: subscription.id }) }}" class="d-inline">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('jpm_martin_sylius_subscription_skip_renewal_' ~ subscription.id) }}">
+                <button type="submit" class="btn" {{ sylius_test_html_attribute('skip-renewal') }}>
+                    {{ 'jpm_martin_sylius_subscription.ui.skip_renewal'|trans({ '%date%': renewal_to_skip.scheduledAt|format_date }) }}
+                </button>
+            </form>
+        {% endif %}
+        {% for transition in ['pause', 'resume', 'suspend', 'reactivate', 'cancel'] %}
             {% if sylius_sm_can(subscription, 'jpm_martin_sylius_subscription', transition) %}
                 <form method="post" action="{{ path('jpm_martin_sylius_subscription_admin_subscription_' ~ transition, { id: subscription.id }) }}" class="d-inline">
                     <input type="hidden" name="_method" value="PUT">

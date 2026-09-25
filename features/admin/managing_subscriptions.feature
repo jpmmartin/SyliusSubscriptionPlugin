@@ -2,7 +2,7 @@
 Feature: Managing subscriptions
     In order to look after the customers' renewals
     As an Administrator
-    I want to find subscriptions, see what they renew and every charge attempt, retry failed renewals, and change their state or frequency
+    I want to find subscriptions, see what they renew and every charge attempt, retry failed renewals, skip a renewal, and change their state or frequency
 
     Background:
         Given the store operates on a single channel in "United States"
@@ -44,6 +44,12 @@ Feature: Managing subscriptions
     Scenario: Filtering the subscriptions by state
         Given the subscription of "bob@example.com" has been suspended
         When I filter the subscriptions by state "Suspended"
+        Then I should see 1 subscription in the list
+
+    @ui
+    Scenario: Filtering the subscriptions by the paused state
+        Given the subscription of "bob@example.com" has been paused
+        When I filter the subscriptions by state "Paused"
         Then I should see 1 subscription in the list
 
     @ui
@@ -129,6 +135,30 @@ Feature: Managing subscriptions
         Then I should be notified that it has been reactivated
         And it should be "Active"
         And it should next renew on "01-04-2027"
+
+    @ui
+    Scenario: Pausing a subscription for its customer and resuming it
+        Given it is "2027-01-20 09:00" now
+        When I view the subscription of "ann@example.com"
+        And I pause it
+        Then I should be notified that it has been paused
+        And it should be "Paused"
+        And its renewal #2 should be "Cancelled"
+        When it is "2027-03-10 12:00" now
+        And I view the subscription of "ann@example.com"
+        And I resume it
+        Then I should be notified that it has been resumed
+        And it should be "Active"
+        And it should next renew on "01-04-2027"
+
+    @ui
+    Scenario: Skipping the next renewal of a subscription for its customer
+        Given it is "2027-01-20 09:00" now
+        When I view the subscription of "ann@example.com"
+        And I skip its next renewal
+        Then I should be notified that the renewal has been skipped
+        And its renewal #2 should be "Skipped"
+        And it should next renew on "01-03-2027"
 
     @ui
     Scenario: Not being offered to reactivate a cancelled subscription

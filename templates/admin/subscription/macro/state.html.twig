@@ -3,6 +3,7 @@
     {% set state_badge = {
         pending: 'bg-secondary-lt',
         active: 'bg-green-lt',
+        paused: 'bg-secondary-lt',
         suspended: 'bg-orange-lt',
         cancelled: 'bg-red-lt',
         completed: 'bg-blue-lt',
@@ -11,6 +12,7 @@
         awaiting_payment: 'bg-purple-lt',
         paid: 'bg-green-lt',
         failed: 'bg-red-lt',
+        skipped: 'bg-secondary-lt',
     } %}
 
     <span class="badge {{ state_badge[state]|default('') }}">
