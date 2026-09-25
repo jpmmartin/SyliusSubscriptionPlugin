@@ -60,6 +60,11 @@ final class ShowPage extends SymfonyPage
         $this->getElement('skip_renewal')->press();
     }
 
+    public function changeAddress(): void
+    {
+        $this->getElement('change_address')->click();
+    }
+
     public function changeFrequency(): void
     {
         $this->getElement('change_frequency')->click();
@@ -102,6 +107,7 @@ final class ShowPage extends SymfonyPage
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'change_address' => '[data-test-change-address]',
             'change_frequency' => '[data-test-change-frequency]',
             'consent_field' => '[data-test-consent-%field%]',
             'cycle' => '[data-test-cycle="%number%"]',

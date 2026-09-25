@@ -1,0 +1,7 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'jpm_martin_sylius_subscription.ui.change_address'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    {% hook 'update' with { _prefixes: ['jpm_martin_sylius_subscription.admin.subscription_address_change', 'sylius_admin.common'], resource, form, offers } %}
+{% endblock %}

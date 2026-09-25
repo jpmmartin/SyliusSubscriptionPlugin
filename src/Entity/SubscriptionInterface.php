@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Entity;
 
 use Doctrine\Common\Collections\Collection;
+use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -75,6 +76,19 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
     public function getShippingMethod(): ?ShippingMethodInterface;
 
     public function setShippingMethod(?ShippingMethodInterface $shippingMethod): void;
+
+    /**
+     * The addresses its customer or an administrator chose for its renewals: copies of their own, which
+     * editing the address book leaves alone. Null until they are changed: the renewals then take those of
+     * the subscription's last order.
+     */
+    public function getShippingAddress(): ?AddressInterface;
+
+    public function setShippingAddress(?AddressInterface $shippingAddress): void;
+
+    public function getBillingAddress(): ?AddressInterface;
+
+    public function setBillingAddress(?AddressInterface $billingAddress): void;
 
     public function getConsentVersion(): ?string;
 

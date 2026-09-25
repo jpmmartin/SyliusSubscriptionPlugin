@@ -109,6 +109,15 @@ jpm_martin_sylius_subscription_shop_account_subscription_change_frequency:
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
         customer_only: true
 
+jpm_martin_sylius_subscription_shop_account_subscription_change_address:
+    path: /account/subscriptions/{id}/change-address
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.change_subscription_address
+        template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
+        customer_only: true
+
 jpm_martin_sylius_subscription_shop_cart_repeat:
     path: /cart/repeat
     methods: [POST]

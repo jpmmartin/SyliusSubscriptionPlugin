@@ -6,6 +6,7 @@ jpm_martin_sylius_subscription:
     subscription:
         cancelled: The subscription has been cancelled.
         frequency_changed: The subscription frequency has been changed.
+        address_changed: "The subscription's addresses have been changed."
         suspended: The subscription has been suspended.
         reactivated: The subscription has been reactivated.
         paused: The subscription has been paused.

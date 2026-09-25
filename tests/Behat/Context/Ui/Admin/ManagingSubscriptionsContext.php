@@ -9,6 +9,7 @@ use Behat\Step\Then;
 use Behat\Step\When;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Service\NotificationCheckerInterface;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeAddressPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeFrequencyPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\IndexPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ShowPage;
@@ -22,6 +23,7 @@ final class ManagingSubscriptionsContext implements Context
         private readonly IndexPage $indexPage,
         private readonly ShowPage $showPage,
         private readonly ChangeFrequencyPage $changeFrequencyPage,
+        private readonly ChangeAddressPage $changeAddressPage,
         private readonly NotificationCheckerInterface $notificationChecker,
     ) {
     }
@@ -63,6 +65,14 @@ final class ManagingSubscriptionsContext implements Context
     public function iApplyToIt(string $transition): void
     {
         $this->showPage->apply(self::TRANSITIONS[$transition]);
+    }
+
+    #[When('/^I change its shipping address to "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)" for "([^"]+)"$/')]
+    public function iChangeItsShippingAddressTo(string $city, string $street, string $postcode, string $country, string $fullName): void
+    {
+        $this->showPage->changeAddress();
+        $this->changeAddressPage->writeShippingAddress($fullName, $street, $postcode, $city, $country);
+        $this->changeAddressPage->confirm();
     }
 
     #[When('I skip its next renewal')]
@@ -193,6 +203,18 @@ final class ManagingSubscriptionsContext implements Context
     public function iShouldBeNotifiedThatItsFrequencyHasBeenChanged(): void
     {
         $this->notificationChecker->checkNotification('The subscription frequency has been changed.', NotificationType::success());
+    }
+
+    #[Then("I should be notified that the subscription's addresses have been changed")]
+    public function iShouldBeNotifiedThatTheAddressesHaveBeenChanged(): void
+    {
+        $this->notificationChecker->checkNotification("The subscription's addresses have been changed.", NotificationType::success());
+    }
+
+    #[Then('/^it should be shipped to "([^"]+)"$/')]
+    public function itShouldBeShippedTo(string $street): void
+    {
+        Assert::contains($this->showPage->getDetail('shipping-address'), $street);
     }
 
     #[Then('I should be notified that the renewal has been skipped')]

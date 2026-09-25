@@ -194,6 +194,15 @@ jpm_martin_sylius_subscription_admin_subscription_change_frequency:
         redirect_route: jpm_martin_sylius_subscription_admin_subscription_show
         customer_only: false
 
+jpm_martin_sylius_subscription_admin_subscription_change_address:
+    path: /subscriptions/{id}/change-address
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.change_subscription_address
+        template: "@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_address.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_admin_subscription_show
+        customer_only: false
+
 jpm_martin_sylius_subscription_admin_subscription_skip_renewal:
     path: /subscriptions/{id}/skip-renewal
     methods: [POST]

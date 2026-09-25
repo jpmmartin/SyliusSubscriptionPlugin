@@ -11,6 +11,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeAddressPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeFrequencyPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\IndexPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ShowPage;
@@ -22,6 +23,7 @@ final class ManagingMySubscriptionsContext implements Context
         private readonly IndexPage $indexPage,
         private readonly ShowPage $showPage,
         private readonly ChangeFrequencyPage $changeFrequencyPage,
+        private readonly ChangeAddressPage $changeAddressPage,
         private readonly NotificationCheckerInterface $notificationChecker,
         private readonly SharedStorageInterface $sharedStorage,
     ) {
@@ -66,6 +68,29 @@ final class ManagingMySubscriptionsContext implements Context
     {
         Assert::contains((string) $this->showPage->getSkipRenewalButton(), $date);
         $this->showPage->skipRenewal();
+    }
+
+    #[When('/^I change its shipping address to the "([^"]+)" address of my address book$/')]
+    public function iChangeItsShippingAddressToTheAddressOfMyBook(string $street): void
+    {
+        $this->showPage->changeAddress();
+        $this->changeAddressPage->chooseFromAddressBook($street);
+        $this->changeAddressPage->confirm();
+    }
+
+    #[When('/^I change its shipping address to "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)" for "([^"]+)"$/')]
+    public function iChangeItsShippingAddressTo(string $city, string $street, string $postcode, string $country, string $fullName): void
+    {
+        $this->showPage->changeAddress();
+        $this->changeAddressPage->writeShippingAddress($fullName, $street, $postcode, $city, $country);
+        $this->changeAddressPage->confirm();
+    }
+
+    #[When('/^I choose the "([^"]+)" shipping method$/')]
+    public function iChooseTheShippingMethod(string $name): void
+    {
+        $this->changeAddressPage->chooseShippingMethod($name);
+        $this->changeAddressPage->confirm();
     }
 
     #[When('I start changing its frequency')]
@@ -191,6 +216,24 @@ final class ManagingMySubscriptionsContext implements Context
     public function iShouldBeNotifiedThatTheSubscriptionHasBeen(string $state): void
     {
         $this->notificationChecker->checkNotification(\sprintf('The subscription has been %s.', $state), NotificationType::success());
+    }
+
+    #[Then('/^I should be asked to choose the "([^"]+)" shipping method for "([^"]+)"$/')]
+    public function iShouldBeAskedToChooseTheShippingMethod(string $name, string $cost): void
+    {
+        Assert::same($this->changeAddressPage->getOfferedShippingMethods(), [\sprintf('%s: %s', $name, $cost)]);
+    }
+
+    #[Then("I should be notified that the subscription's addresses have been changed")]
+    public function iShouldBeNotifiedThatTheAddressesHaveBeenChanged(): void
+    {
+        $this->notificationChecker->checkNotification("The subscription's addresses have been changed.", NotificationType::success());
+    }
+
+    #[Then('/^this subscription should be shipped to "([^"]+)"$/')]
+    public function thisSubscriptionShouldBeShippedTo(string $street): void
+    {
+        Assert::contains($this->showPage->getDetail('shipping-address'), $street);
     }
 
     #[Then('I should be notified that the renewal has been skipped')]

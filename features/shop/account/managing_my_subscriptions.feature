@@ -2,7 +2,7 @@
 Feature: Managing my subscriptions
     In order to decide what I keep receiving and how often
     As a Customer
-    I want to see my subscriptions in my account, pause, resume or cancel them, skip a renewal and change how often they renew
+    I want to see my subscriptions in my account, pause, resume or cancel them, skip a renewal, and change where and how often they renew
 
     Background:
         Given the store operates on a single channel in "United States"
@@ -115,6 +115,33 @@ Feature: Managing my subscriptions
         When I view my subscription to "Coffee"
         Then this subscription should be "Suspended"
         And I should not be able to pause or resume it, nor skip its next renewal
+
+    @ui
+    Scenario: Changing the address of a subscription to one of my address book
+        Given I have an address "John Doe", "Elm Street 13", "43210", "Springwood", "United States" in my address book
+        And it is "2027-01-20 09:00" now
+        When I view my subscription to "Coffee"
+        And I change its shipping address to the "Elm Street 13" address of my address book
+        Then I should be notified that the subscription's addresses have been changed
+        And this subscription should be shipped to "Elm Street 13"
+        When the renewals due on "2027-02-01 09:00" are processed
+        Then its renewal #2 should be shipped to "Elm Street 13" with "Free"
+
+    @ui
+    Scenario: Moving to another zone and choosing a shipping method that reaches it
+        Given the store operates in "France"
+        And the store has a zone "Europe" with code "EU"
+        And it has the "France" country member
+        And the store has "Europe Express" shipping method with "$15.00" fee within the "EU" zone
+        And it is "2027-01-20 09:00" now
+        When I view my subscription to "Coffee"
+        And I change its shipping address to "Paris", "Rue de Rivoli 1", "75001", "France" for "John Doe"
+        Then I should be asked to choose the "Europe Express" shipping method for "$15.00"
+        When I choose the "Europe Express" shipping method
+        Then I should be notified that the subscription's addresses have been changed
+        And this subscription should be shipped to "Rue de Rivoli 1"
+        When the renewals due on "2027-02-01 09:00" are processed
+        Then its renewal #2 should be shipped to "Rue de Rivoli 1" with "Europe Express"
 
     @ui
     Scenario: Changing from monthly to quarterly halfway through the month

@@ -176,6 +176,13 @@ Feature: Managing subscriptions
         And its renewal #2 should be "Cancelled"
 
     @ui
+    Scenario: Changing the address of a subscription for its customer
+        When I view the subscription of "ann@example.com"
+        And I change its shipping address to "Springwood", "Elm Street 13", "43210", "United States" for "Ann Other"
+        Then I should be notified that the subscription's addresses have been changed
+        And it should be shipped to "Elm Street 13"
+
+    @ui
     Scenario: Changing the frequency of a subscription
         Given it is "2027-01-15 09:00" now
         When I view the subscription of "ann@example.com"

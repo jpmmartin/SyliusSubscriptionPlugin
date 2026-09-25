@@ -56,3 +56,18 @@ sylius_twig_hooks:
             form:
                 template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_frequency/form.html.twig'
                 priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_address_change.update.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_address_change.update.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address/title.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_address_change.update.content.main':
+            form:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address/form.html.twig'
+                priority: 0

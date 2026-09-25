@@ -53,6 +53,12 @@ jpm_martin_sylius_subscription:
             not_in_channel: No se vende en este canal
         cancel_subscription: Cancelar suscripción
         subscriptions: Suscripciones
+        change_address: Cambiar la dirección
+        change_address_help: 'Las direcciones nuevas se aplican desde la próxima renovación que aún no tenga pedido.'
+        another_address: Otra dirección
+        different_billing_address: Facturar a otra dirección
+        choose_shipping_method: 'El método de envío actual no llega a esta dirección. Elige cómo se enviará:'
+        no_shipping_method_reaches: Ningún método de envío llega a esta dirección.
         pause: Pausar
         resume: Reanudar
         skip_renewal: 'Saltarse la renovación del %date%'

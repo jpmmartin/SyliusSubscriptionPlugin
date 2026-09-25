@@ -1,6 +1,7 @@
 {% from '@SyliusAdmin/shared/helper/money.html.twig' import format %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/macro/state.html.twig' import label %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/address.html.twig' import one_line %}
 
 {% set subscription = hookable_metadata.context.resource %}
 {% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
@@ -25,7 +26,11 @@
                     <dt class="col-5">{{ 'sylius.ui.payment_method'|trans }}</dt>
                     <dd class="col-7">{{ subscription.paymentMethod.name|default('-') }}</dd>
                     <dt class="col-5">{{ 'sylius.ui.shipping_method'|trans }}</dt>
-                    <dd class="col-7">{{ subscription.shippingMethod.name|default('-') }}</dd>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-shipping-method') }}>{{ subscription.shippingMethod.name|default('-') }}</dd>
+                    <dt class="col-5">{{ 'sylius.ui.shipping_address'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-shipping-address') }}>{{ one_line(jpm_martin_sylius_subscription_renewal_shipping_address(subscription)) }}</dd>
+                    <dt class="col-5">{{ 'sylius.ui.billing_address'|trans }}</dt>
+                    <dd class="col-7" {{ sylius_test_html_attribute('subscription-billing-address') }}>{{ one_line(jpm_martin_sylius_subscription_renewal_billing_address(subscription)) }}</dd>
                     <dt class="col-5">{{ 'jpm_martin_sylius_subscription.ui.consecutive_failed_cycles'|trans }}</dt>
                     <dd class="col-7" {{ sylius_test_html_attribute('subscription-consecutive-failed-cycles') }}>{{ subscription.consecutiveFailedCycles }}</dd>
                 </dl>

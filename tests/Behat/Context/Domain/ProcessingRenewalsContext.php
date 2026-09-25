@@ -76,6 +76,23 @@ final class ProcessingRenewalsContext implements Context
         }
     }
 
+    #[Then('/^its renewal #(\d+) should be shipped to "([^"]+)" with "([^"]+)"$/')]
+    public function itsRenewalShouldBeShippedTo(int $number, string $street, string $shippingMethod): void
+    {
+        foreach ($this->subscription()->getCycles() as $cycle) {
+            if ($number === $cycle->getNumber()) {
+                $order = $cycle->getOrder();
+                Assert::notNull($order, \sprintf('Renewal #%d has no order.', $number));
+                Assert::same($order->getShippingAddress()?->getStreet(), $street);
+                Assert::same($order->getShipments()->first() ? $order->getShipments()->first()->getMethod()?->getName() : null, $shippingMethod);
+
+                return;
+            }
+        }
+
+        throw new \InvalidArgumentException(\sprintf('There is no renewal #%d.', $number));
+    }
+
     #[Then('/^its renewal #(\d+) should have been charged "([^"]+)"$/')]
     public function itsRenewalShouldHaveBeenCharged(int $number, string $amount): void
     {

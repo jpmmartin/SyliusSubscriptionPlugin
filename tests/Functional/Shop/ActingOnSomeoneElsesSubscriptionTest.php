@@ -25,8 +25,8 @@ use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionCon
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\SubscriptionPlanContext;
 
 /**
- * A signed-in customer pausing, resuming or skipping the renewal of another customer's subscription by
- * its address: the account's routes look the subscription up among the customer's own, so they answer
+ * A signed-in customer pausing, resuming, skipping the renewal of or changing the address of another
+ * customer's subscription by its address: the account's routes look the subscription up among the customer's own, so they answer
  * as if it did not exist, before any token is checked, and change nothing.
  *
  * The store is set up with the same Behat setup services the scenarios use.
@@ -123,6 +123,18 @@ final class ActingOnSomeoneElsesSubscriptionTest extends WebTestCase
         $this->assertTheSubscriptionIsUntouched();
     }
 
+    public function testChangingTheAddressOfSomeoneElsesSubscriptionIsNotFoundAndChangesNothing(): void
+    {
+        $this->client->request('GET', $this->url('change-address'));
+        self::assertSame(404, $this->client->getResponse()->getStatusCode());
+
+        $this->client->request('POST', $this->url('change-address'), ['jpm_martin_sylius_subscription_address_change' => [
+            'shippingAddress' => ['firstName' => 'Eve', 'lastName' => 'Thief', 'street' => 'Elsewhere 1', 'city' => 'Springwood', 'postcode' => '43210', 'countryCode' => 'US'],
+        ]]);
+        self::assertSame(404, $this->client->getResponse()->getStatusCode());
+        $this->assertTheSubscriptionIsUntouched();
+    }
+
     /** The control: the same requests reach the customer's own subscription, and only stop at its missing token. */
     public function testTheSameRequestsFindTheCustomersOwnSubscription(): void
     {
@@ -139,6 +151,8 @@ final class ActingOnSomeoneElsesSubscriptionTest extends WebTestCase
             $this->client->request($method, $this->url($action, (int) $mine->getId()));
             self::assertSame(403, $this->client->getResponse()->getStatusCode(), $action);
         }
+        $this->client->request('GET', $this->url('change-address', (int) $mine->getId()));
+        self::assertSame(200, $this->client->getResponse()->getStatusCode(), 'change-address');
     }
 
     private function url(string $action, ?int $subscriptionId = null): string
@@ -155,6 +169,7 @@ final class ActingOnSomeoneElsesSubscriptionTest extends WebTestCase
         self::assertInstanceOf(SubscriptionInterface::class, $subscription);
 
         self::assertSame(SubscriptionInterface::STATE_ACTIVE, $subscription->getState());
+        self::assertNull($subscription->getShippingAddress());
         $states = [];
         foreach ($subscription->getCycles() as $cycle) {
             $states[$cycle->getNumber()] = $cycle->getState();

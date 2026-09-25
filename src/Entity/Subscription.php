@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
@@ -35,6 +36,10 @@ class Subscription implements SubscriptionInterface
     protected ?PaymentMethodInterface $paymentMethod = null;
 
     protected ?ShippingMethodInterface $shippingMethod = null;
+
+    protected ?AddressInterface $shippingAddress = null;
+
+    protected ?AddressInterface $billingAddress = null;
 
     protected ?string $consentVersion = null;
 
@@ -157,6 +162,26 @@ class Subscription implements SubscriptionInterface
     public function setShippingMethod(?ShippingMethodInterface $shippingMethod): void
     {
         $this->shippingMethod = $shippingMethod;
+    }
+
+    public function getShippingAddress(): ?AddressInterface
+    {
+        return $this->shippingAddress;
+    }
+
+    public function setShippingAddress(?AddressInterface $shippingAddress): void
+    {
+        $this->shippingAddress = $shippingAddress;
+    }
+
+    public function getBillingAddress(): ?AddressInterface
+    {
+        return $this->billingAddress;
+    }
+
+    public function setBillingAddress(?AddressInterface $billingAddress): void
+    {
+        $this->billingAddress = $billingAddress;
     }
 
     public function getConsentVersion(): ?string

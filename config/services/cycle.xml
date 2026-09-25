@@ -34,10 +34,17 @@
             <argument>%jpm_martin_sylius_subscription.model.subscription_cycle.class%</argument>
         </service>
 
+        <service id="jpm_martin_sylius_subscription.order.address_copier" class="JpmMartin\SyliusSubscriptionPlugin\Order\AddressCopier">
+            <argument type="service" id="sylius.factory.address" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver" />
+
         <service id="jpm_martin_sylius_subscription.order.renewal_placer" class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacer">
             <argument type="service" id="sylius.factory.order" />
             <argument type="service" id="sylius.factory.order_item" />
-            <argument type="service" id="sylius.factory.address" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.address_copier" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
             <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_cycle_item" />
             <argument type="service" id="sylius.modifier.order_item_quantity" />
             <argument type="service" id="sylius.checker.inventory.availability" />

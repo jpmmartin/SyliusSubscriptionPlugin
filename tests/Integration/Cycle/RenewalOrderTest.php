@@ -13,6 +13,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Factory\SubscriptionPlanFactoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacerInterface;
 use Sylius\Behat\Context\Setup\PromotionContext;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\ChannelPricingInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -21,6 +22,7 @@ use Sylius\Component\Core\Model\PromotionInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Order\Model\OrderItemInterface;
+use Sylius\Resource\Factory\FactoryInterface;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Lifecycle\LifecycleTestCase;
 
 /**
@@ -107,6 +109,37 @@ final class RenewalOrderTest extends LifecycleTestCase
         self::assertSame($order->getId(), $cycle->getOrder()?->getId());
         self::assertSame([['Coffee', 1, 9000, null], ['Tea', 1, 5000, null]], $this->recordedItemsOf($cycle));
         self::assertCount(2, $this->storedSubscriptions(), 'The renewal started a subscription of its own.');
+    }
+
+    public function testASubscriptionWhoseAddressesWereChangedRenewsToThemAndNotToItsLastOrders(): void
+    {
+        /** @var FactoryInterface<AddressInterface> $addresses */
+        $addresses = self::getContainer()->get('sylius.factory.address');
+        $shipping = $addresses->createNew();
+        $shipping->setFirstName('John');
+        $shipping->setLastName('Doe');
+        $shipping->setStreet('Elm Street 13');
+        $shipping->setCity('Springwood');
+        $shipping->setPostcode('43210');
+        $shipping->setCountryCode('US');
+        $billing = $addresses->createNew();
+        $billing->setFirstName('John');
+        $billing->setLastName('Doe');
+        $billing->setStreet('Office Road 1');
+        $billing->setCity('Springwood');
+        $billing->setPostcode('43211');
+        $billing->setCountryCode('US');
+        $batch = $this->batch();
+        $batch->setShippingAddress($shipping);
+        $batch->setBillingAddress($billing);
+        $this->entityManager()->flush();
+
+        [, $cycle] = $this->storedCycles($this->batch());
+        $order = $this->placeRenewal($cycle);
+
+        self::assertSame('Elm Street 13', $order->getShippingAddress()?->getStreet());
+        self::assertSame('Office Road 1', $order->getBillingAddress()?->getStreet());
+        self::assertNotSame($this->batch()->getShippingAddress()?->getId(), $order->getShippingAddress()?->getId(), 'The order has its own copy.');
     }
 
     public function testASubscriptionThatShipsNothingRenewsWithAnOrderWithoutShipping(): void
