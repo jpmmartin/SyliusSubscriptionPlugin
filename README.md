@@ -42,8 +42,9 @@ with all of them, charged without the customer present, with retries when a char
   renewal.
 - **Customer account**: the customer's subscriptions with their products, their renewals and what each
   skipped and where they are shipped; pausing and resuming them, skipping the next renewal,
-  cancelling, and changing how often and where they renew. See
-  [Pausing and skipping](#pausing-and-skipping) and [Changing the address](#changing-the-address).
+  cancelling, changing how often and where they renew, and changing their quantities, swapping a
+  variant, removing a product or adding one. See [Pausing and skipping](#pausing-and-skipping),
+  [Changing the address](#changing-the-address) and [Changing the items](#changing-the-items).
 - **Admin**: a list filterable by state, customer, variant (of any of the products) and next renewal,
   and a page with the products, the consent, the failed renewals in a row, every renewal with what it
   took in or skipped and each charge attempt (date, outcome and reason), where it is shipped, and the
@@ -298,6 +299,46 @@ Changing where a subscription ships is the first thing a stolen account does: li
 `SubscriptionAddressChanged` and tell the customer. The change is a service,
 `SubscriptionAddressChangerInterface`: replace it to change addresses another way.
 
+## Changing the items
+
+A customer changes what an active subscription brings from their account, while its open cycle has no
+order yet: once the renewal's order is placed, for instance while its charge awaits a retry, that
+order keeps its items and nothing can be changed until the next cycle. The changes apply from the open
+cycle. On the "Change items" page, each item still renewing can:
+
+- change its quantity, from 1 to the most Sylius allows on a cart line
+  (`sylius.order_item_quantity_modifier.limit`, 9999 by default), keeping its frozen price;
+- move to another variant of the same product, which renews at that variant's current price less the
+  discount of its plan, or of the store's frequency, of the subscription's interval, and keeps the
+  cycles the item has been paid;
+- be removed, while another item still renews.
+
+A variant is offered when the channel sells it (enabled, its product in the channel, and at least one
+in stock when its stock is tracked), when it has terms of the subscription's interval of the item's
+kind (an enabled plan of its own for an item on a plan, the store's frequency, if the variant can be
+repeated, for an item repeated with it), when those terms' maximum of cycles is above what the item
+has been paid, and when no other renewing item has it.
+
+The "Add a product" page lists, by product, every variant the channel sells with an enabled plan of the
+subscription's interval, or else that can be repeated with the store's frequency of that interval, and
+that no renewing item has: an item already renewing changes its quantity instead. The plan wins when a
+variant has both. The new item is frozen at the variant's current price less that discount, with no
+cycle paid.
+
+When the changes raise what each renewal costs, the page shows the new total and asks the customer to
+accept the recurring charges again, and saves nothing until they do; see
+[Consent to recurring charges](#consent-to-recurring-charges). The "Add a product" page asks in
+the same step. Lowering a quantity, removing an item, or adding one that is free asks for nothing.
+
+A removed item is not deleted: it stays on the subscription marked as removed, like one that reached its
+maximum of cycles, so the renewals that carried it keep showing it. It no longer renews, the frequency
+change leaves it alone, and the committed cycles do not count it. Its variant can be added again, as a
+new item. Nothing reserves stock: a renewal still skips what it cannot sell that day.
+
+Listen to `SubscriptionItemsChanged`, which carries the totals before and after, to keep your own
+record of each change. The changes are a service, `SubscriptionItemEditorInterface`: replace it to
+offer other changes.
+
 ## Retrying failed charges
 
 What becomes of a charge that was declined or not attempted is decided by
@@ -411,6 +452,10 @@ The text the customer accepts is the translation `jpm_martin_sylius_subscription
 it: customers are then asked again, and each subscription keeps the version, text and date that were
 accepted for it.
 
+The same text is asked again when a customer's changes to a subscription's items raise what each
+renewal costs, so write it to fit both moments. The subscription then keeps the version, text and date
+of that acceptance instead; the consent recorded on the initial order stays as the proof of the first.
+
 ## Store frequencies and repeated carts
 
 - **Frequencies** are managed in the admin under Configuration > Subscription frequencies. Each has a
@@ -481,6 +526,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionCompleted` | it ends: no item has a cycle left to renew | — |
 | `SubscriptionFrequencyChanged` | its frequency changes | `intervalCount`, `intervalUnit` (`day`, `week`, `month` or `year`) |
 | `SubscriptionAddressChanged` | its addresses change, by its customer or an administrator | `shippingMethodChanged` |
+| `SubscriptionItemsChanged` | its customer changes, removes or adds items | `previousRenewalTotal`, `renewalTotal`, in minor units of the subscription's currency |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
@@ -563,6 +609,10 @@ logged. Only a handler of yours that throws, run synchronously, stops it, as abo
 
 ## Upgrading
 
+From a version without item changes, `doctrine:migrations:migrate` adds when each item was removed, with
+no item removed before. Going back down is refused while any item is removed, since that version would
+renew it again.
+
 From a version without the subscription's own addresses, `doctrine:migrations:migrate` adds them,
 empty: every subscription keeps renewing to its last order's addresses until they are changed. Going
 back down deletes the addresses the subscriptions had of their own.
@@ -607,8 +657,12 @@ From a version with one subscription per order line:
   exposed, and answers 404.
 - A frequency's name is the admin's; the shop shows the interval and the discount instead ("Every
   month (save 5%)"), which are translated.
-- An item that cannot be sold is skipped in every cycle until it can again; the items of a subscription
-  cannot be edited yet.
+- An item that cannot be sold is skipped in every cycle until it can again, or until its customer
+  changes or removes it.
+- Products are added to a subscription from its page in the customer's account, not from the product
+  page: the product page's form is Sylius's live cart form.
+- A change of items saved while the command places the open cycle's order may miss that order, which
+  keeps the items it was placed with; the next renewal carries the change.
 
 ## Development
 

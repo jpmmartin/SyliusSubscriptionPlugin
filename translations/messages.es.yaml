@@ -1,6 +1,6 @@
 jpm_martin_sylius_subscription:
     consent:
-        text: Autorizo a la tienda a cobrar automáticamente en mi método de pago cada renovación de las suscripciones de este pedido, al precio y con el intervalo indicados, hasta que las cancele desde mi cuenta.
+        text: Autorizo a la tienda a cobrar automáticamente en mi método de pago cada renovación de mis suscripciones, al precio y con el intervalo indicados, hasta que las cancele desde mi cuenta.
     ui:
         plan_or_frequency: "Plan o frecuencia"
         repeat_this_cart: "Repetir este carrito"
@@ -59,6 +59,16 @@ jpm_martin_sylius_subscription:
         different_billing_address: Facturar a otra dirección
         choose_shipping_method: 'El método de envío actual no llega a esta dirección. Elige cómo se enviará:'
         no_shipping_method_reaches: Ningún método de envío llega a esta dirección.
+        change_items: Cambiar los artículos
+        change_items_help: 'Los cambios se aplican desde la próxima renovación que aún no tenga pedido. Una cantidad conserva su precio; otra variante se renueva a su precio de suscriptor actual.'
+        add_product: Añadir un producto
+        add_product_help: 'El producto se renueva con esta suscripción, al precio de suscriptor indicado, desde la próxima renovación que aún no tenga pedido.'
+        choose_product: Elige un producto
+        remove: Quitar
+        removed: Quitado
+        renewal_total: Cada renovación
+        new_renewal_total: 'Con tus cambios, cada renovación costará %total%. Acepta los cobros recurrentes para guardarlos.'
+        save_changes: Guardar los cambios
         pause: Pausar
         resume: Reanudar
         skip_renewal: 'Saltarse la renovación del %date%'

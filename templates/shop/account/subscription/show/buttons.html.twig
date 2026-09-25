@@ -11,6 +11,16 @@
             {{ 'jpm_martin_sylius_subscription.ui.change_address'|trans }}
         </a>
     {% endif %}
+    {% if jpm_martin_sylius_subscription_can_change_items(subscription) %}
+        <a class="btn btn-outline-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_change_items', { id: subscription.id }) }}" {{ sylius_test_html_attribute('change-items') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.change_items'|trans }}
+        </a>
+    {% endif %}
+    {% if jpm_martin_sylius_subscription_can_add_items(subscription) %}
+        <a class="btn btn-outline-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_add_item', { id: subscription.id }) }}" {{ sylius_test_html_attribute('add-product') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.add_product'|trans }}
+        </a>
+    {% endif %}
     {% set renewal_to_skip = jpm_martin_sylius_subscription_renewal_to_skip(subscription) %}
     {% if renewal_to_skip is not null %}
         <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_skip_renewal', { id: subscription.id }) }}">

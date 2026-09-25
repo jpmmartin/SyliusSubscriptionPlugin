@@ -69,6 +69,21 @@ final class ShowPage extends SymfonyPage
         $this->getElement('change_address')->click();
     }
 
+    public function changeItems(): void
+    {
+        $this->getElement('change_items')->click();
+    }
+
+    public function addProduct(): void
+    {
+        $this->getElement('add_product')->click();
+    }
+
+    public function isItemRemoved(string $productName): bool
+    {
+        return null !== $this->getElement('item', ['%product%' => $productName])->find('css', '[data-test-item-removed]');
+    }
+
     public function canChangeFrequency(): bool
     {
         return $this->hasElement('change_frequency');
@@ -106,7 +121,9 @@ final class ShowPage extends SymfonyPage
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'add_product' => '[data-test-add-product]',
             'cancel' => '[data-test-cancel]',
+            'change_items' => '[data-test-change-items]',
             'change_address' => '[data-test-change-address]',
             'change_frequency' => '[data-test-change-frequency]',
             'cycle' => '[data-test-cycle="%number%"]',

@@ -11,8 +11,10 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Service\NotificationCheckerInterface;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\AddItemPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeAddressPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeFrequencyPage;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeItemsPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\IndexPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ShowPage;
 use Webmozart\Assert\Assert;
@@ -24,6 +26,8 @@ final class ManagingMySubscriptionsContext implements Context
         private readonly ShowPage $showPage,
         private readonly ChangeFrequencyPage $changeFrequencyPage,
         private readonly ChangeAddressPage $changeAddressPage,
+        private readonly ChangeItemsPage $changeItemsPage,
+        private readonly AddItemPage $addItemPage,
         private readonly NotificationCheckerInterface $notificationChecker,
         private readonly SharedStorageInterface $sharedStorage,
     ) {
@@ -105,6 +109,61 @@ final class ManagingMySubscriptionsContext implements Context
         $this->showPage->changeFrequency();
         $this->changeFrequencyPage->chooseFrequency($frequency);
         $this->changeFrequencyPage->confirm();
+    }
+
+    #[When('I start changing its items')]
+    public function iStartChangingItsItems(): void
+    {
+        $this->showPage->changeItems();
+    }
+
+    #[When('/^I change the quantity of "([^"]+)" to (\d+)$/')]
+    public function iChangeTheQuantityOf(string $productName, int $quantity): void
+    {
+        $this->changeItemsPage->changeQuantity($productName, $quantity);
+    }
+
+    #[When('/^I move "([^"]+)" to the "([^"]+)" variant$/')]
+    public function iMoveToTheVariant(string $productName, string $variantName): void
+    {
+        $this->changeItemsPage->chooseVariant($productName, $variantName);
+    }
+
+    #[When('/^I remove "([^"]+)"$/')]
+    public function iRemove(string $productName): void
+    {
+        $this->changeItemsPage->remove($productName);
+    }
+
+    #[When('I save my item changes')]
+    public function iSaveMyItemChanges(): void
+    {
+        $this->changeItemsPage->save();
+    }
+
+    #[When('I accept the recurring charges again')]
+    public function iAcceptTheRecurringChargesAgain(): void
+    {
+        $this->changeItemsPage->acceptConsent();
+    }
+
+    #[When('/^I add (\d+) "([^"]+)" to it accepting the recurring charges$/')]
+    #[When('/^I try to add (\d+) "([^"]+)" to it (without) accepting the recurring charges$/')]
+    public function iAddToItAcceptingTheRecurringCharges(int $quantity, string $productName, string $without = ''): void
+    {
+        $this->showPage->addProduct();
+        $this->addItemPage->chooseProduct($productName);
+        $this->addItemPage->setQuantity($quantity);
+        if ('' === $without) {
+            $this->addItemPage->acceptConsent();
+        }
+        $this->addItemPage->add();
+    }
+
+    #[Then('I should be told to accept the recurring charges')]
+    public function iShouldBeToldToAcceptTheRecurringCharges(): void
+    {
+        Assert::contains($this->addItemPage->getConsentText(), 'Please accept the recurring charges to save these changes.');
     }
 
     #[Then('/^I should see my subscription to "([^"]+)" renewing "([^"]+)"$/')]
@@ -222,6 +281,31 @@ final class ManagingMySubscriptionsContext implements Context
     public function iShouldBeAskedToChooseTheShippingMethod(string $name, string $cost): void
     {
         Assert::same($this->changeAddressPage->getOfferedShippingMethods(), [\sprintf('%s: %s', $name, $cost)]);
+    }
+
+    #[Then('/^I should be asked to accept the recurring charges for "([^"]+)" per renewal$/')]
+    public function iShouldBeAskedToAcceptTheRecurringChargesFor(string $total): void
+    {
+        Assert::true($this->changeItemsPage->isConsentAsked(), 'The consent is not asked.');
+        Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
+    }
+
+    #[Then("I should be notified that the subscription's items have been changed")]
+    public function iShouldBeNotifiedThatTheItemsHaveBeenChanged(): void
+    {
+        $this->notificationChecker->checkNotification("The subscription's items have been changed.", NotificationType::success());
+    }
+
+    #[Then('I should be notified that the product has been added to the subscription')]
+    public function iShouldBeNotifiedThatTheProductHasBeenAdded(): void
+    {
+        $this->notificationChecker->checkNotification('The product has been added to the subscription.', NotificationType::success());
+    }
+
+    #[Then('/^"([^"]+)" should be marked as removed from this subscription$/')]
+    public function shouldBeMarkedAsRemoved(string $productName): void
+    {
+        Assert::true($this->showPage->isItemRemoved($productName), \sprintf('"%s" is not marked as removed.', $productName));
     }
 
     #[Then("I should be notified that the subscription's addresses have been changed")]

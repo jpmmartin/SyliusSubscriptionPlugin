@@ -27,6 +27,8 @@ class SubscriptionItem implements SubscriptionItemInterface
 
     protected int $paidCycles = 0;
 
+    protected ?\DateTimeImmutable $removedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -117,8 +119,27 @@ class SubscriptionItem implements SubscriptionItemInterface
         return $this->plan ?? $this->frequency;
     }
 
+    public function getRemovedAt(): ?\DateTimeImmutable
+    {
+        return $this->removedAt;
+    }
+
+    public function setRemovedAt(?\DateTimeImmutable $removedAt): void
+    {
+        $this->removedAt = $removedAt;
+    }
+
+    public function isRemoved(): bool
+    {
+        return null !== $this->removedAt;
+    }
+
     public function isRenewable(): bool
     {
+        if ($this->isRemoved()) {
+            return false;
+        }
+
         $maxCycles = $this->getTerms()?->getMaxCycles();
 
         return null === $maxCycles || $this->paidCycles < $maxCycles;

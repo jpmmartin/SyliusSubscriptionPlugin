@@ -1,6 +1,6 @@
 jpm_martin_sylius_subscription:
     consent:
-        text: I authorise the store to charge my payment method automatically for every renewal of the subscriptions in this order, at the price and interval shown, until I cancel them from my account.
+        text: I authorise the store to charge my payment method automatically for every renewal of my subscriptions, at the price and interval shown, until I cancel them from my account.
     ui:
         plan_or_frequency: "Plan or frequency"
         repeat_this_cart: "Repeat this cart"
@@ -59,6 +59,16 @@ jpm_martin_sylius_subscription:
         different_billing_address: Bill to a different address
         choose_shipping_method: 'The current shipping method does not reach this address. Choose how it will be shipped:'
         no_shipping_method_reaches: No shipping method reaches this address.
+        change_items: Change items
+        change_items_help: 'The changes apply from the next renewal whose order is not placed yet. A quantity keeps its price; another variant renews at its current subscriber price.'
+        add_product: Add a product
+        add_product_help: 'The product renews with this subscription, at the subscriber price shown, from the next renewal whose order is not placed yet.'
+        choose_product: Choose a product
+        remove: Remove
+        removed: Removed
+        renewal_total: Each renewal
+        new_renewal_total: 'With your changes, each renewal will cost %total%. Accept the recurring charges to save them.'
+        save_changes: Save changes
         pause: Pause
         resume: Resume
         skip_renewal: 'Skip the renewal of %date%'

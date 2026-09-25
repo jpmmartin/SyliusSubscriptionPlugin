@@ -20,7 +20,7 @@ interface SubscriptionRepositoryInterface extends RepositoryInterface
     /** @return list<SubscriptionInterface> the subscriptions the order's lines started */
     public function findByInitialOrder(OrderInterface $order): array;
 
-    /** @return list<SubscriptionInterface> the active subscriptions with an item of the variant */
+    /** @return list<SubscriptionInterface> the active subscriptions with an item of the variant their customers did not remove */
     public function findActiveByProductVariant(ProductVariantInterface $productVariant): array;
 
     /** @return list<SubscriptionInterface> the customer's subscriptions, the latest first */

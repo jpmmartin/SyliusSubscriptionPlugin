@@ -44,6 +44,7 @@ class SubscriptionRepository extends EntityRepository implements SubscriptionRep
         $subscriptions = $this->createQueryBuilder('o')
             ->innerJoin('o.items', 'item')
             ->andWhere('item.productVariant = :productVariant')
+            ->andWhere('item.removedAt IS NULL')
             ->andWhere('o.state = :active')
             ->setParameter('productVariant', $productVariant)
             ->setParameter('active', SubscriptionInterface::STATE_ACTIVE)

@@ -55,6 +55,16 @@ interface SubscriptionItemInterface extends ResourceInterface
 
     public function setPaidCycles(int $paidCycles): void;
 
-    /** Whether it still goes into renewals: its terms have no maximum, or it has not been reached. */
+    /** When its customer removed it from the subscription; it stays so the cycles that carried it keep it. */
+    public function getRemovedAt(): ?\DateTimeImmutable;
+
+    public function setRemovedAt(?\DateTimeImmutable $removedAt): void;
+
+    public function isRemoved(): bool;
+
+    /**
+     * Whether it still goes into renewals: it was not removed, and its terms have no maximum or it has
+     * not been reached.
+     */
     public function isRenewable(): bool;
 }

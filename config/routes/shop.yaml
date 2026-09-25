@@ -118,6 +118,22 @@ jpm_martin_sylius_subscription_shop_account_subscription_change_address:
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
         customer_only: true
 
+jpm_martin_sylius_subscription_shop_account_subscription_change_items:
+    path: /account/subscriptions/{id}/change-items
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.change_subscription_items
+        template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_items.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
+
+jpm_martin_sylius_subscription_shop_account_subscription_add_item:
+    path: /account/subscriptions/{id}/add-item
+    methods: [GET, POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.add_subscription_item
+        template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item.html.twig"
+        redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
+
 jpm_martin_sylius_subscription_shop_cart_repeat:
     path: /cart/repeat
     methods: [POST]

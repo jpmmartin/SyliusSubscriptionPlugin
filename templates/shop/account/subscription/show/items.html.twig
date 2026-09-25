@@ -19,7 +19,9 @@
                     <td>
                         {{ item.productVariant.product.name }}
                         {% include '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/shared/variant.html.twig' with { variant: item.productVariant } only %}
-                        {% if not item.renewable %}
+                        {% if item.removed %}
+                            <span class="badge rounded-pill text-bg-secondary" {{ sylius_test_html_attribute('item-removed') }}>{{ 'jpm_martin_sylius_subscription.ui.removed'|trans }}</span>
+                        {% elseif not item.renewable %}
                             <span class="badge rounded-pill text-bg-secondary">{{ 'jpm_martin_sylius_subscription.ui.no_longer_renews'|trans }}</span>
                         {% endif %}
                     </td>

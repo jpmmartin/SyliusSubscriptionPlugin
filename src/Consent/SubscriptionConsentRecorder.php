@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Consent;
 
 use Doctrine\Persistence\ObjectManager;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionConsentInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Psr\Clock\ClockInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
@@ -80,6 +81,13 @@ final class SubscriptionConsentRecorder implements SubscriptionConsentRecorderIn
         $consent = $this->consentRepository->findOneBy(['order' => $order]);
 
         return $consent instanceof SubscriptionConsentInterface ? $consent : null;
+    }
+
+    public function recordOnSubscription(SubscriptionInterface $subscription, string $localeCode): void
+    {
+        $subscription->setConsentVersion($this->currentVersion);
+        $subscription->setConsentText($this->translator->trans(self::TEXT_KEY, [], 'messages', $localeCode));
+        $subscription->setConsentAcceptedAt($this->clock->now());
     }
 
     public function reset(): void

@@ -14,17 +14,15 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionTermsInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionFrequencyChanged;
 use JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\SubscriptionPlanPriceProcessor;
-use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionFrequencyRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use Sylius\Component\Core\Calculator\ProductVariantPricesCalculatorInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
-use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Webmozart\Assert\Assert;
 
 /**
  * Every item moves, also one that no longer renews: under terms with a higher maximum, or none, it
- * renews again. An item on a plan moves to a plan of its variant, and one repeated with a store
+ * renews again. Only an item its customer removed stays as it was. An item on a plan moves to a plan of its variant, and one repeated with a store
  * frequency to another of the store's frequencies, never from one kind to the other. The new prices
  * are worked out the way the cart prices a subscription line.
  */
@@ -32,13 +30,8 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
 {
     private const UNCHARGED_OPEN_CYCLE_STATES = [SubscriptionCycleInterface::STATE_SCHEDULED, SubscriptionCycleInterface::STATE_ON_HOLD];
 
-    /**
-     * @param RepositoryInterface<SubscriptionPlanInterface> $planRepository
-     * @param SubscriptionFrequencyRepositoryInterface<SubscriptionFrequencyInterface> $frequencyRepository
-     */
     public function __construct(
-        private readonly RepositoryInterface $planRepository,
-        private readonly SubscriptionFrequencyRepositoryInterface $frequencyRepository,
+        private readonly SubscriptionTermsFinder $termsFinder,
         private readonly ProductVariantPricesCalculatorInterface $productVariantPricesCalculator,
         private readonly SubscriptionSchedulerInterface $scheduler,
         private readonly EventPublisher $eventPublisher,
@@ -102,11 +95,16 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         $storeFrequencies = null;
         $offers = null;
         foreach ($subscription->getItems() as $item) {
+            if ($item->isRemoved()) {
+                continue;
+            }
+
             if (null !== $item->getFrequency()) {
-                $storeFrequencies ??= $this->byInterval($this->storeFrequenciesOf($subscription), $current);
+                $storeFrequencies ??= self::otherThan($current, $this->storeFrequenciesOf($subscription));
                 $targets = $storeFrequencies;
             } else {
-                $targets = $this->byInterval($this->planRepository->findBy(['productVariant' => $item->getProductVariant(), 'enabled' => true], ['id' => 'ASC']), $current);
+                $variant = $item->getProductVariant();
+                $targets = null === $variant ? [] : self::otherThan($current, $this->termsFinder->plansOf($variant));
             }
 
             if (null === $offers) {
@@ -133,7 +131,7 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         return $offers;
     }
 
-    /** @return list<SubscriptionFrequencyInterface> the enabled frequencies of the subscription's channel, oldest first */
+    /** @return array<string, SubscriptionFrequencyInterface> by interval key, the frequencies of the subscription's channel */
     private function storeFrequenciesOf(SubscriptionInterface $subscription): array
     {
         $channel = $subscription->getChannel();
@@ -141,27 +139,21 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
             return [];
         }
 
-        return $this->frequencyRepository->findEnabledByChannel($channel);
+        return $this->termsFinder->frequenciesOf($channel);
     }
 
     /**
      * @template T of SubscriptionTermsInterface
      *
-     * @param iterable<T> $terms oldest first
+     * @param array<string, T> $terms by interval key
      *
-     * @return array<string, T> the oldest for each interval but the current one
+     * @return array<string, T> all but the current interval's
      */
-    private function byInterval(iterable $terms, SubscriptionInterval $current): array
+    private static function otherThan(SubscriptionInterval $current, array $terms): array
     {
-        $byInterval = [];
-        foreach ($terms as $candidate) {
-            $interval = SubscriptionInterval::of($candidate);
-            if (!$interval->equals($current) && !isset($byInterval[$interval->key()])) {
-                $byInterval[$interval->key()] = $candidate;
-            }
-        }
+        unset($terms[$current->key()]);
 
-        return $byInterval;
+        return $terms;
     }
 
     /** Only to order the intervals: a month counts 30 days and a year 365. */

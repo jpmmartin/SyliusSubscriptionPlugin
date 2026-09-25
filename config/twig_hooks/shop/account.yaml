@@ -71,3 +71,33 @@ sylius_twig_hooks:
             form:
                 template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address/form.html.twig'
                 priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_items_change.update.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_items/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_items_change.update.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_items/title.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_items_change.update.content.main':
+            form:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_items/form.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_item_addition.update.content':
+            breadcrumbs:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item/breadcrumbs.html.twig'
+                priority: 200
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_item_addition.update.content.main.header':
+            title:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item/title.html.twig'
+                priority: 0
+
+        'jpm_martin_sylius_subscription.shop.account.subscription_item_addition.update.content.main':
+            form:
+                template: '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item/form.html.twig'
+                priority: 0
