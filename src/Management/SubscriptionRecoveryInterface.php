@@ -9,8 +9,9 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 
 /**
- * A customer recovering their subscription suspended after cycles failed in a row: its last failed
- * cycle is retried with a new order the customer pays on the store's order payment page, and paying it
+ * A customer recovering their subscription suspended because its renewals could not be charged: its
+ * last failed cycle is retried with a new order the customer pays on the store's order payment page,
+ * and paying it
  * reactivates the subscription. The plugin never charges that order: left unpaid, it expires like any
  * unpaid order, and the cycle fails again. A suspension by an administrator is theirs to lift.
  */
@@ -20,13 +21,13 @@ interface SubscriptionRecoveryInterface
     public const NOTHING_TO_RENEW = 'nothing_to_renew';
 
     /**
-     * Whether its customer can recover it now: it was suspended after failed cycles, and either its last
+     * Whether its customer can recover it now: it was suspended for unpaid renewals, and either its last
      * cycle failed and something of it can be sold, or a recovery is already waiting to be paid.
      */
     public function canRecover(SubscriptionInterface $subscription): bool;
 
     /**
-     * Why a subscription suspended after failed cycles cannot be recovered now, one of the constants;
+     * Why a subscription suspended for unpaid renewals cannot be recovered now, one of the constants;
      * null when it can, or when it was not suspended that way.
      */
     public function whyNot(SubscriptionInterface $subscription): ?string;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JpmMartin\SyliusSubscriptionPlugin\Cycle;
 
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttemptInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
@@ -47,8 +48,9 @@ final class CycleFailureHandler implements CycleFailureHandlerInterface
 
         if (null !== $this->suspendAfterFailedCycles && $subscription->getConsecutiveFailedCycles() >= $this->suspendAfterFailedCycles) {
             if ($this->stateMachine->can($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND)) {
-                // Before the transition, so SubscriptionSuspended says why.
-                $subscription->setSuspendedForFailedCycles(true);
+                // Before the transition, so SubscriptionSuspended says why. Paying only mends a charge:
+                // a cycle a gate, an expired hold or nothing to renew failed stays the administrator's.
+                $subscription->setSuspendedForUnpaidRenewals(self::failedOnACharge($cycle));
                 $this->stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND);
             }
 
@@ -56,5 +58,14 @@ final class CycleFailureHandler implements CycleFailureHandlerInterface
         }
 
         $this->scheduler->scheduleNext($subscription);
+    }
+
+    private static function failedOnACharge(SubscriptionCycleInterface $cycle): bool
+    {
+        $lastAttempt = $cycle->getAttempts()->last();
+
+        return $lastAttempt instanceof SubscriptionChargeAttemptInterface &&
+            \in_array($lastAttempt->getType(), [SubscriptionChargeAttemptInterface::TYPE_CHARGE, SubscriptionChargeAttemptInterface::TYPE_STATUS], true) &&
+            \in_array($lastAttempt->getOutcome(), [SubscriptionChargeAttemptInterface::OUTCOME_DECLINED, SubscriptionChargeAttemptInterface::OUTCOME_NOT_ATTEMPTED], true);
     }
 }

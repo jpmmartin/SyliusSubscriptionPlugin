@@ -17,7 +17,7 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
 use Webmozart\Assert\Assert;
 
 /**
- * A customer's recovery paid: the subscription suspended after failed cycles is reactivated, with its
+ * A customer's recovery paid: the subscription suspended for unpaid renewals is reactivated, with its
  * calendar and its run of failures started afresh. It runs before PayCycleListener, while the cycle
  * still says it is a recovery: paying it ends the retry. An administrator's retry, which the plugin
  * charges, leaves the subscription as it was: lifting a suspension stays theirs to decide.
@@ -46,7 +46,7 @@ final class ReactivateRecoveredSubscriptionListener
             null === $payment ||
             !$this->recovery->isAwaitingItsCustomer($cycle) ||
             SubscriptionInterface::STATE_SUSPENDED !== $subscription->getState() ||
-            !$subscription->isSuspendedForFailedCycles() ||
+            !$subscription->isSuspendedForUnpaidRenewals() ||
             PluginCharges::include($cycle, $payment) ||
             !$this->stateMachine->can($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_REACTIVATE)
         ) {
