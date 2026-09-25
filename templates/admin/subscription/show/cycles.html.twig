@@ -59,7 +59,7 @@
                             {% for attempt in cycle.attempts %}
                                 <div {{ sylius_test_html_attribute('attempt', loop.index) }}>
                                     <span {{ sylius_test_html_attribute('attempted-at') }}>{{ attempt.attemptedAt|date('d-m-Y H:i') }}</span>
-                                    · {{ ('jpm_martin_sylius_subscription.ui.attempt_type.' ~ attempt.type)|trans }}
+                                    · <span {{ sylius_test_html_attribute('attempt-type') }}>{{ ('jpm_martin_sylius_subscription.ui.attempt_type.' ~ attempt.type)|trans }}</span>
                                     · <strong {{ sylius_test_html_attribute('outcome') }}>{{ ('jpm_martin_sylius_subscription.ui.outcome.' ~ attempt.outcome)|trans }}</strong>
                                     {% if attempt.reason is not null %}· <span {{ sylius_test_html_attribute('reason') }}>{{ attempt.reason }}</span>{% endif %}
                                     {% if attempt.code is not null %}· <code {{ sylius_test_html_attribute('code') }}>{{ attempt.code }}</code>{% endif %}

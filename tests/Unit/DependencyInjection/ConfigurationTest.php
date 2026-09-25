@@ -65,6 +65,29 @@ final class ConfigurationTest extends TestCase
         $this->process(['missed_cycles' => 'charge_all']);
     }
 
+    public function testARetryWaitsAnHourForACustomersPaymentUnlessTheStoreSaysOtherwise(): void
+    {
+        self::assertSame(60, $this->process([])['customer_payment_wait_minutes']);
+        self::assertSame(15, $this->process(['customer_payment_wait_minutes' => 15])['customer_payment_wait_minutes']);
+    }
+
+    /** @return iterable<string, array{mixed}> */
+    public static function invalidCustomerPaymentWaits(): iterable
+    {
+        yield 'zero' => [0];
+        yield 'negative' => [-5];
+        yield 'not a number' => ['an hour'];
+        yield 'none' => [null];
+    }
+
+    #[DataProvider('invalidCustomerPaymentWaits')]
+    public function testItRejectsAWaitForACustomersPaymentThatIsNotAPositiveInteger(mixed $minutes): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['customer_payment_wait_minutes' => $minutes]);
+    }
+
     public function testAStoreCanChooseWhenToAnnounceARenewalOrNeverToAnnounceIt(): void
     {
         self::assertSame(7, $this->process(['renewal_notice_days' => 7])['renewal_notice_days']);

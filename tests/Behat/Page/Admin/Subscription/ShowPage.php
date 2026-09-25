@@ -45,6 +45,20 @@ final class ShowPage extends SymfonyPage
         return $attempts;
     }
 
+    /** @return list<array{attempted_at: string, type: string}> */
+    public function getAttemptTypesOfRenewal(int $number): array
+    {
+        $attempts = [];
+        foreach ($this->getElement('cycle', ['%number%' => (string) $number])->findAll('css', '[data-test-attempt]') as $attempt) {
+            $attempts[] = [
+                'attempted_at' => trim((string) $attempt->find('css', '[data-test-attempted-at]')?->getText()),
+                'type' => trim((string) $attempt->find('css', '[data-test-attempt-type]')?->getText()),
+            ];
+        }
+
+        return $attempts;
+    }
+
     public function canApply(string $transition): bool
     {
         return $this->hasElement('transition', ['%transition%' => $transition]);

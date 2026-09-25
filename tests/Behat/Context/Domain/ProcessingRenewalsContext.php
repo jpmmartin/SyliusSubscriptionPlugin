@@ -13,6 +13,11 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Sylius\Behat\Context\Setup\CalendarContext;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Bundle\PaymentBundle\Announcer\PaymentRequestAnnouncerInterface;
+use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
+use Sylius\Component\Payment\Factory\PaymentRequestFactoryInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -28,6 +33,8 @@ final class ProcessingRenewalsContext implements Context
         private readonly EntityManagerInterface $entityManager,
         private readonly SharedStorageInterface $sharedStorage,
         private readonly ScriptedGateway $scriptedGateway,
+        private readonly PaymentRequestFactoryInterface $paymentRequestFactory,
+        private readonly PaymentRequestAnnouncerInterface $paymentRequestAnnouncer,
     ) {
     }
 
@@ -55,6 +62,36 @@ final class ProcessingRenewalsContext implements Context
             }
             Assert::same($cycle->getState(), SubscriptionCycleInterface::STATE_FAILED);
         }
+    }
+
+    /** As the store's order payment page does it: a payment request of the pending payment, which the test gateway approves. */
+    #[Given('/^the customer "([^"]+)" paid their renewal #(\d+) on the store$/')]
+    public function theCustomerPaidTheirRenewalOnTheStore(string $email, int $number): void
+    {
+        $cycle = $this->entityManager->createQueryBuilder()
+            ->select('cycle')
+            ->from(SubscriptionCycleInterface::class, 'cycle')
+            ->innerJoin('cycle.subscription', 'subscription')
+            ->innerJoin('subscription.customer', 'customer')
+            ->andWhere('customer.email = :email')
+            ->andWhere('cycle.number = :number')
+            ->setParameter('email', $email)
+            ->setParameter('number', $number)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+        Assert::isInstanceOf($cycle, SubscriptionCycleInterface::class);
+        $payment = $cycle->getOrder()?->getLastPayment(PaymentInterface::STATE_NEW);
+        Assert::notNull($payment, \sprintf('Renewal #%d of "%s" has no payment to pay.', $number, $email));
+        $method = $payment->getMethod();
+        Assert::isInstanceOf($method, PaymentMethodInterface::class);
+
+        $paymentRequest = $this->paymentRequestFactory->create($payment, $method);
+        $paymentRequest->setAction(PaymentRequestInterface::ACTION_CAPTURE);
+        $this->entityManager->persist($paymentRequest);
+        $this->entityManager->flush();
+        $this->paymentRequestAnnouncer->dispatchPaymentRequestCommand($paymentRequest);
+        $this->entityManager->flush();
     }
 
     #[When('/^the renewals due on "([^"]+)" are processed$/')]

@@ -185,6 +185,17 @@ final class ManagingSubscriptionsContext implements Context
         );
     }
 
+    #[Then('/^its renewal #(\d+) should show a payment by its customer on "([^"]+)"$/')]
+    public function itsRenewalShouldShowAPaymentByItsCustomer(int $number, string $attemptedAt): void
+    {
+        $attempts = $this->showPage->getAttemptTypesOfRenewal($number);
+        Assert::inArray(
+            ['attempted_at' => $attemptedAt, 'type' => 'Paid by the customer'],
+            $attempts,
+            \sprintf('The attempts shown are %s.', json_encode($attempts, \JSON_THROW_ON_ERROR)),
+        );
+    }
+
     #[Then('/^I should not be able to (?:suspend|reactivate|cancel) it(?:, (?:suspend|reactivate|cancel) it)* or (?:suspend|reactivate|cancel) it$/')]
     public function iShouldNotBeAbleToChangeItsState(): void
     {

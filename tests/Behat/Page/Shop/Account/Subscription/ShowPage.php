@@ -69,6 +69,26 @@ final class ShowPage extends SymfonyPage
         $this->getElement('change_address')->click();
     }
 
+    public function payRenewalNow(int $number): void
+    {
+        $link = $this->getElement('cycle', ['%number%' => (string) $number])->find('css', '[data-test-pay-now]');
+        if (null === $link) {
+            throw new \InvalidArgumentException(\sprintf('Renewal #%d cannot be paid now.', $number));
+        }
+        $link->click();
+    }
+
+    public function isRenewalPaidByCustomer(int $number): bool
+    {
+        return null !== $this->getElement('cycle', ['%number%' => (string) $number])->find('css', '[data-test-paid-by-customer]');
+    }
+
+    /** Where "Change card" leads; null when it is not offered. */
+    public function getChangeCardUrl(): ?string
+    {
+        return $this->hasElement('change_card') ? $this->getElement('change_card')->getAttribute('href') : null;
+    }
+
     public function changeItems(): void
     {
         $this->getElement('change_items')->click();
@@ -123,6 +143,7 @@ final class ShowPage extends SymfonyPage
         return array_merge(parent::getDefinedElements(), [
             'add_product' => '[data-test-add-product]',
             'cancel' => '[data-test-cancel]',
+            'change_card' => '[data-test-change-card]',
             'change_items' => '[data-test-change-items]',
             'change_address' => '[data-test-change-address]',
             'change_frequency' => '[data-test-change-frequency]',

@@ -12,6 +12,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateKeeperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacerInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Payment\CustomerPaymentInProgressChecker;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
@@ -48,6 +49,7 @@ final class ProcessSubscriptionCycleHandler
         private readonly ClockInterface $clock,
         private readonly MissedCyclePolicyInterface $missedCyclePolicy,
         private readonly SubscriptionSchedulerInterface $scheduler,
+        private readonly CustomerPaymentInProgressChecker $customerPaymentInProgressChecker,
     ) {
     }
 
@@ -90,7 +92,8 @@ final class ProcessSubscriptionCycleHandler
             return;
         }
 
-        if (!$cycle->isManualRetry()) {
+        // A customer paying the order right now: the retry waits for the next run, and is not made if they pay.
+        if (!$cycle->isManualRetry() && !$this->customerPaymentInProgressChecker->isInProgress($cycle)) {
             $this->cycleCharger->charge($cycle);
         }
     }

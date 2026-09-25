@@ -17,6 +17,7 @@ use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscriptio
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeItemsPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\IndexPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ShowPage;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Order\PaymentPage;
 use Webmozart\Assert\Assert;
 
 final class ManagingMySubscriptionsContext implements Context
@@ -28,6 +29,7 @@ final class ManagingMySubscriptionsContext implements Context
         private readonly ChangeAddressPage $changeAddressPage,
         private readonly ChangeItemsPage $changeItemsPage,
         private readonly AddItemPage $addItemPage,
+        private readonly PaymentPage $orderPaymentPage,
         private readonly NotificationCheckerInterface $notificationChecker,
         private readonly SharedStorageInterface $sharedStorage,
     ) {
@@ -109,6 +111,13 @@ final class ManagingMySubscriptionsContext implements Context
         $this->showPage->changeFrequency();
         $this->changeFrequencyPage->chooseFrequency($frequency);
         $this->changeFrequencyPage->confirm();
+    }
+
+    #[When('/^I pay its renewal #(\d+) now$/')]
+    public function iPayItsRenewalNow(int $number): void
+    {
+        $this->showPage->payRenewalNow($number);
+        $this->orderPaymentPage->pay();
     }
 
     #[When('I start changing its items')]
@@ -288,6 +297,20 @@ final class ManagingMySubscriptionsContext implements Context
     {
         Assert::true($this->changeItemsPage->isConsentAsked(), 'The consent is not asked.');
         Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
+    }
+
+    #[Then('/^its renewal #(\d+) should be marked as paid by me$/')]
+    public function itsRenewalShouldBeMarkedAsPaidByMe(int $number): void
+    {
+        Assert::true($this->showPage->isRenewalPaidByCustomer($number), \sprintf('Renewal #%d is not marked as paid by the customer.', $number));
+    }
+
+    #[Then('/^I should be able to change its card on the gateway\'s page "([^"]+)"$/')]
+    public function iShouldBeAbleToChangeItsCardOn(string $urlStart): void
+    {
+        $url = $this->showPage->getChangeCardUrl();
+        Assert::notNull($url, 'Changing the card is not offered.');
+        Assert::startsWith($url, $urlStart);
     }
 
     #[Then("I should be notified that the subscription's items have been changed")]

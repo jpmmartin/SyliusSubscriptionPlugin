@@ -19,7 +19,16 @@
                 <tr {{ sylius_test_html_attribute('cycle', cycle.number) }}>
                     <td>{{ cycle.number }}</td>
                     <td {{ sylius_test_html_attribute('date') }}>{{ cycle.scheduledAt|format_date }}</td>
-                    <td {{ sylius_test_html_attribute('state') }}>{{ label(cycle.skipped ? 'skipped' : cycle.state) }}</td>
+                    <td>
+                        <span {{ sylius_test_html_attribute('state') }}>{{ label(cycle.skipped ? 'skipped' : cycle.state) }}</span>
+                        {% if cycle.attempts|filter(attempt => attempt.type == 'customer')|length > 0 %}
+                            <div class="small text-body-secondary" {{ sylius_test_html_attribute('paid-by-customer') }}>{{ 'jpm_martin_sylius_subscription.ui.paid_by_you'|trans }}</div>
+                        {% endif %}
+                        {% set payment_link = jpm_martin_sylius_subscription_renewal_payment_link(cycle) %}
+                        {% if payment_link is not null %}
+                            <a class="btn btn-sm btn-primary mt-1" href="{{ payment_link }}" {{ sylius_test_html_attribute('pay-now') }}>{{ 'jpm_martin_sylius_subscription.ui.pay_now'|trans }}</a>
+                        {% endif %}
+                    </td>
                     <td {{ sylius_test_html_attribute('order') }}>
                         {% if cycle.order is not null and cycle.order.number is not null %}
                             <a href="{{ path('sylius_shop_account_order_show', { number: cycle.order.number }) }}">#{{ cycle.order.number }}</a>

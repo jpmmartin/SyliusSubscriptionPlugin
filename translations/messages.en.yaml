@@ -59,6 +59,9 @@ jpm_martin_sylius_subscription:
         different_billing_address: Bill to a different address
         choose_shipping_method: 'The current shipping method does not reach this address. Choose how it will be shipped:'
         no_shipping_method_reaches: No shipping method reaches this address.
+        pay_now: Pay now
+        paid_by_you: Paid by you
+        change_card: Change card
         change_items: Change items
         change_items_help: 'The changes apply from the next renewal whose order is not placed yet. A quantity keeps its price; another variant renews at its current subscriber price.'
         add_product: Add a product
@@ -85,6 +88,7 @@ jpm_martin_sylius_subscription:
         attempt_type:
             charge: Charge
             status: Status check
+            customer: Paid by the customer
         outcome:
             approved: Approved
             declined: Declined

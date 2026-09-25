@@ -242,3 +242,18 @@ Feature: Managing my subscriptions
         Then I should be told to accept the recurring charges
         When I view my subscription to "Coffee"
         Then it should cost "$28.00" per renewal
+
+    @ui
+    Scenario: Paying a renewal whose charge was declined from my account
+        Given the test gateway will decline the next charge with "Insufficient funds."
+        And the renewals due on "2027-02-01 09:00" are processed
+        When I view my subscription to "Coffee"
+        And I pay its renewal #2 now
+        And I view my subscription to "Coffee"
+        Then its renewal #2 should be "Paid"
+        And its renewal #2 should be marked as paid by me
+
+    @ui
+    Scenario: Changing the card on the gateway's page
+        When I view my subscription to "Coffee"
+        Then I should be able to change its card on the gateway's page "https://gateway.example.com/cards/update?subscription="

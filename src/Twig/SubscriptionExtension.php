@@ -12,6 +12,8 @@ use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerIn
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver;
+use JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry;
+use JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use Twig\Extension\AbstractExtension;
@@ -27,6 +29,8 @@ final class SubscriptionExtension extends AbstractExtension
         private readonly SubscriptionAddressChangerInterface $addressChanger,
         private readonly RenewalAddressesResolver $addressesResolver,
         private readonly SubscriptionItemEditorInterface $itemEditor,
+        private readonly RenewalPaymentLinkGeneratorInterface $renewalPaymentLinkGenerator,
+        private readonly CardUpdateProviderRegistry $cardUpdateProviderRegistry,
     ) {
     }
 
@@ -40,6 +44,8 @@ final class SubscriptionExtension extends AbstractExtension
             new TwigFunction('jpm_martin_sylius_subscription_can_change_address', $this->canChangeAddress(...)),
             new TwigFunction('jpm_martin_sylius_subscription_can_change_items', $this->canChangeItems(...)),
             new TwigFunction('jpm_martin_sylius_subscription_can_add_items', $this->canAddItems(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_renewal_payment_link', $this->renewalPaymentLinkGenerator->generate(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_card_update_url', $this->getCardUpdateUrl(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_shipping_address', $this->addressesResolver->shippingAddress(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_billing_address', $this->addressesResolver->billingAddress(...)),
         ];
@@ -65,6 +71,16 @@ final class SubscriptionExtension extends AbstractExtension
     public function canChangeAddress(SubscriptionInterface $subscription): bool
     {
         return $this->addressChanger->canChange($subscription);
+    }
+
+    /** Where the customer changes the card of a subscription not ended; null when no gateway integration lets them. */
+    public function getCardUpdateUrl(SubscriptionInterface $subscription): ?string
+    {
+        if (\in_array($subscription->getState(), [SubscriptionInterface::STATE_CANCELLED, SubscriptionInterface::STATE_COMPLETED], true)) {
+            return null;
+        }
+
+        return $this->cardUpdateProviderRegistry->urlFor($subscription);
     }
 
     public function canChangeItems(SubscriptionInterface $subscription): bool

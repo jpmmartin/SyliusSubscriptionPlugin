@@ -191,6 +191,8 @@
             <argument type="service" id="jpm_martin_sylius_subscription.management.address_changer" />
             <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
             <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" />
+            <argument type="service" id="jpm_martin_sylius_subscription.payment.card_update_provider_registry" />
             <tag name="twig.extension" />
         </service>
 

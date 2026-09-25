@@ -193,3 +193,15 @@ Feature: Managing subscriptions
         And its "Tea" item should be 1 at "$10.00" on the "TEA_QUARTERLY" plan
         And it should cost "$27.00" per renewal
         And it should next renew on "01-02-2027"
+
+    @ui
+    Scenario: Seeing a renewal its customer paid on the store after its charge was declined
+        Given the subscription of "bob@example.com" has been cancelled
+        And the test gateway will decline the next charge with "Insufficient funds."
+        And the renewals due on "2027-02-01 09:00" are processed
+        And it is "2027-02-01 12:00" now
+        And the customer "ann@example.com" paid their renewal #2 on the store
+        When I view the subscription of "ann@example.com"
+        Then its renewal #2 should be "Paid"
+        And its renewal #2 should show a "Declined" charge on "01-02-2027 09:00" because "Insufficient funds."
+        And its renewal #2 should show a payment by its customer on "01-02-2027 12:00"

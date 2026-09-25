@@ -21,6 +21,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionEventInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionFrequencyChanged;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionItemsChanged;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionPaused;
+use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionPaymentMethodChanged;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionReactivated;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionResumed;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionSuspended;
@@ -49,6 +50,7 @@ final class EventSerializationTest extends TestCase
         yield 'frequency changed' => [new SubscriptionFrequencyChanged(7, 2, 'week')];
         yield 'address changed' => [new SubscriptionAddressChanged(7, true)];
         yield 'items changed' => [new SubscriptionItemsChanged(7, 1800, 3600)];
+        yield 'payment method changed' => [new SubscriptionPaymentMethodChanged(7, 'CARD_ON_FILE')];
         yield 'upcoming' => [new RenewalUpcoming(7, 11, 2, $at)];
         yield 'held' => [new RenewalHeld(7, 11, 2, $at, 'Waiting for the prescriber.')];
         yield 'held without a date' => [new RenewalHeld(7, 11, 2, null, null)];

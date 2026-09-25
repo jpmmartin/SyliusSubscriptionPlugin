@@ -35,11 +35,12 @@ final class CycleCharger implements CycleChargerInterface
     public function charge(SubscriptionCycleInterface $cycle): ChargeOutcome
     {
         $payment = $cycle->getOrder()?->getLastPayment(PaymentInterface::STATE_NEW);
+        $attempt = $this->start($cycle, SubscriptionChargeAttemptInterface::TYPE_CHARGE, $payment);
         $outcome = null === $payment
             ? ChargeOutcome::notAttempted('The order has no payment left to charge.')
             : $this->renewalCharger->charge($payment);
 
-        $this->record($cycle, SubscriptionChargeAttemptInterface::TYPE_CHARGE, $outcome, $payment);
+        self::finish($attempt, $outcome);
         $this->follow($cycle, $outcome);
 
         return $outcome;
@@ -55,25 +56,37 @@ final class CycleCharger implements CycleChargerInterface
         }
         Assert::notNull($payment, 'Only a cycle that was charged can be reconciled.');
 
+        $attempt = $this->start($cycle, SubscriptionChargeAttemptInterface::TYPE_STATUS, $payment);
         $outcome = $this->renewalCharger->status($payment);
 
-        $this->record($cycle, SubscriptionChargeAttemptInterface::TYPE_STATUS, $outcome, $payment);
+        self::finish($attempt, $outcome);
         $this->follow($cycle, $outcome);
 
         return $outcome;
     }
 
-    private function record(SubscriptionCycleInterface $cycle, string $type, ChargeOutcome $outcome, ?PaymentInterface $payment): void
+    /**
+     * The attempt is on the cycle before the gateway is asked: a gateway that answers at once completes
+     * the payment during the charge, and the order's payment listeners must see it is the plugin's.
+     */
+    private function start(SubscriptionCycleInterface $cycle, string $type, ?PaymentInterface $payment): SubscriptionChargeAttemptInterface
     {
         $attempt = $this->attemptFactory->createNew();
         Assert::isInstanceOf($attempt, SubscriptionChargeAttemptInterface::class);
         $attempt->setType($type);
-        $attempt->setOutcome($outcome->outcome);
-        $attempt->setReason($outcome->reason);
-        $attempt->setCode($outcome->code);
+        $attempt->setOutcome(SubscriptionChargeAttemptInterface::OUTCOME_UNKNOWN);
         $attempt->setAttemptedAt($this->clock->now());
         $attempt->setPayment($payment);
         $cycle->addAttempt($attempt);
+
+        return $attempt;
+    }
+
+    private static function finish(SubscriptionChargeAttemptInterface $attempt, ChargeOutcome $outcome): void
+    {
+        $attempt->setOutcome($outcome->outcome);
+        $attempt->setReason($outcome->reason);
+        $attempt->setCode($outcome->code);
     }
 
     private function follow(SubscriptionCycleInterface $cycle, ChargeOutcome $outcome): void
