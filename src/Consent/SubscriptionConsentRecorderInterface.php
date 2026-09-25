@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Consent;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionConsentInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 
 /** Records a customer's acceptance of the recurring-charge consent text on an order, and tells whether it was given. */
@@ -20,4 +21,10 @@ interface SubscriptionConsentRecorderInterface
     public function isGivenFor(OrderInterface $order): bool;
 
     public function findFor(OrderInterface $order): ?SubscriptionConsentInterface;
+
+    /**
+     * Records on the subscription acceptance of the current version, in the given language, now, in
+     * place of the one it kept. The consent of its initial order stays as the proof of the first one.
+     */
+    public function recordOnSubscription(SubscriptionInterface $subscription, string $localeCode): void;
 }

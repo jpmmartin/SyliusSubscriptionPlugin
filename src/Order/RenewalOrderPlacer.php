@@ -15,10 +15,7 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Core\Model\ProductInterface;
-use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\OrderCheckoutTransitions;
-use Sylius\Component\Inventory\Checker\AvailabilityCheckerInterface;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Webmozart\Assert\Assert;
@@ -49,7 +46,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         private readonly RenewalAddressesResolver $addressesResolver,
         private readonly FactoryInterface $cycleItemFactory,
         private readonly OrderItemQuantityModifierInterface $quantityModifier,
-        private readonly AvailabilityCheckerInterface $availabilityChecker,
+        private readonly VariantAvailabilityChecker $availabilityChecker,
         private readonly StateMachineInterface $stateMachine,
         private readonly ObjectManager $orderManager,
     ) {
@@ -132,7 +129,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
             Assert::notNull($variant);
             $variantKey = spl_object_id($variant);
             $quantity = ($quantityTaken[$variantKey] ?? 0) + $item->getQuantity();
-            $skippedReason = $this->whyUnavailable($variant, $channel, $quantity);
+            $skippedReason = $this->availabilityChecker->whyUnavailable($variant, $channel, $quantity);
 
             $cycleItem = $this->cycleItemFactory->createNew();
             Assert::isInstanceOf($cycleItem, SubscriptionCycleItemInterface::class);
@@ -149,26 +146,6 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         }
 
         return $taken;
-    }
-
-    private function whyUnavailable(ProductVariantInterface $variant, ChannelInterface $channel, int $quantity): ?string
-    {
-        $product = $variant->getProduct();
-        Assert::isInstanceOf($product, ProductInterface::class);
-
-        if (!$variant->isEnabled() || !$product->isEnabled()) {
-            return SubscriptionCycleItemInterface::SKIPPED_DISABLED;
-        }
-
-        if (!$product->hasChannel($channel)) {
-            return SubscriptionCycleItemInterface::SKIPPED_NOT_IN_CHANNEL;
-        }
-
-        if (!$this->availabilityChecker->isStockSufficient($variant, $quantity)) {
-            return SubscriptionCycleItemInterface::SKIPPED_OUT_OF_STOCK;
-        }
-
-        return null;
     }
 
     /** A new address with the same details: an address belongs to one order only. */

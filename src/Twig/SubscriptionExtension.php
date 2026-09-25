@@ -9,6 +9,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionAddressChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionInterval;
@@ -25,6 +26,7 @@ final class SubscriptionExtension extends AbstractExtension
         private readonly SubscriptionRenewalSkipperInterface $renewalSkipper,
         private readonly SubscriptionAddressChangerInterface $addressChanger,
         private readonly RenewalAddressesResolver $addressesResolver,
+        private readonly SubscriptionItemEditorInterface $itemEditor,
     ) {
     }
 
@@ -36,6 +38,8 @@ final class SubscriptionExtension extends AbstractExtension
             new TwigFunction('jpm_martin_sylius_subscription_can_retry_cycle', $this->canRetryCycle(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_to_skip', $this->getRenewalToSkip(...)),
             new TwigFunction('jpm_martin_sylius_subscription_can_change_address', $this->canChangeAddress(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_can_change_items', $this->canChangeItems(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_can_add_items', $this->canAddItems(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_shipping_address', $this->addressesResolver->shippingAddress(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_billing_address', $this->addressesResolver->billingAddress(...)),
         ];
@@ -61,6 +65,16 @@ final class SubscriptionExtension extends AbstractExtension
     public function canChangeAddress(SubscriptionInterface $subscription): bool
     {
         return $this->addressChanger->canChange($subscription);
+    }
+
+    public function canChangeItems(SubscriptionInterface $subscription): bool
+    {
+        return [] !== $this->itemEditor->editableItems($subscription);
+    }
+
+    public function canAddItems(SubscriptionInterface $subscription): bool
+    {
+        return [] !== $this->itemEditor->variantsToAdd($subscription);
     }
 
     /** The renewal the customer can skip now, whose date the skip button shows; null when none can. */

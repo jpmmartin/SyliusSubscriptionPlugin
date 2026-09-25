@@ -56,6 +56,17 @@ final class RepeatableVariants implements RepeatableVariantsInterface
         ));
     }
 
+    public function findAllRepeatable(): array
+    {
+        /** @var list<RepeatableVariantInterface> $marks */
+        $marks = $this->entityManager->getRepository($this->repeatableVariantClass)->findBy([], ['id' => 'ASC']);
+
+        return array_values(array_filter(array_map(
+            static fn (RepeatableVariantInterface $mark): ?ProductVariantInterface => $mark->getProductVariant(),
+            $marks,
+        )));
+    }
+
     public function markRepeatable(ProductVariantInterface $productVariant, bool $repeatable): void
     {
         $mark = $this->find($productVariant);

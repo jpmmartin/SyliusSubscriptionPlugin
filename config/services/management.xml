@@ -5,9 +5,13 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
 >
     <services>
-        <service id="jpm_martin_sylius_subscription.management.frequency_changer" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChanger">
+        <service id="jpm_martin_sylius_subscription.management.terms_finder" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionTermsFinder">
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.management.frequency_changer" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChanger">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.terms_finder" />
             <argument type="service" id="sylius.calculator.product_variant_price" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
             <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
@@ -43,6 +47,69 @@
             <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionAddressChangerInterface" alias="jpm_martin_sylius_subscription.management.address_changer" public="true" />
+
+        <!-- Replace this service, or point the interface alias elsewhere, to let customers change their items another way. -->
+        <service id="jpm_martin_sylius_subscription.management.item_editor" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditor">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.terms_finder" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.variant_availability_checker" />
+            <argument type="service" id="sylius.calculator.product_variant_price" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_item" />
+            <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+            <argument>%sylius.order_item_quantity_modifier.limit%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface" alias="jpm_martin_sylius_subscription.management.item_editor" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_items_change" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionItemsChangeType">
+            <tag name="form.type" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_item_edit" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionItemEditType">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="sylius.formatter.money" />
+            <argument type="service" id="sylius.context.locale" />
+            <tag name="form.type" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.form.type.subscription_item_addition" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionItemAdditionType">
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="sylius.formatter.money" />
+            <argument type="service" id="sylius.context.locale" />
+            <tag name="form.type" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.change_subscription_items"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\ChangeSubscriptionItemsAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="form.factory" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="twig" />
+            <argument type="service" id="router" />
+            <argument type="service" id="translator" />
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.add_subscription_item"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\AddSubscriptionItemAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="form.factory" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="twig" />
+            <argument type="service" id="router" />
+            <argument type="service" id="translator" />
+            <tag name="controller.service_arguments" />
+        </service>
 
         <service id="jpm_martin_sylius_subscription.form.type.subscription_address_change" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionAddressChangeType">
             <tag name="form.type" />
@@ -123,6 +190,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.management.renewal_skipper" />
             <argument type="service" id="jpm_martin_sylius_subscription.management.address_changer" />
             <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
             <tag name="twig.extension" />
         </service>
 

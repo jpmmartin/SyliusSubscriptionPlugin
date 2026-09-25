@@ -1,0 +1,8 @@
+{% extends '@SyliusShop/account/common/update.html.twig' %}
+
+{% set prefixes = ['jpm_martin_sylius_subscription.shop.account.subscription_items_change'] %}
+{% set attrs = { subscription, form, renewal_total, new_renewal_total, consent_required } %}
+
+{% form_theme form '@SyliusShop/form/theme.html.twig' %}
+
+{% block title %}{{ 'jpm_martin_sylius_subscription.ui.change_items'|trans }} | {{ parent() }}{% endblock %}

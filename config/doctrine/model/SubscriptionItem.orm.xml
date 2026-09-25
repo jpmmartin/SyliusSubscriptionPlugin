@@ -23,6 +23,8 @@
         <field name="quantity" column="quantity" type="integer" />
         <field name="unitPrice" column="unit_price" type="integer" />
         <field name="paidCycles" column="paid_cycles" type="integer" />
+        <!-- Set when the customer removed it: it stays, so the cycles that carried it keep showing it. -->
+        <field name="removedAt" column="removed_at" type="datetime_immutable" nullable="true" />
 
         <many-to-one field="subscription" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface" inversed-by="items">
             <join-column name="subscription_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />

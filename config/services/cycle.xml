@@ -38,6 +38,10 @@
             <argument type="service" id="sylius.factory.address" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.order.variant_availability_checker" class="JpmMartin\SyliusSubscriptionPlugin\Order\VariantAvailabilityChecker">
+            <argument type="service" id="sylius.checker.inventory.availability" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver" />
 
         <service id="jpm_martin_sylius_subscription.order.renewal_placer" class="JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacer">
@@ -47,7 +51,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
             <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_cycle_item" />
             <argument type="service" id="sylius.modifier.order_item_quantity" />
-            <argument type="service" id="sylius.checker.inventory.availability" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.variant_availability_checker" />
             <argument type="service" id="sylius_abstraction.state_machine" />
             <argument type="service" id="sylius.manager.order" />
         </service>

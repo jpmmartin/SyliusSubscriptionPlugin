@@ -1,0 +1,15 @@
+{% set subscription = hookable_metadata.context.subscription %}
+{% set form = hookable_metadata.context.form %}
+
+{{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+    {{ form_errors(form) }}
+    {{ form_row(form.offer, sylius_test_form_attribute('product')) }}
+    {{ form_row(form.quantity, sylius_test_form_attribute('quantity')) }}
+    <div class="mb-4" {{ sylius_test_html_attribute('subscription-consent') }}>
+        {{ form_row(form.consent, sylius_test_form_attribute('subscription-consent-checkbox')) }}
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('confirm-item-addition') }}>{{ 'jpm_martin_sylius_subscription.ui.add_product'|trans }}</button>
+        <a class="btn btn-outline-gray" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_show', { id: subscription.id }) }}">{{ 'sylius.ui.cancel'|trans }}</a>
+    </div>
+{{ form_end(form) }}

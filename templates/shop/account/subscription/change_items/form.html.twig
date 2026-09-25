@@ -1,0 +1,67 @@
+{% from '@SyliusShop/shared/macro/money.html.twig' import format %}
+
+{% set subscription = hookable_metadata.context.subscription %}
+{% set form = hookable_metadata.context.form %}
+{% set consent_required = hookable_metadata.context.consent_required %}
+
+{{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+    {{ form_errors(form) }}
+    <div class="table-responsive mb-3">
+        <table class="table align-middle" {{ sylius_test_html_attribute('items') }}>
+            <thead>
+                <tr>
+                    <th>{{ 'sylius.ui.product'|trans }}</th>
+                    <th>{{ 'sylius.ui.variant'|trans }}</th>
+                    <th>{{ 'sylius.ui.quantity'|trans }}</th>
+                    <th>{{ 'sylius.ui.unit_price'|trans }}</th>
+                    <th>{{ 'jpm_martin_sylius_subscription.ui.remove'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item_form in form.items %}
+                    {% set item = item_form.vars.data.item %}
+                    <tr {{ sylius_test_html_attribute('item', item.productVariant.product.name) }}>
+                        <td>{{ item.productVariant.product.name }}</td>
+                        <td>
+                            {% if item_form.variant is defined %}
+                                {{ form_widget(item_form.variant, sylius_test_form_attribute('variant')) }}
+                                {{ form_errors(item_form.variant) }}
+                            {% else %}
+                                {{ item.productVariant.name }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ form_widget(item_form.quantity, sylius_test_form_attribute('quantity')) }}
+                            {{ form_errors(item_form.quantity) }}
+                        </td>
+                        <td>{{ format(item.unitPrice, subscription.currencyCode) }}</td>
+                        <td>
+                            {% if item_form.removed is defined %}
+                                {{ form_widget(item_form.removed, sylius_test_form_attribute('remove')) }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p {{ sylius_test_html_attribute('renewal-total') }}>
+        {{ 'jpm_martin_sylius_subscription.ui.renewal_total'|trans }}: {{ format(hookable_metadata.context.renewal_total, subscription.currencyCode) }}
+    </p>
+    {% if consent_required %}
+        <div class="alert alert-info" {{ sylius_test_html_attribute('new-renewal-total') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.new_renewal_total'|trans({ '%total%': format(hookable_metadata.context.new_renewal_total, subscription.currencyCode) }) }}
+        </div>
+        <div class="mb-4" {{ sylius_test_html_attribute('subscription-consent') }}>
+            {{ form_row(form.consent, sylius_test_form_attribute('subscription-consent-checkbox')) }}
+        </div>
+    {% else %}
+        {% do form.consent.setRendered %}
+    {% endif %}
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('confirm-items-change') }}>{{ 'jpm_martin_sylius_subscription.ui.save_changes'|trans }}</button>
+        <a class="btn btn-outline-gray" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_show', { id: subscription.id }) }}">{{ 'sylius.ui.cancel'|trans }}</a>
+    </div>
+{{ form_end(form) }}

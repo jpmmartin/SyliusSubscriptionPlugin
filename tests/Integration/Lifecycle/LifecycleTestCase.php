@@ -406,7 +406,7 @@ abstract class LifecycleTestCase extends KernelTestCase
         return $address;
     }
 
-    private function variantOfANewProduct(string $name, int $price): ProductVariantInterface
+    protected function variantOfANewProduct(string $name, int $price): ProductVariantInterface
     {
         /** @var ProductContext $products */
         $products = self::getContainer()->get('sylius.behat.context.setup.product');
@@ -422,7 +422,7 @@ abstract class LifecycleTestCase extends KernelTestCase
         return $variant;
     }
 
-    private function plan(ProductVariantInterface $variant, string $code, int $intervalCount, SubscriptionIntervalUnit $unit, int $discount): SubscriptionPlanInterface
+    protected function plan(ProductVariantInterface $variant, string $code, int $intervalCount, SubscriptionIntervalUnit $unit, int $discount): SubscriptionPlanInterface
     {
         /** @var SubscriptionPlanFactoryInterface $factory */
         $factory = self::getContainer()->get('jpm_martin_sylius_subscription.factory.subscription_plan');

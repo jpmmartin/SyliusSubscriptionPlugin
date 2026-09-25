@@ -72,6 +72,16 @@
                  parent="sylius.behat.symfony_page"
         />
 
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_items"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\ChangeItemsPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.add_item"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Account\Subscription\AddItemPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
         <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_address"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeAddressPage"
                  parent="sylius.behat.symfony_page"
@@ -168,6 +178,8 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.show" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_frequency" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_address" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_items" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.add_item" />
             <argument type="service" id="sylius.behat.notification_checker.shop" />
             <argument type="service" id="sylius.behat.shared_storage" />
         </service>

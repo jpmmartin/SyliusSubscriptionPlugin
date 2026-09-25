@@ -1,0 +1,13 @@
+{% from '@SyliusShop/shared/breadcrumbs.html.twig' import breadcrumbs as breadcrumbs %}
+
+{% set subscription = hookable_metadata.context.subscription %}
+
+<div class="col-12">
+    {{ breadcrumbs([
+        { label: 'sylius.ui.home'|trans, path: path('sylius_shop_homepage') },
+        { label: 'sylius.ui.my_account'|trans, path: path('sylius_shop_account_dashboard') },
+        { label: 'jpm_martin_sylius_subscription.ui.my_subscriptions'|trans, path: path('jpm_martin_sylius_subscription_shop_account_subscription_index') },
+        { label: '#' ~ subscription.id, path: path('jpm_martin_sylius_subscription_shop_account_subscription_show', { id: subscription.id }) },
+        { label: 'jpm_martin_sylius_subscription.ui.change_items'|trans, active: true },
+    ]) }}
+</div>

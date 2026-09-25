@@ -2,7 +2,7 @@
 Feature: Managing my subscriptions
     In order to decide what I keep receiving and how often
     As a Customer
-    I want to see my subscriptions in my account, pause, resume or cancel them, skip a renewal, and change where and how often they renew
+    I want to see my subscriptions in my account, pause, resume or cancel them, skip a renewal, change where and how often they renew, and change what they bring
 
     Background:
         Given the store operates on a single channel in "United States"
@@ -184,3 +184,61 @@ Feature: Managing my subscriptions
         Given the customer "ann@example.com" subscribed to "Coffee" on the "COFFEE_MONTHLY" plan
         When I try to view that subscription
         Then I should be told that it does not exist
+
+    @ui
+    Scenario: Raising the quantity of a product and accepting the recurring charges again
+        Given it is "2027-01-20 09:00" now
+        When I view my subscription to "Coffee"
+        And I start changing its items
+        And I change the quantity of "Coffee" to 2
+        And I save my item changes
+        Then I should be asked to accept the recurring charges for "$46.00" per renewal
+        When I accept the recurring charges again
+        And I save my item changes
+        Then I should be notified that the subscription's items have been changed
+        And this subscription should have 2 "Coffee" at "$18.00"
+        And it should cost "$46.00" per renewal
+
+    @ui
+    Scenario: Moving a product to another of its variants
+        Given the product "Coffee" has a "Decaf" variant priced at "$25.00"
+        And the "Decaf" variant offers a "DECAF_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        When I view my subscription to "Coffee"
+        And I start changing its items
+        And I move "Coffee" to the "Decaf" variant
+        And I save my item changes
+        Then I should be asked to accept the recurring charges for "$32.50" per renewal
+        When I accept the recurring charges again
+        And I save my item changes
+        Then I should be notified that the subscription's items have been changed
+        And this subscription should have 1 "Coffee" in "Decaf" at "$22.50"
+
+    @ui
+    Scenario: Removing a product without being asked to accept the recurring charges again
+        When I view my subscription to "Coffee"
+        And I start changing its items
+        And I remove "Tea"
+        And I save my item changes
+        Then I should be notified that the subscription's items have been changed
+        And it should cost "$18.00" per renewal
+        And "Tea" should be marked as removed from this subscription
+
+    @ui
+    Scenario: Adding a product
+        Given the store has a product "Honey" priced at "$5.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month
+        When I view my subscription to "Coffee"
+        And I add 2 "Honey" to it accepting the recurring charges
+        Then I should be notified that the product has been added to the subscription
+        And this subscription should have 2 "Honey" at "$5.00"
+        And it should cost "$38.00" per renewal
+
+    @ui
+    Scenario: Not adding a product without accepting the recurring charges
+        Given the store has a product "Honey" priced at "$5.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month
+        When I view my subscription to "Coffee"
+        And I try to add 1 "Honey" to it without accepting the recurring charges
+        Then I should be told to accept the recurring charges
+        When I view my subscription to "Coffee"
+        Then it should cost "$28.00" per renewal

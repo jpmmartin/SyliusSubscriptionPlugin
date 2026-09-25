@@ -34,6 +34,12 @@ jpm_martin_sylius_subscription:
         channels:
             min: Elige al menos un canal.
     subscription_item:
+        quantity:
+            range: 'La cantidad debe estar entre {{ min }} y {{ max }}.'
+        product:
+            not_blank: Elige un producto.
+        consent_required: Acepta los cobros recurrentes para guardar estos cambios.
+        not_offered: Estos cambios ya no son posibles. Revísalos y vuelve a intentarlo.
         product_variant:
             not_available: Esta variante de producto no está disponible en esta tienda.
         subscription_plan:

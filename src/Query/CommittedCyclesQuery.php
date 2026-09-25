@@ -46,7 +46,7 @@ final class CommittedCyclesQuery implements CommittedCyclesQueryInterface
             $shift = $this->missedCyclePolicy->datesToSkip($subscription, $openCycle->getNumber() + 1, $now);
 
             foreach ($subscription->getItems() as $item) {
-                if ($item->getProductVariant()?->getId() !== $productVariant->getId()) {
+                if ($item->isRemoved() || $item->getProductVariant()?->getId() !== $productVariant->getId()) {
                     continue;
                 }
 

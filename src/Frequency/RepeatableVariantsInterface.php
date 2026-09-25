@@ -23,6 +23,9 @@ interface RepeatableVariantsInterface
      */
     public function filterRepeatable(iterable $productVariants): array;
 
+    /** @return list<ProductVariantInterface> every variant that can be repeated */
+    public function findAllRepeatable(): array;
+
     /** Marks or unmarks the variant; the caller flushes, as a variant's save already does. */
     public function markRepeatable(ProductVariantInterface $productVariant, bool $repeatable): void;
 }
