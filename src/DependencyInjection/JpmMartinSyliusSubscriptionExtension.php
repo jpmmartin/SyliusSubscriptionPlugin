@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\DependencyInjection;
 
 use JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderInterface;
 use Sylius\Bundle\CoreBundle\DependencyInjection\PrependDoctrineMigrationsTrait;
 use Sylius\Bundle\ResourceBundle\DependencyInjection\Extension\AbstractResourceExtension;
 use Symfony\Component\Config\FileLocator;
@@ -18,7 +19,7 @@ final class JpmMartinSyliusSubscriptionExtension extends AbstractResourceExtensi
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{driver: string, resources: array<string, mixed>, payment_methods: list<string>, retry_delays: list<int>, final_decline_codes: list<string>, suspend_after_failed_cycles: int|null, max_consecutive_skips: int|null, missed_cycles: string, renewal_notice_days: int|null, consent_version: string} $config */
+        /** @var array{driver: string, resources: array<string, mixed>, payment_methods: list<string>, retry_delays: list<int>, final_decline_codes: list<string>, suspend_after_failed_cycles: int|null, max_consecutive_skips: int|null, customer_payment_wait_minutes: int, missed_cycles: string, renewal_notice_days: int|null, consent_version: string} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('jpm_martin_sylius_subscription', $config['driver'], $config['resources'], $container);
@@ -30,6 +31,7 @@ final class JpmMartinSyliusSubscriptionExtension extends AbstractResourceExtensi
         $container->setParameter('jpm_martin_sylius_subscription.missed_cycles', $config['missed_cycles']);
         $container->setParameter('jpm_martin_sylius_subscription.renewal_notice_days', $config['renewal_notice_days']);
         $container->setParameter('jpm_martin_sylius_subscription.max_consecutive_skips', $config['max_consecutive_skips']);
+        $container->setParameter('jpm_martin_sylius_subscription.customer_payment_wait_minutes', $config['customer_payment_wait_minutes']);
         $container->setParameter('jpm_martin_sylius_subscription.consent_version', $config['consent_version']);
 
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
@@ -37,6 +39,7 @@ final class JpmMartinSyliusSubscriptionExtension extends AbstractResourceExtensi
         $loader->load('services.xml');
 
         $container->registerForAutoconfiguration(CycleGateInterface::class)->addTag('jpm_martin_sylius_subscription.cycle_gate');
+        $container->registerForAutoconfiguration(CardUpdateProviderInterface::class)->addTag('jpm_martin_sylius_subscription.card_update_provider');
     }
 
     public function prepend(ContainerBuilder $container): void

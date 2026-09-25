@@ -17,6 +17,9 @@ interface SubscriptionChargeAttemptInterface extends ResourceInterface
 
     public const TYPE_STATUS = 'status';
 
+    /** Paid by the customer on the store's order payment page, not charged by the plugin. */
+    public const TYPE_CUSTOMER = 'customer';
+
     public const OUTCOME_APPROVED = 'approved';
 
     public const OUTCOME_DECLINED = 'declined';

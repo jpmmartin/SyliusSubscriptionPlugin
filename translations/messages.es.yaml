@@ -59,6 +59,9 @@ jpm_martin_sylius_subscription:
         different_billing_address: Facturar a otra dirección
         choose_shipping_method: 'El método de envío actual no llega a esta dirección. Elige cómo se enviará:'
         no_shipping_method_reaches: Ningún método de envío llega a esta dirección.
+        pay_now: Pagar ahora
+        paid_by_you: Pagado por ti
+        change_card: Cambiar la tarjeta
         change_items: Cambiar los artículos
         change_items_help: 'Los cambios se aplican desde la próxima renovación que aún no tenga pedido. Una cantidad conserva su precio; otra variante se renueva a su precio de suscriptor actual.'
         add_product: Añadir un producto
@@ -85,6 +88,7 @@ jpm_martin_sylius_subscription:
         attempt_type:
             charge: Cobro
             status: Consulta de estado
+            customer: Pagado por el cliente
         outcome:
             approved: Aprobado
             declined: Rechazado

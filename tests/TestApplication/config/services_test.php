@@ -10,6 +10,7 @@ use Tests\JpmMartin\SyliusSubscriptionPlugin\Gate\ScriptedCycleGate;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedGateway;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestCommandProvider;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestHandler;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\TestCardUpdateProvider;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Readme\TellTheCustomerAboutTheRenewal;
 
 return function (ContainerConfigurator $container) {
@@ -41,6 +42,12 @@ return function (ContainerConfigurator $container) {
         $services
             ->set(TellTheCustomerAboutTheRenewal::class)
                 ->autowire()
+                ->autoconfigure()
+        ;
+
+        // A gateway integration's page to change the card, for "Card on file" only, tagged by autoconfiguration.
+        $services
+            ->set('jpm_martin_sylius_subscription.test.card_update_provider', TestCardUpdateProvider::class)
                 ->autoconfigure()
         ;
 

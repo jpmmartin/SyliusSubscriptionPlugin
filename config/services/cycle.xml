@@ -86,7 +86,16 @@
             <argument type="service" id="clock" />
             <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument type="service" id="jpm_martin_sylius_subscription.payment.customer_payment_in_progress_checker" />
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.payment.customer_payment_in_progress_checker"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Payment\CustomerPaymentInProgressChecker"
+        >
+            <argument type="service" id="sylius.repository.payment_request" />
+            <argument type="service" id="clock" />
+            <argument>%jpm_martin_sylius_subscription.customer_payment_wait_minutes%</argument>
         </service>
 
         <service id="jpm_martin_sylius_subscription.console.command.process_subscription_cycles"
@@ -109,6 +118,20 @@
             <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
             <argument type="service" id="clock" />
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <!-- Before the cycle is paid: a renewal its customer paid is recorded as theirs, and its method adopted. -->
+        <service id="jpm_martin_sylius_subscription.listener.workflow.order.record_customer_payment"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\RecordCustomerPaymentListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_charge_attempt" />
+            <argument type="service_closure" id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" />
+            <argument type="service" id="security.token_storage" />
+            <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" priority="10" />
         </service>
 
         <!-- A paid renewal order pays its cycle; the initial order's payment is handled in subscription.xml. -->

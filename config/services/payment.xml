@@ -16,6 +16,33 @@
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" alias="jpm_martin_sylius_subscription.payment.renewal_charger" />
 
+        <!-- A renewal order is paid on Sylius's order payment page only with a method the plugin can charge. -->
+        <service id="jpm_martin_sylius_subscription.payment.renewal_payment_methods_resolver"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentMethodsResolver"
+                 decorates="sylius.resolver.payment_methods"
+        >
+            <argument type="service" id=".inner" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service_closure" id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGenerator"
+        >
+            <argument type="service" id="router" />
+            <argument type="service" id="url_helper" />
+            <argument>%sylius.unsecured_urls%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface" alias="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" public="true" />
+
+        <!-- Gateway integrations tag their CardUpdateProviderInterface with jpm_martin_sylius_subscription.card_update_provider. -->
+        <service id="jpm_martin_sylius_subscription.payment.card_update_provider_registry"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry"
+        >
+            <argument type="tagged_iterator" tag="jpm_martin_sylius_subscription.card_update_provider" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry" alias="jpm_martin_sylius_subscription.payment.card_update_provider_registry" public="true" />
+
         <service id="jpm_martin_sylius_subscription.consent.recorder"
                  class="JpmMartin\SyliusSubscriptionPlugin\Consent\SubscriptionConsentRecorder"
         >

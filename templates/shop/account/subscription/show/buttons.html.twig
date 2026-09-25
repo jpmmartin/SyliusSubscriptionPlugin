@@ -21,6 +21,12 @@
             {{ 'jpm_martin_sylius_subscription.ui.add_product'|trans }}
         </a>
     {% endif %}
+    {% set card_update_url = jpm_martin_sylius_subscription_card_update_url(subscription) %}
+    {% if card_update_url is not null %}
+        <a class="btn btn-outline-primary" href="{{ card_update_url }}" {{ sylius_test_html_attribute('change-card') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.change_card'|trans }}
+        </a>
+    {% endif %}
     {% set renewal_to_skip = jpm_martin_sylius_subscription_renewal_to_skip(subscription) %}
     {% if renewal_to_skip is not null %}
         <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_skip_renewal', { id: subscription.id }) }}">

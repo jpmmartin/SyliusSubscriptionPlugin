@@ -82,6 +82,11 @@
                  parent="sylius.behat.symfony_page"
         />
 
+        <service id="jpm_martin_sylius_subscription.behat.page.shop.order.payment"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Order\PaymentPage"
+                 parent="sylius.behat.symfony_page"
+        />
+
         <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_address"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeAddressPage"
                  parent="sylius.behat.symfony_page"
@@ -180,6 +185,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_address" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.change_items" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.account.subscription.add_item" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.order.payment" />
             <argument type="service" id="sylius.behat.notification_checker.shop" />
             <argument type="service" id="sylius.behat.shared_storage" />
         </service>
@@ -192,6 +198,8 @@
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="sylius.behat.shared_storage" />
             <argument type="service" id="jpm_martin_sylius_subscription.test.scripted_gateway" />
+            <argument type="service" id="sylius.factory.payment_request" />
+            <argument type="service" id="Sylius\Bundle\PaymentBundle\Announcer\PaymentRequestAnnouncerInterface" />
         </service>
 
         <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription_cart"

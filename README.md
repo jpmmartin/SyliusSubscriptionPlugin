@@ -42,9 +42,11 @@ with all of them, charged without the customer present, with retries when a char
   renewal.
 - **Customer account**: the customer's subscriptions with their products, their renewals and what each
   skipped and where they are shipped; pausing and resuming them, skipping the next renewal,
-  cancelling, changing how often and where they renew, and changing their quantities, swapping a
-  variant, removing a product or adding one. See [Pausing and skipping](#pausing-and-skipping),
-  [Changing the address](#changing-the-address) and [Changing the items](#changing-the-items).
+  cancelling, changing how often and where they renew, changing their quantities, swapping a variant,
+  removing a product or adding one, and paying a renewal whose charge was declined or changing their
+  card through the gateway. See [Pausing and skipping](#pausing-and-skipping),
+  [Changing the address](#changing-the-address), [Changing the items](#changing-the-items) and
+  [Paying a declined renewal](#paying-a-declined-renewal).
 - **Admin**: a list filterable by state, customer, variant (of any of the products) and next renewal,
   and a page with the products, the consent, the failed renewals in a row, every renewal with what it
   took in or skipped and each charge attempt (date, outcome and reason), where it is shipped, and the
@@ -175,6 +177,9 @@ jpm_martin_sylius_subscription:
     renewal_notice_days: 3
     # Renewals in a row a customer may skip; null sets no limit. See "Pausing and skipping".
     max_consecutive_skips: ~
+    # Minutes a retry waits for a payment the customer is making of the same renewal, counted from its
+    # last change. See "Paying a declined renewal".
+    customer_payment_wait_minutes: 60
     # What becomes of the dates of a calendar that came before a cycle could be scheduled on them:
     # skip, charge or skip_late. See "Missed dates".
     missed_cycles: skip
@@ -214,6 +219,10 @@ handler put the code in the response data, or charge renewals with your own serv
   asks for the payment's status until the worker has settled it. It never charges the payment again.
 - **Encryption.** Sylius 2 encrypts payment requests. Generate the key once with
   `bin/console sylius:payment:generate-key`.
+- **A card the customer pays with must be kept.** A customer may pay a declined renewal on the store's
+  order payment page with another card (see [Paying a declined renewal](#paying-a-declined-renewal)),
+  and the next renewals are charged without them. The gateway's handler must keep that card for charges
+  without the customer, as the checkout already requires of it; how depends on the gateway.
 
 ### Your own service
 
@@ -377,6 +386,57 @@ decides when to give up on them, and failing the cycle cancels them. Every other
 included, expires as before. If your store decorates or replaces that service too, keep renewal orders
 awaiting payment out of it.
 
+## Paying a declined renewal
+
+When a renewal's charge is declined, or could not be attempted, and a retry is to come, its customer
+can pay the renewal order on Sylius's own order payment page, `sylius_shop_order_show`
+(`/order/{tokenValue}`), with another card or another method:
+
+- their account offers "Pay now" on that renewal, and
+  `JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface` gives the page's
+  absolute address for the store's own notice of `RenewalChargeDeclined`; see [Events](#events);
+- on a renewal order, the page offers only the methods the renewal charger `supports()`: the plugin
+  decorates `sylius.resolver.payment_methods`, and leaves every other order as it was;
+- once paid, the cycle is paid as if the plugin had charged it, its retry is not made, and its history
+  shows "Paid by the customer". Paid with another method the plugin can charge, the subscription renews
+  with it from then on, and `SubscriptionPaymentMethodChanged` is published. A payment an administrator
+  marks complete in the admin pays the cycle too, but is not shown as the customer's.
+
+A retry does not charge while the customer is paying the same order, so the renewal is not charged
+twice: a payment request of the pending payment still new or processing holds the retry back to the
+next run of the command. A customer who gives up on the gateway's page leaves that request behind, so it
+counts only until it has gone `customer_payment_wait_minutes` without changing, an hour by default; the
+retry then goes ahead. Only gateways that use Sylius's payment requests leave a request to find.
+
+### Changing the card
+
+Without a renewal to pay, where the customer changes their card is the gateway integration's, since the
+card is the gateway's. An integration implements
+`JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderInterface`: `supports()` a subscription,
+usually by its payment method, and `getUrl()` of its own page. Tag it with
+`jpm_martin_sylius_subscription.card_update_provider`, or let autoconfiguration do it; the first that
+supports a subscription, by the tag's priority, gives the account's "Change card" link, and
+`JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry` gives it to your own templates
+or emails. The plugin registers none, so nothing is offered until one is.
+
+```php
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderInterface;
+
+final class StripeCardUpdateProvider implements CardUpdateProviderInterface
+{
+    public function supports(SubscriptionInterface $subscription): bool
+    {
+        return 'STRIPE' === $subscription->getPaymentMethod()?->getCode();
+    }
+
+    public function getUrl(SubscriptionInterface $subscription): string
+    {
+        return '/account/stripe/cards'; // a page of your integration
+    }
+}
+```
+
 ## Missed dates
 
 A cycle's date comes from its subscription's calendar, so a late charge never moves the cycles after
@@ -527,6 +587,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionFrequencyChanged` | its frequency changes | `intervalCount`, `intervalUnit` (`day`, `week`, `month` or `year`) |
 | `SubscriptionAddressChanged` | its addresses change, by its customer or an administrator | `shippingMethodChanged` |
 | `SubscriptionItemsChanged` | its customer changes, removes or adds items | `previousRenewalTotal`, `renewalTotal`, in minor units of the subscription's currency |
+| `SubscriptionPaymentMethodChanged` | its customer paid a declined renewal with another method the plugin can charge, which it renews with from then on | `paymentMethodCode` |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
@@ -546,6 +607,13 @@ a cycle that is already due. So it reaches your customers only if the command ru
 or so. A subscription that renews more often than that, every day for instance, has its next cycle
 within the notice as soon as it is scheduled: that cycle is announced in the same run that charged the
 one before, so less than `renewal_notice_days` ahead.
+
+A notice of `RenewalChargeDeclined` can tell the customer where to pay the renewal themselves:
+`JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface::generate($cycle)`
+gives the absolute address of the order payment page, or `null` once the renewal can no longer be paid
+there. It is on the channel's hostname when the channel has one. Otherwise the host is the request's,
+and a worker handling events has none: set `framework.router.default_uri`, or the link points to
+`localhost`.
 
 A handler, in a store with autoconfiguration:
 
@@ -609,6 +677,11 @@ logged. Only a handler of yours that throws, run synchronously, stops it, as abo
 
 ## Upgrading
 
+From a version without customer payments of declined renewals, nothing needs migrating: a charge
+attempt gains the `customer` type. Sylius's order payment page now offers, on a renewal order, only the
+methods the plugin can charge; every other order is as before. `customer_payment_wait_minutes` is new,
+with a default.
+
 From a version without item changes, `doctrine:migrations:migrate` adds when each item was removed, with
 no item removed before. Going back down is refused while any item is removed, since that version would
 renew it again.
@@ -661,6 +734,9 @@ From a version with one subscription per order line:
   changes or removes it.
 - Products are added to a subscription from its page in the customer's account, not from the product
   page: the product page's form is Sylius's live cart form.
+- With a gateway that charges through Payum rather than payment requests, a retry cannot see that the
+  customer is paying the same renewal, so both could charge it. Prefer gateways with payment requests,
+  Sylius 2's own.
 - A change of items saved while the command places the open cycle's order may miss that order, which
   keeps the items it was placed with; the next renewal carries the change.
 
