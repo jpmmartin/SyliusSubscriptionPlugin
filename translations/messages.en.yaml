@@ -62,6 +62,10 @@ jpm_martin_sylius_subscription:
         pay_now: Pay now
         paid_by_you: Paid by you
         change_card: Change card
+        pay_and_reactivate: Pay and reactivate
+        recovery_help: 'This subscription was suspended because its renewals could not be charged. Pay its last renewal, with another card if you like, and it renews again.'
+        not_recoverable:
+            nothing_to_renew: 'It cannot be recovered now: none of its products can be sold.'
         change_items: Change items
         change_items_help: 'The changes apply from the next renewal whose order is not placed yet. A quantity keeps its price; another variant renews at its current subscriber price.'
         add_product: Add a product

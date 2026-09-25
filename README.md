@@ -43,10 +43,11 @@ with all of them, charged without the customer present, with retries when a char
 - **Customer account**: the customer's subscriptions with their products, their renewals and what each
   skipped and where they are shipped; pausing and resuming them, skipping the next renewal,
   cancelling, changing how often and where they renew, changing their quantities, swapping a variant,
-  removing a product or adding one, and paying a renewal whose charge was declined or changing their
-  card through the gateway. See [Pausing and skipping](#pausing-and-skipping),
-  [Changing the address](#changing-the-address), [Changing the items](#changing-the-items) and
-  [Paying a declined renewal](#paying-a-declined-renewal).
+  removing a product or adding one, paying a renewal whose charge was declined or changing their card
+  through the gateway, and recovering a subscription suspended after failed renewals. See
+  [Pausing and skipping](#pausing-and-skipping), [Changing the address](#changing-the-address),
+  [Changing the items](#changing-the-items), [Paying a declined renewal](#paying-a-declined-renewal)
+  and [Recovering a suspended subscription](#recovering-a-suspended-subscription).
 - **Admin**: a list filterable by state, customer, variant (of any of the products) and next renewal,
   and a page with the products, the consent, the failed renewals in a row, every renewal with what it
   took in or skipped and each charge attempt (date, outcome and reason), where it is shipped, and the
@@ -242,7 +243,8 @@ A cycle fails when its retries run out, a gate rejects it, its hold expires or n
 sold that day. A failed cycle cancels its order if nothing was charged on it, which gives the reserved
 stock back, and the next cycle is scheduled on the subscription's calendar: a failure never cancels a
 subscription. After `suspend_after_failed_cycles` failed cycles in a row the subscription is suspended
-instead, and generates no cycles until an administrator reactivates it.
+instead, and generates no cycles until an administrator reactivates it, or its customer recovers it by
+paying; see [Recovering a suspended subscription](#recovering-a-suspended-subscription).
 
 An administrator can retry a failed cycle of an active or suspended subscription from its page. The
 retry places a new order with the items that can be sold now and charges it once, with no automatic
@@ -381,8 +383,9 @@ services:
 Sylius's `sylius:cancel-unpaid-orders` cancels the orders left unpaid for longer than
 `sylius_order.expiration.order`, five days by default, which is shorter than the plugin's default
 retries. So that it never cuts a retry short, the plugin decorates `sylius.updater.unpaid_orders_state`
-with a version that leaves out the renewal orders whose cycle still awaits payment: the retry policy
-decides when to give up on them, and failing the cycle cancels them. Every other order, initial orders
+with a version that leaves out the renewal orders whose cycle still awaits a retry: the retry policy
+decides when to give up on them, and failing the cycle cancels them. The order of a customer's recovery,
+which the plugin never charges, expires like any other. Every other order, initial orders
 included, expires as before. If your store decorates or replaces that service too, keep renewal orders
 awaiting payment out of it.
 
@@ -436,6 +439,29 @@ final class StripeCardUpdateProvider implements CardUpdateProviderInterface
     }
 }
 ```
+
+## Recovering a suspended subscription
+
+A subscription suspended after `suspend_after_failed_cycles` failed cycles in a row remembers it was,
+and its customer can recover it from their account with "Pay and reactivate":
+
+- its last failed cycle is retried with a new order of the items that can be sold now, which the plugin
+  does not charge: the customer pays it on Sylius's order payment page, with another card or another
+  method the plugin can charge, as in [Paying a declined renewal](#paying-a-declined-renewal);
+- once paid, the cycle is paid and the subscription reactivated: its next cycle is on the first date of
+  its calendar after that day, and its run of failures starts afresh;
+- starting again before paying leads to the same order. Left unpaid, it expires like any unpaid order,
+  after Sylius's `sylius_order.expiration.order`, and the cycle fails again, without counting twice;
+  the subscription stays suspended, and can be recovered again;
+- when none of its items can be sold, nothing is offered, and the account says why.
+
+A suspension by an administrator is theirs to lift: its customer cannot recover it, and a recovery
+started before an administrator suspended the subscription again pays its cycle and leaves it
+suspended. `RenewalPaymentLinkGeneratorInterface::generateRecovery($subscription)` gives the absolute
+address of the store's notice of `SubscriptionSuspended` when `forFailedCycles` is true: once signed
+in, the customer starts the recovery there and goes on to pay. It is `null` when the subscription
+cannot be recovered. The recovery is a service, `SubscriptionRecoveryInterface`: replace it to let
+customers recover another way.
 
 ## Missed dates
 
@@ -580,7 +606,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionActivated` | the subscription is activated: its initial order was paid | — |
 | `SubscriptionPaused` | it is paused, by its customer or an administrator on the customer's behalf | — |
 | `SubscriptionResumed` | the paused subscription is resumed | — |
-| `SubscriptionSuspended` | it is suspended, by an administrator or after failed cycles in a row | — |
+| `SubscriptionSuspended` | it is suspended, by an administrator or after failed cycles in a row | `forFailedCycles`: true after failed cycles, when its customer can recover it by paying |
 | `SubscriptionReactivated` | it is reactivated | — |
 | `SubscriptionCancelled` | it is cancelled, by its customer or an administrator | — |
 | `SubscriptionCompleted` | it ends: no item has a cycle left to renew | — |
@@ -594,7 +620,7 @@ subscription; listen to that interface to receive them all.
 | `RenewalChargeDeclined` | a charge is declined or not attempted, and will be retried | `cycleId`, `cycleNumber`, `orderId`, `nextAttemptAt`, `reason`, `code` |
 | `RenewalPaid` | the renewal order is paid | `cycleId`, `cycleNumber`, `orderId` |
 | `RenewalFailed` | the cycle fails: retries run out, a gate rejects it, its hold expires or nothing could be renewed | `cycleId`, `cycleNumber`, `orderId` (null without an order), `reason` |
-| `RenewalRetried` | an administrator retries a failed cycle; `RenewalPaid` or `RenewalFailed` follows with its new order | `cycleId`, `cycleNumber` |
+| `RenewalRetried` | an administrator retries a failed cycle, or its customer starts recovering a suspended subscription; `RenewalPaid` or `RenewalFailed` follows with its new order | `cycleId`, `cycleNumber` |
 | `RenewalSkipped` | the next renewal is skipped, by the customer or an administrator; published instead of `RenewalCancelled` | `cycleId`, `cycleNumber`, `scheduledAt`, `nextScheduledAt` |
 | `RenewalCancelled` | the cycle is cancelled: its order was cancelled before being paid, the subscription was paused, suspended or cancelled, or the cycle was skipped as late | `cycleId`, `cycleNumber`, `orderId` and `reason`, each null when there is none |
 
@@ -613,7 +639,9 @@ A notice of `RenewalChargeDeclined` can tell the customer where to pay the renew
 gives the absolute address of the order payment page, or `null` once the renewal can no longer be paid
 there. It is on the channel's hostname when the channel has one. Otherwise the host is the request's,
 and a worker handling events has none: set `framework.router.default_uri`, or the link points to
-`localhost`.
+`localhost`. Likewise, a notice of `SubscriptionSuspended` whose `forFailedCycles` is true can give
+`generateRecovery($subscription)`, where the customer recovers it; see
+[Recovering a suspended subscription](#recovering-a-suspended-subscription).
 
 A handler, in a store with autoconfiguration:
 
@@ -676,6 +704,12 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without customers recovering a suspended subscription, `doctrine:migrations:migrate`
+adds whether each subscription was suspended after failed cycles. Nothing says why a subscription
+already suspended was, so none counts as suspended after failed cycles: its customer cannot recover
+it until it is suspended that way again, and an administrator still can reactivate it.
+`SubscriptionSuspended` gains `forFailedCycles`, false by default, so existing handlers keep working.
 
 From a version without customer payments of declined renewals, nothing needs migrating: a charge
 attempt gains the `customer` type. Sylius's order payment page now offers, on a renewal order, only the

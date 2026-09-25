@@ -59,7 +59,7 @@ final class PublishLifecycleEventsListener
             SubscriptionTransitions::TRANSITION_ACTIVATE => new SubscriptionActivated($subscriptionId),
             SubscriptionTransitions::TRANSITION_PAUSE => new SubscriptionPaused($subscriptionId),
             SubscriptionTransitions::TRANSITION_RESUME => new SubscriptionResumed($subscriptionId),
-            SubscriptionTransitions::TRANSITION_SUSPEND => new SubscriptionSuspended($subscriptionId),
+            SubscriptionTransitions::TRANSITION_SUSPEND => new SubscriptionSuspended($subscriptionId, $subscription->isSuspendedForFailedCycles()),
             SubscriptionTransitions::TRANSITION_REACTIVATE => new SubscriptionReactivated($subscriptionId),
             SubscriptionTransitions::TRANSITION_CANCEL => new SubscriptionCancelled($subscriptionId),
             SubscriptionTransitions::TRANSITION_COMPLETE => new SubscriptionCompleted($subscriptionId),

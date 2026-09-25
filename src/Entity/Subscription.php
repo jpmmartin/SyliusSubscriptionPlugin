@@ -57,6 +57,8 @@ class Subscription implements SubscriptionInterface
 
     protected int $consecutiveFailedCycles = 0;
 
+    protected bool $suspendedForFailedCycles = false;
+
     /** @var Collection<int, SubscriptionItemInterface> */
     protected Collection $items;
 
@@ -262,6 +264,16 @@ class Subscription implements SubscriptionInterface
     public function setConsecutiveFailedCycles(int $consecutiveFailedCycles): void
     {
         $this->consecutiveFailedCycles = $consecutiveFailedCycles;
+    }
+
+    public function isSuspendedForFailedCycles(): bool
+    {
+        return $this->suspendedForFailedCycles;
+    }
+
+    public function setSuspendedForFailedCycles(bool $suspendedForFailedCycles): void
+    {
+        $this->suspendedForFailedCycles = $suspendedForFailedCycles;
     }
 
     public function getItems(): Collection

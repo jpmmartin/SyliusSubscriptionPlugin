@@ -44,6 +44,7 @@ final class EventSerializationTest extends TestCase
         yield 'paused' => [new SubscriptionPaused(7)];
         yield 'resumed' => [new SubscriptionResumed(7)];
         yield 'suspended' => [new SubscriptionSuspended(7)];
+        yield 'suspended for failed cycles' => [new SubscriptionSuspended(7, true)];
         yield 'reactivated' => [new SubscriptionReactivated(7)];
         yield 'cancelled' => [new SubscriptionCancelled(7)];
         yield 'completed' => [new SubscriptionCompleted(7)];

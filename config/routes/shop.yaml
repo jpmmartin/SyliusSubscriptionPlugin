@@ -134,6 +134,13 @@ jpm_martin_sylius_subscription_shop_account_subscription_add_item:
         template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item.html.twig"
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
 
+jpm_martin_sylius_subscription_shop_account_subscription_recover:
+    path: /account/subscriptions/{id}/recover
+    methods: [GET]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.recover_subscription
+        redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
+
 jpm_martin_sylius_subscription_shop_cart_repeat:
     path: /cart/repeat
     methods: [POST]

@@ -32,6 +32,8 @@
             <argument type="service" id="router" />
             <argument type="service" id="url_helper" />
             <argument>%sylius.unsecured_urls%</argument>
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface" alias="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" public="true" />
 

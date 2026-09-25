@@ -63,6 +63,26 @@
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface" alias="jpm_martin_sylius_subscription.management.item_editor" public="true" />
 
+        <!-- Replace this service, or point the interface alias elsewhere, to let customers recover another way. -->
+        <service id="jpm_martin_sylius_subscription.management.recovery" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecovery">
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_placer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.variant_availability_checker" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecoveryInterface" alias="jpm_martin_sylius_subscription.management.recovery" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.controller.recover_subscription"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\RecoverSubscriptionAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.form.type.subscription_items_change" class="JpmMartin\SyliusSubscriptionPlugin\Form\Type\SubscriptionItemsChangeType">
             <tag name="form.type" />
         </service>
@@ -193,6 +213,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
             <argument type="service" id="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" />
             <argument type="service" id="jpm_martin_sylius_subscription.payment.card_update_provider_registry" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
             <tag name="twig.extension" />
         </service>
 

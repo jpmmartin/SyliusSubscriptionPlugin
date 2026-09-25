@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order;
 
+use JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleFailureHandlerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecoveryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
@@ -18,14 +20,21 @@ use Webmozart\Assert\Assert;
  * cancelled, not failed, so the run of failures stays as it was, and the next cycle is scheduled. The
  * plugin's own cancellations of a renewal order, when its cycle fails or is cancelled, find the cycle
  * already closed and change nothing.
+ *
+ * A customer's recovery order left unpaid, which expires or an administrator cancels, fails its cycle
+ * again instead: the subscription stays suspended, and the failure is not counted twice.
  */
 final class SkipCycleListener
 {
+    public const RECOVERY_NOT_PAID = 'Its customer did not pay the order that would have recovered the subscription.';
+
     /** @param SubscriptionCycleRepositoryInterface<SubscriptionCycleInterface> $cycleRepository */
     public function __construct(
         private readonly SubscriptionCycleRepositoryInterface $cycleRepository,
         private readonly StateMachineInterface $stateMachine,
         private readonly SubscriptionSchedulerInterface $scheduler,
+        private readonly SubscriptionRecoveryInterface $recovery,
+        private readonly CycleFailureHandlerInterface $failureHandler,
     ) {
     }
 
@@ -35,6 +44,12 @@ final class SkipCycleListener
         Assert::isInstanceOf($order, OrderInterface::class);
 
         $cycle = $this->cycleRepository->findOneByOrder($order);
+        if (null !== $cycle && $this->recovery->isAwaitingItsCustomer($cycle)) {
+            $this->failureHandler->fail($cycle, self::RECOVERY_NOT_PAID);
+
+            return;
+        }
+
         if (null === $cycle || !$this->stateMachine->can($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_CANCEL)) {
             return;
         }

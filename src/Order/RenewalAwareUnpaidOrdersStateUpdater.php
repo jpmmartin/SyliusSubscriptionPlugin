@@ -74,7 +74,9 @@ final class RenewalAwareUnpaidOrdersStateUpdater implements UnpaidOrdersStateUpd
             ->andWhere('o.paymentState = :paymentState')
             ->andWhere('o.state = :orderState')
             ->andWhere('o.checkoutCompletedAt < :terminalDate')
-            ->andWhere(\sprintf('NOT EXISTS (SELECT cycle.id FROM %s cycle WHERE cycle.order = o AND cycle.state = :awaitingPayment)', $this->cycleClass))
+            // A renewal order waiting for a retry is left to the retry policy; one of a customer's
+            // recovery, which the plugin never charges and so has no retry date, expires like any other.
+            ->andWhere(\sprintf('NOT EXISTS (SELECT cycle.id FROM %s cycle WHERE cycle.order = o AND cycle.state = :awaitingPayment AND cycle.nextAttemptAt IS NOT NULL)', $this->cycleClass))
             ->setParameter('checkoutState', OrderCheckoutStates::STATE_COMPLETED)
             ->setParameter('paymentState', OrderPaymentStates::STATE_AWAITING_PAYMENT)
             ->setParameter('orderState', OrderInterface::STATE_NEW)
