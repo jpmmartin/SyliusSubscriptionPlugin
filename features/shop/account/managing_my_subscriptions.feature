@@ -269,3 +269,12 @@ Feature: Managing my subscriptions
         Then this subscription should be "Active"
         And its renewal #4 should be "Paid"
         And it should next renew on "May 1, 2027"
+
+    @ui
+    Scenario: Being told why a subscription suspended after its renewals failed cannot be recovered
+        Given the next 3 renewals of my subscription failed
+        And the product "Coffee" has been disabled
+        And the product "Tea" has been disabled
+        And it is "2027-04-10 09:00" now
+        When I view my subscription to "Coffee"
+        Then I should not be able to pay and reactivate it, because "It cannot be recovered now: none of its products can be sold."

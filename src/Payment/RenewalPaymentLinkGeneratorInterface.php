@@ -19,7 +19,7 @@ interface RenewalPaymentLinkGeneratorInterface
     public function generate(SubscriptionCycleInterface $cycle): ?string;
 
     /**
-     * The absolute address where the customer of a subscription suspended after failed cycles recovers
+     * The absolute address where the customer of a subscription suspended for unpaid renewals recovers
      * it: once signed in, it starts the recovery and leads to the order payment page, so it works
      * before the recovery's order exists. In the language of the subscription's last order. Null
      * unless the customer can recover it now.

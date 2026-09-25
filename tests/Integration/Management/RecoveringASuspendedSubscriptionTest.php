@@ -8,6 +8,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionReactivated;
 use JpmMartin\SyliusSubscriptionPlugin\Event\SubscriptionSuspended;
+use JpmMartin\SyliusSubscriptionPlugin\Gate\GateDecision;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecoveryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalPaymentLinkGeneratorInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
@@ -21,6 +22,7 @@ use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Event\EventCollector;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Gate\ScriptedCycleGate;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Lifecycle\LifecycleTestCase;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedGateway;
 
@@ -40,20 +42,20 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
         $this->collector()->clear();
     }
 
-    public function testCyclesFailedInARowSuspendTheSubscriptionForThemAndSaySo(): void
+    public function testRenewalsDeclinedInARowSuspendTheSubscriptionForUnpaidRenewalsAndSaySo(): void
     {
         $this->theRenewalsOfJanuaryFebruaryAndMarchFail();
 
         $subscription = $this->subscription();
         self::assertSame(SubscriptionInterface::STATE_SUSPENDED, $subscription->getState());
-        self::assertTrue($subscription->isSuspendedForFailedCycles());
+        self::assertTrue($subscription->isSuspendedForUnpaidRenewals());
         self::assertEquals(
             [new SubscriptionSuspended((int) $subscription->getId(), true)],
             $this->collector()->events(SubscriptionSuspended::class),
         );
     }
 
-    public function testAnAdministratorsSuspensionIsNotForFailedCycles(): void
+    public function testAnAdministratorsSuspensionIsNotForUnpaidRenewals(): void
     {
         $subscription = $this->subscription();
         $this->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND);
@@ -61,11 +63,32 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
 
         $subscription = $this->subscription();
         self::assertSame(SubscriptionInterface::STATE_SUSPENDED, $subscription->getState());
-        self::assertFalse($subscription->isSuspendedForFailedCycles());
+        self::assertFalse($subscription->isSuspendedForUnpaidRenewals());
         self::assertEquals(
             [new SubscriptionSuspended((int) $subscription->getId(), false)],
             $this->collector()->events(SubscriptionSuspended::class),
         );
+    }
+
+    public function testCyclesAGateRejectedInARowSuspendTheSubscriptionButPayingWouldNotMendThem(): void
+    {
+        $gate = self::getContainer()->get('jpm_martin_sylius_subscription.test.cycle_gate');
+        self::assertInstanceOf(ScriptedCycleGate::class, $gate);
+        foreach (['2027-01-01 09:00', '2027-02-01 09:00', '2027-03-01 09:00'] as $dateTime) {
+            $gate->decide(GateDecision::reject('The prescription has expired.'));
+            $this->itIsNow($dateTime);
+            $this->runTheCycleCommand();
+        }
+
+        $subscription = $this->subscription();
+        self::assertSame(SubscriptionInterface::STATE_SUSPENDED, $subscription->getState());
+        self::assertFalse($subscription->isSuspendedForUnpaidRenewals());
+        self::assertEquals(
+            [new SubscriptionSuspended((int) $subscription->getId(), false)],
+            $this->collector()->events(SubscriptionSuspended::class),
+        );
+        self::assertFalse($this->recovery()->canRecover($subscription), 'Paying would not renew the prescription.');
+        self::assertNull($this->recovery()->whyNot($subscription));
     }
 
     public function testReactivatingClearsTheCause(): void
@@ -78,7 +101,7 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
 
         $subscription = $this->subscription();
         self::assertSame(SubscriptionInterface::STATE_ACTIVE, $subscription->getState());
-        self::assertFalse($subscription->isSuspendedForFailedCycles());
+        self::assertFalse($subscription->isSuspendedForUnpaidRenewals());
     }
 
     public function testPayingTheRecoveryChargesTheLastFailedCycleAndReactivatesTheSubscription(): void
@@ -102,7 +125,7 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
         $subscription = $this->subscription();
         self::assertSame(SubscriptionInterface::STATE_ACTIVE, $subscription->getState());
         self::assertSame(0, $subscription->getConsecutiveFailedCycles());
-        self::assertFalse($subscription->isSuspendedForFailedCycles());
+        self::assertFalse($subscription->isSuspendedForUnpaidRenewals());
         self::assertSame(SubscriptionCycleInterface::STATE_SCHEDULED, $this->cycleOf('2027-04-01 09:00')->getState());
         self::assertEquals(
             [new SubscriptionReactivated((int) $subscription->getId())],
@@ -130,7 +153,7 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
     {
         $this->theRenewalsOfJanuaryFebruaryAndMarchFail();
         $subscription = $this->subscription();
-        $subscription->setSuspendedForFailedCycles(false);
+        $subscription->setSuspendedForUnpaidRenewals(false);
         $this->entityManager()->flush();
         $ordersBefore = $this->countOrders();
 
@@ -178,7 +201,7 @@ final class RecoveringASuspendedSubscriptionTest extends LifecycleTestCase
         self::assertStringEndsWith(\sprintf('/en_US/account/subscriptions/%d/recover', (int) $subscription->getId()), $link);
         self::assertStringStartsWith('http', $link);
 
-        $subscription->setSuspendedForFailedCycles(false);
+        $subscription->setSuspendedForUnpaidRenewals(false);
         $this->entityManager()->flush();
         self::assertNull($links->generateRecovery($this->subscription()), 'An administrator\'s suspension.');
     }

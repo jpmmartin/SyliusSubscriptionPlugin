@@ -31,7 +31,7 @@ final class SubscriptionRecovery implements SubscriptionRecoveryInterface
 
     public function canRecover(SubscriptionInterface $subscription): bool
     {
-        if (!self::isSuspendedForFailedCycles($subscription)) {
+        if (!self::isSuspendedForUnpaidRenewals($subscription)) {
             return false;
         }
 
@@ -42,7 +42,7 @@ final class SubscriptionRecovery implements SubscriptionRecoveryInterface
     public function whyNot(SubscriptionInterface $subscription): ?string
     {
         if (
-            self::isSuspendedForFailedCycles($subscription) &&
+            self::isSuspendedForUnpaidRenewals($subscription) &&
             null !== $this->failedLastCycle($subscription) &&
             !$this->hasSomethingToRenew($subscription)
         ) {
@@ -84,9 +84,9 @@ final class SubscriptionRecovery implements SubscriptionRecoveryInterface
             null === $cycle->getNextAttemptAt();
     }
 
-    private static function isSuspendedForFailedCycles(SubscriptionInterface $subscription): bool
+    private static function isSuspendedForUnpaidRenewals(SubscriptionInterface $subscription): bool
     {
-        return SubscriptionInterface::STATE_SUSPENDED === $subscription->getState() && $subscription->isSuspendedForFailedCycles();
+        return SubscriptionInterface::STATE_SUSPENDED === $subscription->getState() && $subscription->isSuspendedForUnpaidRenewals();
     }
 
     private function recoveryAwaitingPayment(SubscriptionInterface $subscription): ?SubscriptionCycleInterface

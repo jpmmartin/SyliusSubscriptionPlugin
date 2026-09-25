@@ -78,6 +78,17 @@ final class ShowPage extends SymfonyPage
         $link->click();
     }
 
+    /** Why the subscription cannot be recovered, as the account says it; empty when it says nothing. */
+    public function getWhyNotRecoverable(): string
+    {
+        return $this->hasElement('not_recoverable') ? trim($this->getElement('not_recoverable')->getText()) : '';
+    }
+
+    public function canPayAndReactivate(): bool
+    {
+        return $this->hasElement('pay_and_reactivate');
+    }
+
     public function payAndReactivate(): void
     {
         $this->getElement('pay_and_reactivate')->click();
@@ -161,6 +172,7 @@ final class ShowPage extends SymfonyPage
             'detail' => '[data-test-subscription-%detail%]',
             'item' => '[data-test-item="%product%"]',
             'pause' => 'button[data-test-pause]',
+            'not_recoverable' => '[data-test-not-recoverable]',
             'pay_and_reactivate' => '[data-test-pay-and-reactivate]',
             'resume' => 'button[data-test-resume]',
             'skip_renewal' => 'button[data-test-skip-renewal]',

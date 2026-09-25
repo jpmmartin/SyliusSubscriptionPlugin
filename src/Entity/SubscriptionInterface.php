@@ -129,12 +129,14 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
     public function setConsecutiveFailedCycles(int $consecutiveFailedCycles): void;
 
     /**
-     * Whether it was suspended after cycles failed in a row, so its customer can recover it by paying,
-     * rather than by an administrator. Cleared when it is reactivated.
+     * Whether it was suspended because its renewals could not be charged, so its customer can recover
+     * it by paying: the cycles failed in a row, and the last on a charge that was declined or could not
+     * be attempted. Not when a gate, an expired hold or nothing to renew failed that cycle, nor when an
+     * administrator suspended it. Cleared when it is reactivated.
      */
-    public function isSuspendedForFailedCycles(): bool;
+    public function isSuspendedForUnpaidRenewals(): bool;
 
-    public function setSuspendedForFailedCycles(bool $suspendedForFailedCycles): void;
+    public function setSuspendedForUnpaidRenewals(bool $suspendedForUnpaidRenewals): void;
 
     /** @return Collection<int, SubscriptionItemInterface> */
     public function getItems(): Collection;

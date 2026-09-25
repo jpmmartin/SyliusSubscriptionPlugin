@@ -7,6 +7,8 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Functional\Shop;
 use Doctrine\ORM\EntityManagerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Behat\Context\Hook\CalendarContext as CalendarHookContext;
 use Sylius\Behat\Context\Hook\DoctrineORMContext;
 use Sylius\Behat\Context\Setup\CalendarContext;
@@ -143,6 +145,39 @@ final class RecoveringASuspendedSubscriptionTest extends WebTestCase
             $this->client->getResponse()->headers->get('Location'),
             'Following the link again leads to the same order.',
         );
+    }
+
+    public function testASubscriptionItsCustomerCannotRecoverLeadsBackToItsPageAndChangesNothing(): void
+    {
+        // An administrator reactivates it and suspends it again: the suspension is theirs.
+        /** @var StateMachineInterface $stateMachine */
+        $stateMachine = self::getContainer()->get('sylius_abstraction.state_machine');
+        $subscription = $this->subscription();
+        $stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_REACTIVATE);
+        $stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND);
+        self::getContainer()->get('doctrine.orm.entity_manager')->flush();
+        $ordersBefore = $this->countOrders();
+        $this->signInAs('me@example.com');
+
+        $this->client->request('GET', $this->url());
+
+        self::assertSame(302, $this->client->getResponse()->getStatusCode());
+        self::assertSame(
+            \sprintf('/%s/account/subscriptions/%d', self::LOCALE, $this->subscriptionId),
+            $this->client->getResponse()->headers->get('Location'),
+        );
+        self::assertSame($ordersBefore, $this->countOrders());
+        self::assertSame(SubscriptionInterface::STATE_SUSPENDED, $this->subscription()->getState());
+        $this->client->followRedirect();
+        self::assertStringContainsString('This subscription cannot be recovered now.', (string) $this->client->getResponse()->getContent());
+    }
+
+    private function countOrders(): int
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
+
+        return (int) $entityManager->getConnection()->fetchOne('SELECT COUNT(*) FROM sylius_order');
     }
 
     private function signInAs(string $email): void

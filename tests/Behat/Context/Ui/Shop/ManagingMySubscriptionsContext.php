@@ -306,6 +306,13 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
     }
 
+    #[Then('/^I should not be able to pay and reactivate it, because "([^"]+)"$/')]
+    public function iShouldNotBeAbleToPayAndReactivateItBecause(string $reason): void
+    {
+        Assert::false($this->showPage->canPayAndReactivate(), 'Paying and reactivating it is offered.');
+        Assert::same($this->showPage->getWhyNotRecoverable(), $reason);
+    }
+
     #[Then('/^I should not be able to pay its renewal #(\d+) now$/')]
     public function iShouldNotBeAbleToPayItsRenewalNow(int $number): void
     {
