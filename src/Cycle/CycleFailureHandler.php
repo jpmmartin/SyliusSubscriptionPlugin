@@ -47,6 +47,8 @@ final class CycleFailureHandler implements CycleFailureHandlerInterface
 
         if (null !== $this->suspendAfterFailedCycles && $subscription->getConsecutiveFailedCycles() >= $this->suspendAfterFailedCycles) {
             if ($this->stateMachine->can($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND)) {
+                // Before the transition, so SubscriptionSuspended says why.
+                $subscription->setSuspendedForFailedCycles(true);
                 $this->stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND);
             }
 

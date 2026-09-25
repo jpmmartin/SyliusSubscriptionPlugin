@@ -113,6 +113,13 @@ final class ManagingMySubscriptionsContext implements Context
         $this->changeFrequencyPage->confirm();
     }
 
+    #[When('I pay and reactivate it')]
+    public function iPayAndReactivateIt(): void
+    {
+        $this->showPage->payAndReactivate();
+        $this->orderPaymentPage->pay();
+    }
+
     #[When('/^I pay its renewal #(\d+) now$/')]
     public function iPayItsRenewalNow(int $number): void
     {

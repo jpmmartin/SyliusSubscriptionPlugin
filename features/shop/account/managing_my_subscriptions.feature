@@ -258,3 +258,14 @@ Feature: Managing my subscriptions
     Scenario: Changing the card on the gateway's page
         When I view my subscription to "Coffee"
         Then I should be able to change its card on the gateway's page "https://gateway.example.com/cards/update?subscription="
+
+    @ui
+    Scenario: Recovering a subscription suspended after its renewals failed by paying the last one
+        Given the next 3 renewals of my subscription failed
+        And it is "2027-04-10 09:00" now
+        When I view my subscription to "Coffee"
+        And I pay and reactivate it
+        And I view my subscription to "Coffee"
+        Then this subscription should be "Active"
+        And its renewal #4 should be "Paid"
+        And it should next renew on "May 1, 2027"

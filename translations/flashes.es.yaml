@@ -10,6 +10,7 @@ jpm_martin_sylius_subscription:
         items_changed: "Se han cambiado los artículos de la suscripción."
         items_unchanged: No se ha cambiado nada.
         item_added: Se ha añadido el producto a la suscripción.
+        recovery_not_possible: Esta suscripción no se puede recuperar ahora.
         suspended: La suscripción se ha suspendido.
         reactivated: La suscripción se ha reactivado.
         paused: La suscripción se ha pausado.

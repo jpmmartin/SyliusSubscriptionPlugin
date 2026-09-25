@@ -1,5 +1,21 @@
 {% set subscription = hookable_metadata.context.subscription %}
 
+{% if jpm_martin_sylius_subscription_can_recover(subscription) %}
+    <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2" {{ sylius_test_html_attribute('recovery') }}>
+        <span>{{ 'jpm_martin_sylius_subscription.ui.recovery_help'|trans }}</span>
+        <a class="btn btn-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_recover', { id: subscription.id }) }}" {{ sylius_test_html_attribute('pay-and-reactivate') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.pay_and_reactivate'|trans }}
+        </a>
+    </div>
+{% else %}
+    {% set why_not_recoverable = jpm_martin_sylius_subscription_why_not_recoverable(subscription) %}
+    {% if why_not_recoverable is not null %}
+        <div class="alert alert-secondary" {{ sylius_test_html_attribute('not-recoverable') }}>
+            {{ ('jpm_martin_sylius_subscription.ui.not_recoverable.' ~ why_not_recoverable)|trans }}
+        </div>
+    {% endif %}
+{% endif %}
+
 <div class="d-flex flex-wrap gap-2 mb-3">
     {% if jpm_martin_sylius_subscription_frequencies_to_change_to(subscription) is not empty %}
         <a class="btn btn-outline-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_change_frequency', { id: subscription.id }) }}" {{ sylius_test_html_attribute('change-frequency') }}>

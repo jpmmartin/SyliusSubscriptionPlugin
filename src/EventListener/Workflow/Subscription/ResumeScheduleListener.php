@@ -34,6 +34,7 @@ final class ResumeScheduleListener
 
         if (SubscriptionTransitions::TRANSITION_REACTIVATE === $event->getTransition()?->getName()) {
             $subscription->setConsecutiveFailedCycles(0);
+            $subscription->setSuspendedForFailedCycles(false);
         }
 
         $now = $this->clock->now();

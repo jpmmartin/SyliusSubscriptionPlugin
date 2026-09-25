@@ -6,6 +6,10 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Payment;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttemptInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecoveryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver;
+use Sylius\Component\Channel\Model\ChannelInterface as BaseChannelInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\HttpFoundation\UrlHelper;
@@ -24,6 +28,8 @@ final class RenewalPaymentLinkGenerator implements RenewalPaymentLinkGeneratorIn
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly UrlHelper $urlHelper,
         private readonly bool $unsecuredUrls,
+        private readonly SubscriptionRecoveryInterface $recovery,
+        private readonly RenewalAddressesResolver $lastOrders,
     ) {
     }
 
@@ -49,7 +55,27 @@ final class RenewalPaymentLinkGenerator implements RenewalPaymentLinkGeneratorIn
             '_locale' => $order->getLocaleCode(),
         ]);
 
-        $hostname = $order->getChannel() instanceof ChannelInterface ? $order->getChannel()->getHostname() : null;
+        return $this->absolute($path, $order->getChannel());
+    }
+
+    public function generateRecovery(SubscriptionInterface $subscription): ?string
+    {
+        $channel = $subscription->getChannel();
+        if (!$this->recovery->canRecover($subscription) || !$channel instanceof ChannelInterface) {
+            return null;
+        }
+
+        $path = $this->urlGenerator->generate('jpm_martin_sylius_subscription_shop_account_subscription_recover', [
+            'id' => $subscription->getId(),
+            '_locale' => $this->lastOrders->lastOrderOf($subscription)?->getLocaleCode() ?? $channel->getDefaultLocale()?->getCode(),
+        ]);
+
+        return $this->absolute($path, $channel);
+    }
+
+    private function absolute(string $path, ?BaseChannelInterface $channel): string
+    {
+        $hostname = $channel?->getHostname();
         if (null !== $hostname && '' !== $hostname) {
             return ($this->unsecuredUrls ? 'http://' : 'https://') . $hostname . $path;
         }

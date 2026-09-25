@@ -78,6 +78,11 @@ final class ShowPage extends SymfonyPage
         $link->click();
     }
 
+    public function payAndReactivate(): void
+    {
+        $this->getElement('pay_and_reactivate')->click();
+    }
+
     public function canPayRenewalNow(int $number): bool
     {
         return null !== $this->getElement('cycle', ['%number%' => (string) $number])->find('css', '[data-test-pay-now]');
@@ -156,6 +161,7 @@ final class ShowPage extends SymfonyPage
             'detail' => '[data-test-subscription-%detail%]',
             'item' => '[data-test-item="%product%"]',
             'pause' => 'button[data-test-pause]',
+            'pay_and_reactivate' => '[data-test-pay-and-reactivate]',
             'resume' => 'button[data-test-resume]',
             'skip_renewal' => 'button[data-test-skip-renewal]',
         ]);

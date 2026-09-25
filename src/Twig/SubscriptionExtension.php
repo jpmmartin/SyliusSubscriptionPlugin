@@ -10,6 +10,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionAddressChangerInte
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionFrequencyChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRecoveryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalAddressesResolver;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\CardUpdateProviderRegistry;
@@ -31,6 +32,7 @@ final class SubscriptionExtension extends AbstractExtension
         private readonly SubscriptionItemEditorInterface $itemEditor,
         private readonly RenewalPaymentLinkGeneratorInterface $renewalPaymentLinkGenerator,
         private readonly CardUpdateProviderRegistry $cardUpdateProviderRegistry,
+        private readonly SubscriptionRecoveryInterface $recovery,
     ) {
     }
 
@@ -46,6 +48,8 @@ final class SubscriptionExtension extends AbstractExtension
             new TwigFunction('jpm_martin_sylius_subscription_can_add_items', $this->canAddItems(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_payment_link', $this->renewalPaymentLinkGenerator->generate(...)),
             new TwigFunction('jpm_martin_sylius_subscription_card_update_url', $this->getCardUpdateUrl(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_can_recover', $this->recovery->canRecover(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_why_not_recoverable', $this->recovery->whyNot(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_shipping_address', $this->addressesResolver->shippingAddress(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_billing_address', $this->addressesResolver->billingAddress(...)),
         ];

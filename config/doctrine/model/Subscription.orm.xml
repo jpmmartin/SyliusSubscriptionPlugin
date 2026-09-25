@@ -44,6 +44,8 @@
 
         <field name="state" column="state" type="string" length="16" />
         <field name="consecutiveFailedCycles" column="consecutive_failed_cycles" type="integer" />
+        <!-- Suspended after cycles failed in a row, which its customer can recover from, rather than by an administrator. -->
+        <field name="suspendedForFailedCycles" column="suspended_for_failed_cycles" type="boolean" />
 
         <field name="createdAt" column="created_at" type="datetime">
             <gedmo:timestampable on="create" />

@@ -134,6 +134,16 @@
             <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" priority="10" />
         </service>
 
+        <!-- Before the cycle is paid, which ends its retry: a recovery paid reactivates the subscription suspended after failed cycles. -->
+        <service id="jpm_martin_sylius_subscription.listener.workflow.order.reactivate_recovered_subscription"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\ReactivateRecoveredSubscriptionListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" priority="5" />
+        </service>
+
         <!-- A paid renewal order pays its cycle; the initial order's payment is handled in subscription.xml. -->
         <service id="jpm_martin_sylius_subscription.listener.workflow.order.pay_cycle"
                  class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\PayCycleListener"
@@ -150,6 +160,8 @@
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_cycle" />
             <argument type="service" id="sylius_abstraction.state_machine" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cycle.failure_handler" />
             <tag name="kernel.event_listener" event="workflow.sylius_order.completed.cancel" />
         </service>
 
