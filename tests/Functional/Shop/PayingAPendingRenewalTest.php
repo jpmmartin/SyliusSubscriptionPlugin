@@ -11,17 +11,24 @@ use Sylius\Behat\Context\Hook\CalendarContext as CalendarHookContext;
 use Sylius\Behat\Context\Hook\DoctrineORMContext;
 use Sylius\Behat\Context\Setup\CalendarContext;
 use Sylius\Behat\Context\Setup\ChannelContext;
+use Sylius\Behat\Context\Setup\OrderContext;
 use Sylius\Behat\Context\Setup\PaymentContext;
 use Sylius\Behat\Context\Setup\ProductContext;
 use Sylius\Behat\Context\Setup\ShippingContext;
 use Sylius\Behat\Context\Setup\UserContext;
 use Sylius\Behat\Service\SharedStorageInterface;
+use Sylius\Component\Core\Model\AddressInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Sylius\Component\Core\Model\ShippingMethodInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
 use Sylius\Component\Core\OrderPaymentStates;
+use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Domain\ProcessingRenewalsContext;
@@ -92,6 +99,9 @@ final class PayingAPendingRenewalTest extends WebTestCase
         self::assertInstanceOf(SubscriptionInterface::class, $subscription);
         $this->subscription = $subscription;
 
+        // Offered by the channel, but not a method the plugin can charge without the customer.
+        $payment->storeAllowsPaying('Bank transfer');
+
         $subscriptions->theTestGatewayWillDeclineTheNextCharge('Insufficient funds.');
         $this->renewalsAreProcessed('2027-02-01 09:00');
 
@@ -141,6 +151,63 @@ final class PayingAPendingRenewalTest extends WebTestCase
         $next = $this->cycle(3);
         self::assertSame(SubscriptionCycleInterface::STATE_SCHEDULED, $next->getState());
         self::assertEquals(new \DateTimeImmutable('2027-03-01 09:00'), $next->getScheduledAt());
+    }
+
+    public function testTheRenewalOrdersPageOffersOnlyTheMethodsThePluginCanChargeAndAnotherOrdersPageAllOfThem(): void
+    {
+        $renewalOrder = $this->cycle(2)->getOrder();
+        self::assertInstanceOf(OrderInterface::class, $renewalOrder);
+        self::assertSame(['Card_on_file'], $this->offeredMethodsOnThePageOf((string) $renewalOrder->getTokenValue()));
+
+        $container = self::getContainer();
+        /** @var SharedStorageInterface $sharedStorage */
+        $sharedStorage = $container->get('sylius.behat.shared_storage');
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+        $customer = $entityManager->getRepository(CustomerInterface::class)->findOneBy(['email' => 'me@example.com']);
+        self::assertInstanceOf(CustomerInterface::class, $customer);
+        $product = $entityManager->getRepository(ProductInterface::class)->findOneBy(['code' => 'COFFEE']);
+        self::assertInstanceOf(ProductInterface::class, $product);
+        $shippingMethod = $entityManager->getRepository(ShippingMethodInterface::class)->findOneBy([]);
+        self::assertInstanceOf(ShippingMethodInterface::class, $shippingMethod);
+        $cardOnFile = $entityManager->getRepository(PaymentMethodInterface::class)->findOneBy(['code' => 'Card_on_file']);
+        self::assertInstanceOf(PaymentMethodInterface::class, $cardOnFile);
+        /** @var FactoryInterface<AddressInterface> $addresses */
+        $addresses = $container->get('sylius.factory.address');
+        $address = $addresses->createNew();
+        $address->setFirstName('John');
+        $address->setLastName('Doe');
+        $address->setStreet('Frost Alley');
+        $address->setCity('Ankh Morpork');
+        $address->setPostcode('90210');
+        $address->setCountryCode('US');
+
+        /** @var OrderContext $orders */
+        $orders = $container->get('sylius.behat.context.setup.order');
+        // The channel as stored: the cycles command left the one the setup kept detached.
+        $channel = $entityManager->getRepository(ChannelInterface::class)->findOneBy([]);
+        self::assertInstanceOf(ChannelInterface::class, $channel);
+        $orders->thereIsCustomerThatPlacedOrder($customer, null, $channel);
+        $orders->theCustomerBoughtSingleProduct($product, $channel);
+        $orders->theCustomerChoseShippingToWithPayment($shippingMethod, $address, $cardOnFile);
+        $order = $sharedStorage->get('order');
+        self::assertInstanceOf(OrderInterface::class, $order);
+
+        $methods = $this->offeredMethodsOnThePageOf((string) $order->getTokenValue());
+        sort($methods);
+        self::assertSame(['Bank_transfer', 'Card_on_file'], $methods);
+    }
+
+    /** @return list<string> the codes of the payment methods the order payment page offers */
+    private function offeredMethodsOnThePageOf(string $tokenValue): array
+    {
+        $crawler = $this->client->request('GET', \sprintf('/%s/order/%s', self::LOCALE, $tokenValue));
+        self::assertSame(200, $this->client->getResponse()->getStatusCode());
+
+        return array_values(array_map(
+            static fn ($input): string => (string) $input->getAttribute('value'),
+            iterator_to_array($crawler->filter('input[type="radio"][name$="[method]"]')),
+        ));
     }
 
     private function renewalsAreProcessed(string $dateTime): void

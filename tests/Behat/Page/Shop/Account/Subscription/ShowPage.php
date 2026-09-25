@@ -78,6 +78,11 @@ final class ShowPage extends SymfonyPage
         $link->click();
     }
 
+    public function canPayRenewalNow(int $number): bool
+    {
+        return null !== $this->getElement('cycle', ['%number%' => (string) $number])->find('css', '[data-test-pay-now]');
+    }
+
     public function isRenewalPaidByCustomer(int $number): bool
     {
         return null !== $this->getElement('cycle', ['%number%' => (string) $number])->find('css', '[data-test-paid-by-customer]');

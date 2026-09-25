@@ -252,6 +252,7 @@ Feature: Managing my subscriptions
         And I view my subscription to "Coffee"
         Then its renewal #2 should be "Paid"
         And its renewal #2 should be marked as paid by me
+        And I should not be able to pay its renewal #2 now
 
     @ui
     Scenario: Changing the card on the gateway's page
