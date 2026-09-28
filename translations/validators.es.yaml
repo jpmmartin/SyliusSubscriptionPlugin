@@ -25,6 +25,9 @@ jpm_martin_sylius_subscription:
             not_blank: Introduce el descuento de entrada.
         introductory_cycles:
             positive: El precio de entrada debe durar al menos 1 ciclo.
+        commitment_cycles:
+            positive: El compromiso mínimo debe ser de al menos 1 ciclo.
+            above_max_cycles: El compromiso mínimo no puede superar el máximo de ciclos.
         trial_days:
             positive: Una prueba gratis debe durar al menos 1 día.
             not_with_introductory_price: Una prueba gratis no se puede combinar con un precio de entrada.
@@ -46,6 +49,9 @@ jpm_martin_sylius_subscription:
             range: El descuento de entrada debe estar entre 0 y 100.
         introductory_cycles:
             positive: El precio de entrada debe durar al menos 1 ciclo.
+        commitment_cycles:
+            positive: El compromiso mínimo debe ser de al menos 1 ciclo.
+            above_max_cycles: El compromiso mínimo no puede superar el máximo de ciclos.
         trial_days:
             positive: Una prueba gratis debe durar al menos 1 día.
             not_with_introductory_price: Una prueba gratis no se puede combinar con un precio de entrada.

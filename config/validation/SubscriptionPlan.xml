@@ -82,6 +82,20 @@
             </constraint>
         </property>
 
+        <property name="commitmentCycles">
+            <constraint name="GreaterThanOrEqual">
+                <option name="value">1</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.commitment_cycles.positive</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+            <!-- A commitment longer than the terms last could never be met. -->
+            <constraint name="Expression">
+                <option name="expression">value === null or this.getMaxCycles() === null or value &lt;= this.getMaxCycles()</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.commitment_cycles.above_max_cycles</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+        </property>
+
         <property name="trialDays">
             <constraint name="GreaterThanOrEqual">
                 <option name="value">1</option>

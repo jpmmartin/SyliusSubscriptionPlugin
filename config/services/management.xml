@@ -27,6 +27,19 @@
         <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface" alias="jpm_martin_sylius_subscription.management.cycle_retrier" public="true" />
 
         <!-- Replace this service, or point the interface alias elsewhere, to let customers skip another way. -->
+        <!-- Replace it, or point the interface alias elsewhere, to count a minimum commitment another way. -->
+        <service id="jpm_martin_sylius_subscription.management.commitment" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitment" />
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" alias="jpm_martin_sylius_subscription.management.commitment" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.listener.workflow.subscription.keep_customer_commitment"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Subscription\KeepCustomerCommitmentListener"
+        >
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" />
+            <argument type="service" id="request_stack" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.guard.cancel" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.guard.pause" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.management.renewal_skipper" class="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionRenewalSkipper">
             <argument type="service" id="sylius_abstraction.state_machine" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
@@ -60,6 +73,7 @@
             <argument type="service" id="clock" />
             <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
             <argument>%sylius.order_item_quantity_modifier.limit%</argument>
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" />
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionItemEditorInterface" alias="jpm_martin_sylius_subscription.management.item_editor" public="true" />
 
@@ -215,6 +229,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.payment.card_update_provider_registry" />
             <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
             <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" />
             <tag name="twig.extension" />
         </service>
 

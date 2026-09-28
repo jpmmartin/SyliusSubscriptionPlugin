@@ -31,6 +31,8 @@
         <!-- The introductory price agreed on, and the cycles it lasts; the unit price stays the normal one. -->
         <field name="introductoryUnitPrice" column="introductory_unit_price" type="integer" nullable="true" />
         <field name="introductoryCycles" column="introductory_cycles" type="integer" nullable="true" />
+        <!-- The minimum commitment agreed on, which a later edit of its plan or frequency leaves alone. -->
+        <field name="commitmentCycles" column="commitment_cycles" type="integer" nullable="true" />
 
         <many-to-one field="subscription" target-entity="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface" inversed-by="items">
             <join-column name="subscription_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />

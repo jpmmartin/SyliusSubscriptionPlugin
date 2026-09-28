@@ -280,6 +280,19 @@ Feature: Managing my subscriptions
         Then I should not be able to pay and reactivate it, because "It cannot be recovered now: none of its products can be sold."
 
     @ui
+    Scenario: Not being able to cancel a subscription within its minimum commitment
+        Given the store has a product "Honey" priced at "$10.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month
+        And the "HONEY_MONTHLY" subscription plan has a minimum commitment of 6 cycles
+        And I subscribed to "Honey" on the "HONEY_MONTHLY" plan
+        And the renewals due on "2027-02-01 09:00" are processed
+        And the renewals due on "2027-03-01 09:00" are processed
+        And the renewals due on "2027-04-01 09:00" are processed
+        When I view my subscription to "Honey"
+        Then I should be able to neither cancel nor pause it
+        And it should say "2 more paid renewals before you can cancel or pause it" about its minimum commitment
+
+    @ui
     Scenario: Seeing the price a product renews at after its introductory price
         Given the store has a product "Honey" priced at "$10.00"
         And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month with a 10% discount

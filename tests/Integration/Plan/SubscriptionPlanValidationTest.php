@@ -49,6 +49,20 @@ final class SubscriptionPlanValidationTest extends LifecycleTestCase
         self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_plan.trial_days.not_with_introductory_price'], $this->violationsOf($plan));
     }
 
+    public function testItsMinimumCommitmentIsOneCycleAtLeastAndNoLongerThanItsMaximum(): void
+    {
+        $plan = $this->coffeeMonthly;
+        $plan->setCommitmentCycles(0);
+        self::assertSame(['commitmentCycles' => 'jpm_martin_sylius_subscription.subscription_plan.commitment_cycles.positive'], $this->violationsOf($plan));
+
+        $plan->setCommitmentCycles(6);
+        $plan->setMaxCycles(4);
+        self::assertSame(['commitmentCycles' => 'jpm_martin_sylius_subscription.subscription_plan.commitment_cycles.above_max_cycles'], $this->violationsOf($plan));
+
+        $plan->setMaxCycles(6);
+        self::assertSame([], $this->violationsOf($plan));
+    }
+
     /** @return array<string, string> the message template of each violation, by property */
     private function violationsOf(SubscriptionPlanInterface $plan): array
     {

@@ -46,6 +46,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
         private readonly ClockInterface $clock,
         private readonly EventPublisher $eventPublisher,
         private readonly int $maxQuantity,
+        private readonly SubscriptionCommitmentInterface $commitment,
     ) {
     }
 
@@ -126,7 +127,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
 
         $editable = $this->editableItems($subscription);
 
-        return \in_array($item, $editable, true) && 1 < \count($editable);
+        return \in_array($item, $editable, true) && 1 < \count($editable) && !$this->commitment->isItemCommitted($item);
     }
 
     public function variantsToAdd(SubscriptionInterface $subscription): array
@@ -255,6 +256,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
         foreach ($changes->edits() as $edit) {
             Assert::true(\in_array($edit->item, $editable, true), 'This item of the subscription cannot be changed.');
             $offer = null;
+            Assert::false($edit->removed && $this->commitment->isItemCommitted($edit->item), 'This item is still within its minimum commitment.');
             if (!$edit->removed) {
                 $this->assertQuantity($edit->quantity);
                 if ($edit->changesVariant()) {

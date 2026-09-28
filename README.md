@@ -13,6 +13,9 @@ with all of them, charged without the customer present, with retries when a char
 - **Introductory prices**: a plan or a store frequency can take a discount of its own off the first
   order, or the first cycles, of each new subscription, before the subscriber price applies. See
   [Introductory prices](#introductory-prices).
+- **Minimum commitment**: a plan or a store frequency can commit its subscribers to a number of paid
+  cycles before they can cancel or pause, as a better price's counterpart. See
+  [Minimum commitment](#minimum-commitment).
 - **Free trials**: a plan or a store frequency can start each new subscriber with some days free,
   once per customer and variant, with a payment method whose gateway keeps the card without charging
   it. See [Free trials](#free-trials).
@@ -307,6 +310,9 @@ cancelled cycle between them. With none set, there is no limit. A skip cannot be
 The skip is a service, `SubscriptionRenewalSkipperInterface`: replace it to let customers skip
 another way.
 
+A subscription within a minimum commitment cannot be paused by its customer, only skipped; see
+[Minimum commitment](#minimum-commitment).
+
 ## Changing the address
 
 A renewal goes to the addresses of the subscription's last order until they are changed. A customer
@@ -342,7 +348,7 @@ cycle. On the "Change items" page, each item still renewing can:
 - move to another variant of the same product, which renews at that variant's current price less the
   discount of its plan, or of the store's frequency, of the subscription's interval, and keeps the
   cycles the item has been paid; an introductory price the item was still on ends;
-- be removed, while another item still renews.
+- be removed, while another item still renews and it is past its minimum commitment.
 
 A variant is offered when the channel sells it (enabled, its product in the channel, and at least one
 in stock when its stock is tracked), when it has terms of the subscription's interval of the item's
@@ -563,6 +569,38 @@ and the next two renewals.
   an increase that applies by then included. It is published only when renewals are announced: with
   `renewal_notice_days: null`, keep a notice of your own if you tell customers the introductory price
   ends. See [Events](#events).
+
+## Minimum commitment
+
+A plan, on the variant's Subscription tab, or a store frequency can have a minimum commitment: the
+cycles a subscriber pays, the initial order included, before they may cancel. "Six months at 20% off"
+is a monthly plan with a 20% discount and a commitment of 6.
+
+- **Each item keeps its own.** An item is subscribed with its terms' commitment
+  (`commitmentCycles`), which it keeps when an administrator edits the plan or the frequency later, and
+  when its customer changes its frequency or its variant. A product added from the account to an
+  existing subscription commits to nothing.
+- **Only paid cycles count.** A subscription is within its commitment while one of its items has been
+  paid fewer cycles than it committed to. A skipped, failed or cancelled renewal does not count, so it
+  makes the commitment last longer. A free trial's initial order counts, like any initial order.
+- **What the customer cannot do** meanwhile: cancel the subscription, pause it, or remove a committed
+  item. The account neither offers them nor accepts a request that forces them, and shows how many
+  paid renewals are left. The customer can still skip renewals, within `max_consecutive_skips`, and
+  change the frequency, the variant, the quantities and the address.
+- **What still can:** an administrator cancels, pauses or suspends it, and the plugin still suspends it
+  after failed cycles in a row. The rule applies to the requests of the account's routes, which declare
+  `_subscription_actor: customer` in their defaults; a route of your own that lets customers cancel or
+  pause must declare it too, or it will act as an administrator's.
+- **What the customer sees** before subscribing: the product page, under each plan, and the cart line
+  say "Minimum commitment: you can cancel once you have paid 6 orders".
+- **The service** is `JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface`:
+  point its alias at your own to count a commitment another way, in months for instance.
+
+Whether the law of your customers allows a minimum commitment on a consumer subscription, and for how
+long, is yours to find out: the plugin gives you the mechanism, off unless you set it. Say it in your
+consent text too (`jpm_martin_sylius_subscription.consent.text`), since that is what your customers
+accept; see [Consent to recurring charges](#consent-to-recurring-charges). There is no fee for leaving
+early, and nothing charges what is left of a commitment: an administrator who cancels ends it.
 
 ## Free trials
 
@@ -848,6 +886,10 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without minimum commitments, `doctrine:migrations:migrate` adds them to plans, store
+frequencies and items, with none set: no customer is kept from cancelling. The account's routes gain
+`_subscription_actor: customer`. Going back down frees the subscriptions still committed.
 
 From a version without free trials, `doctrine:migrations:migrate` adds the days of free trial of plans,
 store frequencies, order lines and subscriptions, with none set. `trial_payment_methods` is new, and

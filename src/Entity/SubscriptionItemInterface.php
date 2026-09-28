@@ -79,6 +79,14 @@ interface SubscriptionItemInterface extends ResourceInterface
     /** Agrees on an introductory price; null clears it, which ends it. */
     public function setIntroductoryPrice(?int $introductoryUnitPrice, ?int $introductoryCycles): void;
 
+    /**
+     * The cycles it must be paid before its customer may cancel, pause or remove it, as its terms said
+     * when it was subscribed to; null when it committed to nothing. Kept on a change of terms.
+     */
+    public function getCommitmentCycles(): ?int;
+
+    public function setCommitmentCycles(?int $commitmentCycles): void;
+
     /** Whether the next cycle it is charged in is still one of its introductory cycles. */
     public function isOnIntroductoryPrice(): bool;
 

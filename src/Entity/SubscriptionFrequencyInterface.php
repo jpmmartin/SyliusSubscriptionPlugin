@@ -32,4 +32,6 @@ interface SubscriptionFrequencyInterface extends ResourceInterface, CodeAwareInt
     public function setIntroductoryCycles(int $introductoryCycles): void;
 
     public function setTrialDays(?int $trialDays): void;
+
+    public function setCommitmentCycles(?int $commitmentCycles): void;
 }

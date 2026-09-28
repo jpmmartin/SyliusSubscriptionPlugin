@@ -60,6 +60,11 @@ final class RepeatCartPage extends SymfonyPage
         return $this->getItemRow($productName)->find('css', '[data-test-cart-item-introductory-price]')?->getText();
     }
 
+    public function getCommitmentOf(string $productName): ?string
+    {
+        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-commitment]')?->getText();
+    }
+
     public function isBoughtOnce(string $productName): bool
     {
         return null !== $this->getItemRow($productName)->find('css', '[data-test-cart-item-bought-once]');

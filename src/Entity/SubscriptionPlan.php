@@ -33,6 +33,8 @@ class SubscriptionPlan implements SubscriptionPlanInterface
 
     protected ?int $trialDays = null;
 
+    protected ?int $commitmentCycles = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -136,5 +138,15 @@ class SubscriptionPlan implements SubscriptionPlanInterface
     public function setTrialDays(?int $trialDays): void
     {
         $this->trialDays = $trialDays;
+    }
+
+    public function getCommitmentCycles(): ?int
+    {
+        return $this->commitmentCycles;
+    }
+
+    public function setCommitmentCycles(?int $commitmentCycles): void
+    {
+        $this->commitmentCycles = $commitmentCycles;
     }
 }

@@ -50,6 +50,12 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
         return trim($this->getElement('introductory_price', ['%code%' => $code])->getText());
     }
 
+    /** What the page says under the plan about its minimum commitment. */
+    public function getCommitment(string $code): string
+    {
+        return trim($this->getElement('commitment', ['%code%' => $code])->getText());
+    }
+
     public function choosePlan(string $code): void
     {
         foreach ($this->getPlanRadios() as $radio) {
@@ -87,6 +93,7 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
     {
         return array_merge(parent::getDefinedElements(), [
             'add_to_cart_button' => '[data-test-button="add-to-cart-button"]',
+            'commitment' => '[data-test-subscription-plans] [data-test-commitment="%code%"]',
             'introductory_price' => '[data-test-subscription-plans] [data-test-introductory-price="%code%"]',
             'plan_choice' => '[data-test-subscription-plans]',
         ]);

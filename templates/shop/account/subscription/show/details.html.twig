@@ -5,6 +5,7 @@
 
 {% set subscription = hookable_metadata.context.subscription %}
 {% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
+{% set remaining_commitment = jpm_martin_sylius_subscription_remaining_commitment(subscription) %}
 
 <div class="mb-4">
     <div class="row mb-1">
@@ -19,6 +20,12 @@
         <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</div>
         <div class="col" {{ sylius_test_html_attribute('subscription-price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</div>
     </div>
+    {% if remaining_commitment > 0 %}
+        <div class="row mb-1">
+            <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.minimum_commitment'|trans }}</div>
+            <div class="col" {{ sylius_test_html_attribute('subscription-commitment') }}>{{ 'jpm_martin_sylius_subscription.ui.commitment_left'|trans({ '%count%': remaining_commitment }) }}</div>
+        </div>
+    {% endif %}
     <div class="row mb-1">
         <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.next_renewal'|trans }}</div>
         <div class="col" {{ sylius_test_html_attribute('subscription-next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|format_date : '—' }}</div>

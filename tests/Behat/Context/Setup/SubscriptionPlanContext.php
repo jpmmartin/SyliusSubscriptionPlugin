@@ -60,6 +60,14 @@ final class SubscriptionPlanContext implements Context
         $this->subscriptionPlanRepository->add($plan);
     }
 
+    #[Given('/^the "([^"]+)" subscription plan has a minimum commitment of (\d+) cycles$/')]
+    public function theSubscriptionPlanHasAMinimumCommitment(string $code, string $cycles): void
+    {
+        $plan = $this->plan($code);
+        $plan->setCommitmentCycles((int) $cycles);
+        $this->subscriptionPlanRepository->add($plan);
+    }
+
     #[Given('/^the "([^"]+)" subscription plan is disabled$/')]
     public function theSubscriptionPlanIsDisabled(string $code): void
     {

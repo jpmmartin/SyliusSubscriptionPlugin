@@ -25,6 +25,9 @@ jpm_martin_sylius_subscription:
             not_blank: Please enter the introductory discount.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        commitment_cycles:
+            positive: The minimum commitment must be at least 1 cycle.
+            above_max_cycles: The minimum commitment cannot be longer than the maximum of cycles.
         trial_days:
             positive: A free trial must last at least 1 day.
             not_with_introductory_price: A free trial cannot be combined with an introductory price.
@@ -46,6 +49,9 @@ jpm_martin_sylius_subscription:
             range: The introductory discount must be between 0 and 100.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        commitment_cycles:
+            positive: The minimum commitment must be at least 1 cycle.
+            above_max_cycles: The minimum commitment cannot be longer than the maximum of cycles.
         trial_days:
             positive: A free trial must last at least 1 day.
             not_with_introductory_price: A free trial cannot be combined with an introductory price.

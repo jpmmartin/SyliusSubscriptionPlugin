@@ -33,6 +33,8 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
 
     protected ?int $trialDays = null;
 
+    protected ?int $commitmentCycles = null;
+
     /** @var Collection<array-key, ChannelInterface> */
     protected Collection $channels;
 
@@ -134,6 +136,16 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
     public function setTrialDays(?int $trialDays): void
     {
         $this->trialDays = $trialDays;
+    }
+
+    public function getCommitmentCycles(): ?int
+    {
+        return $this->commitmentCycles;
+    }
+
+    public function setCommitmentCycles(?int $commitmentCycles): void
+    {
+        $this->commitmentCycles = $commitmentCycles;
     }
 
     public function getChannels(): Collection

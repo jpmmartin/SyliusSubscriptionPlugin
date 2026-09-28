@@ -65,6 +65,17 @@ final class SubscriptionFrequencyValidationTest extends LifecycleTestCase
         self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_frequency.trial_days.not_with_introductory_price'], $this->violationsOf($frequency));
     }
 
+    public function testItsMinimumCommitmentIsOneCycleAtLeastAndNoLongerThanItsMaximum(): void
+    {
+        $frequency = $this->frequency('MONTHLY');
+        $frequency->setCommitmentCycles(0);
+        self::assertSame(['commitmentCycles' => 'jpm_martin_sylius_subscription.subscription_frequency.commitment_cycles.positive'], $this->violationsOf($frequency));
+
+        $frequency->setCommitmentCycles(3);
+        $frequency->setMaxCycles(2);
+        self::assertSame(['commitmentCycles' => 'jpm_martin_sylius_subscription.subscription_frequency.commitment_cycles.above_max_cycles'], $this->violationsOf($frequency));
+    }
+
     public function testItIsOfferedInOneChannelAtLeast(): void
     {
         $frequency = $this->frequency('MONTHLY');

@@ -39,7 +39,7 @@ interface SubscriptionItemEditorInterface
      */
     public function variantsFor(SubscriptionItemInterface $item): array;
 
-    /** Whether the item can be removed: another item would still renew. */
+    /** Whether the item can be removed: another item would still renew, and it is past its minimum commitment. */
     public function canRemove(SubscriptionItemInterface $item): bool;
 
     /**

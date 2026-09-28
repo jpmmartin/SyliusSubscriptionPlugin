@@ -41,4 +41,10 @@ interface SubscriptionTermsInterface
      * an introductory price.
      */
     public function getTrialDays(): ?int;
+
+    /**
+     * Cycles an item on these terms must be paid, the initial order included, before its customer may
+     * cancel or pause its subscription or remove it; null commits to nothing. Never above the maximum.
+     */
+    public function getCommitmentCycles(): ?int;
 }

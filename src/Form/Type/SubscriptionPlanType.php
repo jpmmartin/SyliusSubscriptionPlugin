@@ -48,6 +48,12 @@ final class SubscriptionPlanType extends AbstractResourceType
                 'required' => false,
                 'attr' => ['min' => 1],
             ])
+            ->add('commitmentCycles', IntegerType::class, [
+                'label' => 'jpm_martin_sylius_subscription.form.subscription_plan.commitment_cycles',
+                'help' => 'jpm_martin_sylius_subscription.form.subscription_plan.commitment_cycles_help',
+                'required' => false,
+                'attr' => ['min' => 1],
+            ])
         ;
 
         /** @var list<string> $validationGroups */

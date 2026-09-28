@@ -132,6 +132,7 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
                 $item->setIntroductoryPrice($orderItem->getUnitPrice(), $terms->getIntroductoryCycles());
             }
         }
+        $item->setCommitmentCycles($terms->getCommitmentCycles());
         $item->setPlan($orderItem->getSubscriptionPlan());
         $item->setFrequency(null === $orderItem->getSubscriptionPlan() ? $orderItem->getSubscriptionFrequency() : null);
         $item->setOriginOrderItem($orderItem);

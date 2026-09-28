@@ -281,6 +281,19 @@ final class ManagingMySubscriptionsContext implements Context
         }
     }
 
+    #[Then('I should be able to neither cancel nor pause it')]
+    public function iShouldBeAbleToNeitherCancelNorPauseIt(): void
+    {
+        Assert::false($this->showPage->canBeCancelled());
+        Assert::false($this->showPage->canApply('pause'));
+    }
+
+    #[Then('/^it should say "([^"]+)" about its minimum commitment$/')]
+    public function itShouldSayAboutItsMinimumCommitment(string $text): void
+    {
+        Assert::same($this->showPage->getDetail('commitment'), $text);
+    }
+
     #[Then('I should not be able to cancel it again')]
     public function iShouldNotBeAbleToCancelItAgain(): void
     {

@@ -37,6 +37,8 @@ class SubscriptionItem implements SubscriptionItemInterface
 
     protected ?int $introductoryCycles = null;
 
+    protected ?int $commitmentCycles = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -167,6 +169,16 @@ class SubscriptionItem implements SubscriptionItemInterface
     public function isOnIntroductoryPrice(): bool
     {
         return null !== $this->introductoryUnitPrice && $this->paidCycles < (int) $this->introductoryCycles;
+    }
+
+    public function getCommitmentCycles(): ?int
+    {
+        return $this->commitmentCycles;
+    }
+
+    public function setCommitmentCycles(?int $commitmentCycles): void
+    {
+        $this->commitmentCycles = $commitmentCycles;
     }
 
     public function getUnitPriceForCycle(): int

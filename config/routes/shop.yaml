@@ -6,6 +6,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_index:
     path: /account/subscriptions/
     methods: [GET]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.subscription::indexAction
         _sylius:
             section: shop_account
@@ -19,6 +21,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_show:
     path: /account/subscriptions/{id}
     methods: [GET]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.subscription::showAction
         _sylius:
             section: shop_account
@@ -33,6 +37,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_cancel:
     path: /account/subscriptions/{id}/cancel
     methods: [PUT]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
         _sylius:
             section: shop_account
@@ -54,6 +60,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_pause:
     path: /account/subscriptions/{id}/pause
     methods: [PUT]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
         _sylius:
             section: shop_account
@@ -75,6 +83,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_resume:
     path: /account/subscriptions/{id}/resume
     methods: [PUT]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.subscription::applyStateMachineTransitionAction
         _sylius:
             section: shop_account
@@ -96,6 +106,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_skip_renewal:
     path: /account/subscriptions/{id}/skip-renewal
     methods: [POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.skip_subscription_renewal
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
         customer_only: true
@@ -104,6 +116,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_change_frequency:
     path: /account/subscriptions/{id}/change-frequency
     methods: [GET, POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.change_subscription_frequency
         template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_frequency.html.twig"
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
@@ -113,6 +127,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_change_address:
     path: /account/subscriptions/{id}/change-address
     methods: [GET, POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.change_subscription_address
         template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_address.html.twig"
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
@@ -122,6 +138,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_change_items:
     path: /account/subscriptions/{id}/change-items
     methods: [GET, POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.change_subscription_items
         template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/change_items.html.twig"
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
@@ -130,6 +148,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_add_item:
     path: /account/subscriptions/{id}/add-item
     methods: [GET, POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.add_subscription_item
         template: "@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/add_item.html.twig"
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
@@ -138,6 +158,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_recover:
     path: /account/subscriptions/{id}/recover
     methods: [GET]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.recover_subscription
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
 
@@ -145,6 +167,8 @@ jpm_martin_sylius_subscription_shop_account_subscription_accept_price_increase:
     path: /account/subscriptions/{id}/accept-price-increase
     methods: [POST]
     defaults:
+        # Tells the customer's own requests apart, for the minimum commitment.
+        _subscription_actor: customer
         _controller: jpm_martin_sylius_subscription.controller.accept_price_increase
 
 jpm_martin_sylius_subscription_shop_cart_repeat:

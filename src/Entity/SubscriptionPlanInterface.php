@@ -37,4 +37,6 @@ interface SubscriptionPlanInterface extends ResourceInterface, CodeAwareInterfac
     public function setIntroductoryCycles(int $introductoryCycles): void;
 
     public function setTrialDays(?int $trialDays): void;
+
+    public function setCommitmentCycles(?int $commitmentCycles): void;
 }

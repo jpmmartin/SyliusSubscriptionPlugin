@@ -34,6 +34,7 @@
         <field name="introductoryDiscountPercentage" column="introductory_discount_percentage" type="integer" nullable="true" />
         <field name="introductoryCycles" column="introductory_cycles" type="integer" />
         <field name="trialDays" column="trial_days" type="integer" nullable="true" />
+        <field name="commitmentCycles" column="commitment_cycles" type="integer" nullable="true" />
         <field name="enabled" column="enabled" type="boolean" />
 
         <!-- A plan means nothing without its variant. A variant that still has subscriptions cannot

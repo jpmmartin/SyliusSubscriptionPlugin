@@ -27,6 +27,20 @@ Feature: Seeing the subscription plans of a product
         And the "COFFEE_QUARTERLY" plan should read "$15.00 for your first order, then $17.00"
 
     @ui
+    Scenario: Seeing the minimum commitment of a plan
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has a minimum commitment of 6 cycles
+        When I view product "Coffee" in the store
+        Then the "COFFEE_MONTHLY" plan should warn "Minimum commitment: you can cancel once you have paid 6 orders"
+
+    @ui
+    Scenario: Seeing the minimum commitment of a line in my cart
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has a minimum commitment of 6 cycles
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        Then the "Coffee" line of my cart should warn "Minimum commitment: you can cancel once you have paid 6 orders"
+
+    @ui
     Scenario: Seeing the free trial of a plan
         Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
         And the "COFFEE_MONTHLY" subscription plan has a free trial of 14 days
