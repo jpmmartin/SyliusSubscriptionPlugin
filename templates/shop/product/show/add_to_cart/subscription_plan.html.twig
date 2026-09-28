@@ -1,11 +1,35 @@
 {#
     Only present when the selected variant has enabled plans; otherwise the variant is bought once
-    and nothing is rendered.
+    and nothing is rendered. Each plan with an introductory price says it below its choice: that
+    price, how many orders it lasts, and the price after.
 #}
+{% import '@SyliusShop/shared/macro/money.html.twig' as money %}
+
 {% set cart_item_form = hookable_metadata.context.form.cartItem %}
 
 {% if cart_item_form.subscriptionPlan is defined %}
+    {% set plan_field = cart_item_form.subscriptionPlan %}
+    {% set plans = {} %}
+    {% for choice in plan_field.vars.choices %}
+        {% set plans = plans|merge({ (choice.value): choice.data }) %}
+    {% endfor %}
+
     <div class="mb-4" {{ sylius_test_html_attribute('subscription-plans') }}>
-        {{ form_row(cart_item_form.subscriptionPlan) }}
+        {{ form_label(plan_field) }}
+        {% for choice_field in plan_field %}
+            {{ form_widget(choice_field) }}
+            {% set plan = plans[choice_field.vars.value] ?? null %}
+            {% set offer = plan is null ? null : jpm_martin_sylius_subscription_introductory_offer(plan.productVariant, plan, sylius.channel) %}
+            {% if offer is not null %}
+                <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('introductory-price', plan.code) }}>
+                    {{ 'jpm_martin_sylius_subscription.ui.introductory_offer'|trans({
+                        '%count%': offer.cycles,
+                        '%introductory_price%': money.convertAndFormat(offer.introductory_price),
+                        '%price%': money.convertAndFormat(offer.price),
+                    }) }}
+                </div>
+            {% endif %}
+        {% endfor %}
+        {{ form_errors(plan_field) }}
     </div>
 {% endif %}

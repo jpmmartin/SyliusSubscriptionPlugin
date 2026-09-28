@@ -51,6 +51,20 @@ final class SubscribingToProductsContext implements Context
         Assert::same($this->cartPage->getPlanOf($productName), $planCode);
     }
 
+    #[Then('/^the "([^"]+)" plan should read "([^"]+)"$/')]
+    public function thePlanShouldRead(string $planCode, string $introductoryPrice): void
+    {
+        Assert::same($this->productPage->getIntroductoryPrice($planCode), $introductoryPrice);
+    }
+
+    #[Then('/^the "([^"]+)" line of my cart should read "([^"]+)"$/')]
+    public function theLineOfMyCartShouldRead(string $productName, string $introductoryPrice): void
+    {
+        $this->cartPage->open();
+
+        Assert::same($this->cartPage->getIntroductoryPriceOf($productName), $introductoryPrice);
+    }
+
     #[Then('/^I should be able to buy it once or subscribe on the "([^"]+)" plan$/')]
     #[Then('/^I should be able to buy it once or subscribe on the "([^"]+)" and "([^"]+)" plans$/')]
     public function iShouldBeAbleToBuyItOnceOrSubscribeOn(string ...$planCodes): void

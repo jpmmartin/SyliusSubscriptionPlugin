@@ -13,7 +13,8 @@ use Webmozart\Assert\Assert;
 
 /**
  * Prices a subscription line at the variant's channel price less the discount of its terms: its plan,
- * or the frequency its cart is repeated with.
+ * or the frequency its cart is repeated with. Terms with an introductory price take their introductory
+ * discount instead, since the initial order is the first cycle.
  *
  * Runs right after Sylius's own price recalculation (priority 50) and before shipments, promotions
  * and taxes, so everything that follows sees the subscriber price, as it would any unit price. The
@@ -52,7 +53,7 @@ final class SubscriptionPlanPriceProcessor implements OrderProcessorInterface
 
             $price = $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]);
 
-            $item->setUnitPrice(self::applyDiscount($price, $terms->getDiscountPercentage()));
+            $item->setUnitPrice(self::applyDiscount($price, $terms->getIntroductoryDiscountPercentage() ?? $terms->getDiscountPercentage()));
         }
     }
 

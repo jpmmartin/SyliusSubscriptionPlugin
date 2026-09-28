@@ -68,6 +68,10 @@ jpm_martin_sylius_subscription:
             nothing_to_renew: 'It cannot be recovered now: none of its products can be sold.'
         pending_price: '%price% from %date%'
         pending_price_from: '%price% from %date%'
+        introductory_offer: '{1}%introductory_price% for your first order, then %price%|]1,Inf[%introductory_price% for your first %count% orders, then %price%'
+        introductory_price_left: '{1}%price% on your next renewal|]1,Inf[%price% on your next %count% renewals'
+        introductory_price: Introductory price
+        introductory_price_summary: '{1}%discount%% off the first order|]1,Inf[%discount%% off the first %count% orders'
         accept_new_price: Accept the new price
         accept_new_price_and_resume: Accept the new price and resume
         price_increase_help:
@@ -144,3 +148,10 @@ jpm_martin_sylius_subscription:
             discount_percentage: Subscriber discount (%)
             max_cycles: Maximum cycles
             max_cycles_help: Leave empty to renew until the customer cancels.
+            introductory_price: Introductory price
+            introductory_price_none: None
+            introductory_price_first_order: First order only
+            introductory_price_first_cycles: The first N cycles
+            introductory_discount_percentage: Introductory discount (%)
+            introductory_cycles: Introductory cycles
+            introductory_cycles_help: 'For "The first N cycles": how many orders, the first one included, are charged the introductory price.'

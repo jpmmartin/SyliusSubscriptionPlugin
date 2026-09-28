@@ -27,7 +27,7 @@ interface SubscriptionItemInterface extends ResourceInterface
 
     public function setQuantity(int $quantity): void;
 
-    /** Frozen at subscription time, and on a change of frequency; in the subscription's currency. */
+    /** The normal price, frozen at subscription time and on a change of terms; in the subscription's currency. */
     public function getUnitPrice(): int;
 
     public function setUnitPrice(int $unitPrice): void;
@@ -67,6 +67,26 @@ interface SubscriptionItemInterface extends ResourceInterface
     public function setPendingPrice(?int $pendingUnitPrice, ?\DateTimeImmutable $pendingPriceFrom): void;
 
     public function hasPendingPrice(): bool;
+
+    /**
+     * The unit price of its first getIntroductoryCycles() cycles, the initial order included, agreed on
+     * when the customer subscribed; null when it had none, or its terms changed since.
+     */
+    public function getIntroductoryUnitPrice(): ?int;
+
+    public function getIntroductoryCycles(): ?int;
+
+    /** Agrees on an introductory price; null clears it, which ends it. */
+    public function setIntroductoryPrice(?int $introductoryUnitPrice, ?int $introductoryCycles): void;
+
+    /** Whether the next cycle it is charged in is still one of its introductory cycles. */
+    public function isOnIntroductoryPrice(): bool;
+
+    /**
+     * The unit price of the next cycle it is charged in: its introductory price until it has paid its
+     * introductory cycles, and its frozen price after.
+     */
+    public function getUnitPriceForCycle(): int;
 
     /** When its customer removed it from the subscription; it stays so the cycles that carried it keep it. */
     public function getRemovedAt(): ?\DateTimeImmutable;

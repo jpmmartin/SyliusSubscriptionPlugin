@@ -28,6 +28,11 @@
                     <td {{ sylius_test_html_attribute('item-quantity') }}>{{ item.quantity }}</td>
                     <td>
                         <span {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</span>
+                        {% if item.onIntroductoryPrice %}
+                            <div class="small text-body-secondary" {{ sylius_test_html_attribute('item-introductory-price') }}>
+                                {{ 'jpm_martin_sylius_subscription.ui.introductory_price_left'|trans({ '%count%': item.introductoryCycles - item.paidCycles, '%price%': format(item.introductoryUnitPrice, subscription.currencyCode) }) }}
+                            </div>
+                        {% endif %}
                         {% if item.pendingUnitPrice is not null %}
                             <div class="small text-body-secondary" {{ sylius_test_html_attribute('item-pending-price') }}>
                                 {{ 'jpm_martin_sylius_subscription.ui.pending_price_from'|trans({ '%price%': format(item.pendingUnitPrice, subscription.currencyCode), '%date%': item.pendingPriceFrom|format_date }) }}

@@ -42,15 +42,31 @@ final class SubscriptionPlanContext implements Context
         $this->sharedStorage->set('subscription_plan', $plan);
     }
 
+    #[Given('/^the "([^"]+)" subscription plan has an introductory discount of (\d+)% for the first order$/')]
+    #[Given('/^the "([^"]+)" subscription plan has an introductory discount of (\d+)% for the first (\d+) orders$/')]
+    public function theSubscriptionPlanHasAnIntroductoryDiscount(string $code, string $percentage, string $cycles = '1'): void
+    {
+        $plan = $this->plan($code);
+        $plan->setIntroductoryDiscountPercentage((int) $percentage);
+        $plan->setIntroductoryCycles((int) $cycles);
+        $this->subscriptionPlanRepository->add($plan);
+    }
+
     #[Given('/^the "([^"]+)" subscription plan is disabled$/')]
     public function theSubscriptionPlanIsDisabled(string $code): void
+    {
+        $plan = $this->plan($code);
+        $plan->disable();
+        $this->subscriptionPlanRepository->add($plan);
+    }
+
+    private function plan(string $code): SubscriptionPlanInterface
     {
         $plan = $this->subscriptionPlanRepository->findOneBy(['code' => $code]);
         if (!$plan instanceof SubscriptionPlanInterface) {
             throw new \InvalidArgumentException(\sprintf('There is no "%s" subscription plan.', $code));
         }
 
-        $plan->disable();
-        $this->subscriptionPlanRepository->add($plan);
+        return $plan;
     }
 }

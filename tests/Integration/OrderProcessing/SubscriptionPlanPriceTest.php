@@ -90,6 +90,18 @@ final class SubscriptionPlanPriceTest extends KernelTestCase
         self::assertSame(9000, $cart->getTotal());
     }
 
+    public function testAPlanWithAnIntroductoryPriceTakesItsIntroductoryDiscountInstead(): void
+    {
+        $this->plan->setIntroductoryDiscountPercentage(50);
+        $cart = $this->cartWith($item = $this->line($this->plan));
+
+        $this->process($cart);
+
+        self::assertSame(5000, $item->getUnitPrice());
+        self::assertSame(10000, $item->getOriginalUnitPrice());
+        self::assertSame(5000, $cart->getTotal());
+    }
+
     public function testPromotionsApplyToTheSubscriberPrice(): void
     {
         $container = self::getContainer();

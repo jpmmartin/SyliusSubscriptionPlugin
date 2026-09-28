@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Plan;
+
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Lifecycle\LifecycleTestCase;
+
+/** The rules the admin form applies to the introductory price of a plan, in the plugin's validation group. */
+final class SubscriptionPlanValidationTest extends LifecycleTestCase
+{
+    public function testAPlanWithoutAnIntroductoryPriceIsValid(): void
+    {
+        $plan = $this->coffeeMonthly;
+
+        self::assertNull($plan->getIntroductoryDiscountPercentage());
+        self::assertSame(1, $plan->getIntroductoryCycles());
+        self::assertSame([], $this->violationsOf($plan));
+    }
+
+    public function testItsIntroductoryDiscountIsFromZeroToAHundredAndLastsOneCycleAtLeast(): void
+    {
+        $plan = $this->coffeeMonthly;
+        $plan->setIntroductoryDiscountPercentage(-1);
+        $plan->setIntroductoryCycles(0);
+
+        self::assertSame([
+            'introductoryCycles' => 'jpm_martin_sylius_subscription.subscription_plan.introductory_cycles.positive',
+            'introductoryDiscountPercentage' => 'jpm_martin_sylius_subscription.subscription_plan.introductory_discount_percentage.range',
+        ], $this->violationsOf($plan));
+
+        $plan->setIntroductoryDiscountPercentage(0);
+        $plan->setIntroductoryCycles(3);
+        self::assertSame([], $this->violationsOf($plan));
+    }
+
+    /** @return array<string, string> the message template of each violation, by property */
+    private function violationsOf(SubscriptionPlanInterface $plan): array
+    {
+        /** @var ValidatorInterface $validator */
+        $validator = self::getContainer()->get('validator');
+        $violations = [];
+        foreach ($validator->validate($plan, null, ['jpm_martin_sylius_subscription']) as $violation) {
+            $violations[$violation->getPropertyPath()] = $violation->getMessageTemplate();
+        }
+        ksort($violations);
+
+        return $violations;
+    }
+}

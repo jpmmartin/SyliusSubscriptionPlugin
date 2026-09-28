@@ -33,6 +33,10 @@ class SubscriptionItem implements SubscriptionItemInterface
 
     protected ?\DateTimeImmutable $pendingPriceFrom = null;
 
+    protected ?int $introductoryUnitPrice = null;
+
+    protected ?int $introductoryCycles = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -142,6 +146,32 @@ class SubscriptionItem implements SubscriptionItemInterface
     public function hasPendingPrice(): bool
     {
         return null !== $this->pendingUnitPrice;
+    }
+
+    public function getIntroductoryUnitPrice(): ?int
+    {
+        return $this->introductoryUnitPrice;
+    }
+
+    public function getIntroductoryCycles(): ?int
+    {
+        return $this->introductoryCycles;
+    }
+
+    public function setIntroductoryPrice(?int $introductoryUnitPrice, ?int $introductoryCycles): void
+    {
+        $this->introductoryUnitPrice = $introductoryUnitPrice;
+        $this->introductoryCycles = null === $introductoryUnitPrice ? null : $introductoryCycles;
+    }
+
+    public function isOnIntroductoryPrice(): bool
+    {
+        return null !== $this->introductoryUnitPrice && $this->paidCycles < (int) $this->introductoryCycles;
+    }
+
+    public function getUnitPriceForCycle(): int
+    {
+        return $this->isOnIntroductoryPrice() ? (int) $this->introductoryUnitPrice : $this->unitPrice;
     }
 
     public function getRemovedAt(): ?\DateTimeImmutable

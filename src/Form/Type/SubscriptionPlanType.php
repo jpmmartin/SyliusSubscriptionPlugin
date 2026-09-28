@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Form\Type;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit;
+use JpmMartin\SyliusSubscriptionPlugin\Form\IntroductoryPriceFields;
 use Sylius\Bundle\ResourceBundle\Form\EventSubscriber\AddCodeFormSubscriber;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -47,6 +48,13 @@ final class SubscriptionPlanType extends AbstractResourceType
                 'required' => false,
                 'attr' => ['min' => 1],
             ])
+        ;
+
+        /** @var list<string> $validationGroups */
+        $validationGroups = \is_array($options['validation_groups'] ?? null) ? $options['validation_groups'] : ['jpm_martin_sylius_subscription'];
+        IntroductoryPriceFields::addTo($builder, $validationGroups);
+
+        $builder
             ->add('enabled', CheckboxType::class, [
                 'label' => 'sylius.ui.enabled',
                 'required' => false,

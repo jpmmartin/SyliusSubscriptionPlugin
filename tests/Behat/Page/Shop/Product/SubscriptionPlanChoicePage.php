@@ -44,6 +44,12 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
         );
     }
 
+    /** What the page says under the plan about its introductory price. */
+    public function getIntroductoryPrice(string $code): string
+    {
+        return trim($this->getElement('introductory_price', ['%code%' => $code])->getText());
+    }
+
     public function choosePlan(string $code): void
     {
         foreach ($this->getPlanRadios() as $radio) {
@@ -81,6 +87,7 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
     {
         return array_merge(parent::getDefinedElements(), [
             'add_to_cart_button' => '[data-test-button="add-to-cart-button"]',
+            'introductory_price' => '[data-test-subscription-plans] [data-test-introductory-price="%code%"]',
             'plan_choice' => '[data-test-subscription-plans]',
         ]);
     }

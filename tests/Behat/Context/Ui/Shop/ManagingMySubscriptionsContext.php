@@ -313,6 +313,22 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
     }
 
+    #[Then('/^"([^"]+)" should cost "([^"]+)" on my next (\d+) renewals$/')]
+    #[Then('/^"([^"]+)" should cost "([^"]+)" on my next renewal$/')]
+    public function shouldCostOnMyNextRenewals(string $productName, string $price, string $renewals = '1'): void
+    {
+        Assert::same(
+            $this->showPage->getItem($productName, 'introductory-price'),
+            '1' === $renewals ? \sprintf('%s on your next renewal', $price) : \sprintf('%s on your next %s renewals', $price, $renewals),
+        );
+    }
+
+    #[Then('/^"([^"]+)" should have no introductory price left$/')]
+    public function shouldHaveNoIntroductoryPriceLeft(string $productName): void
+    {
+        Assert::same($this->showPage->getItem($productName, 'introductory-price'), '');
+    }
+
     #[Then('/^"([^"]+)" should go up to "([^"]+)" from "([^"]+)"$/')]
     public function shouldGoUpToFrom(string $productName, string $price, string $date): void
     {

@@ -53,6 +53,24 @@ final class ManagingSubscriptionPlansContext implements Context
         $this->createPage->setDiscount((int) $percentage);
     }
 
+    #[When('/^I give it an introductory discount of (\d+) percent for the first order only$/')]
+    public function iGiveItAnIntroductoryDiscountForTheFirstOrderOnly(string $percentage): void
+    {
+        $this->createPage->setIntroductoryPrice('first_order', (int) $percentage, null);
+    }
+
+    #[When('/^I give it an introductory discount of (\d+) percent for the first (\d+) cycles$/')]
+    public function iGiveItAnIntroductoryDiscountForTheFirstCycles(string $percentage, string $cycles): void
+    {
+        $this->createPage->setIntroductoryPrice('first_cycles', (int) $percentage, (int) $cycles);
+    }
+
+    #[When('I give it an introductory price for the first order only without a discount')]
+    public function iGiveItAnIntroductoryPriceWithoutADiscount(): void
+    {
+        $this->createPage->setIntroductoryPrice('first_order', null, null);
+    }
+
     #[When('I add it')]
     #[When('I try to add it')]
     public function iAddIt(): void
@@ -101,6 +119,20 @@ final class ManagingSubscriptionPlansContext implements Context
         Assert::same($this->subscriptionPlansPage->getPlanDiscount($code), \sprintf('%s %%', $discountPercentage));
     }
 
+    #[Then('/^the "([^"]+)" subscription plan of the ("[^"]+" variant) should have an introductory price of "([^"]+)"$/')]
+    public function theSubscriptionPlanOfShouldHaveAnIntroductoryPriceOf(string $code, ProductVariantInterface $variant, string $introductoryPrice): void
+    {
+        $this->openVariant($variant);
+
+        Assert::same($this->subscriptionPlansPage->getPlanIntroductoryPrice($code), $introductoryPrice);
+    }
+
+    #[Then('/^the "([^"]+)" subscription plan of the ("[^"]+" variant) should have no introductory price$/')]
+    public function theSubscriptionPlanOfShouldHaveNoIntroductoryPrice(string $code, ProductVariantInterface $variant): void
+    {
+        $this->theSubscriptionPlanOfShouldHaveAnIntroductoryPriceOf($code, $variant, '—');
+    }
+
     #[Then('/^the "([^"]+)" subscription plan of the ("[^"]+" variant) should be disabled$/')]
     public function theSubscriptionPlanOfShouldBeDisabled(string $code, ProductVariantInterface $variant): void
     {
@@ -121,6 +153,12 @@ final class ManagingSubscriptionPlansContext implements Context
     public function iShouldBeNotifiedThatAPlanWithThisCodeAlreadyExists(): void
     {
         Assert::same($this->createPage->getValidationMessage('code'), 'A subscription plan with this code already exists.');
+    }
+
+    #[Then('I should be notified that the introductory discount is required')]
+    public function iShouldBeNotifiedThatTheIntroductoryDiscountIsRequired(): void
+    {
+        Assert::same($this->createPage->getValidationMessage('introductory_discount_percentage'), 'Please enter the introductory discount.');
     }
 
     #[Then('I should be notified that the interval must be at least 1')]

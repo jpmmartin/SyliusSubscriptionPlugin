@@ -17,6 +17,24 @@ Feature: Seeing the subscription plans of a product
         And the choices should read "One-time purchase", "Subscribe: COFFEE_MONTHLY (save 10%)" and "Subscribe: COFFEE_QUARTERLY (save 15%)"
 
     @ui
+    Scenario: Seeing the introductory price of a plan
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has an introductory discount of 50% for the first 3 orders
+        And the "Coffee" variant offers a "COFFEE_QUARTERLY" subscription plan renewing every 3 months with a 15% discount
+        And the "COFFEE_QUARTERLY" subscription plan has an introductory discount of 25% for the first order
+        When I view product "Coffee" in the store
+        Then the "COFFEE_MONTHLY" plan should read "$10.00 for your first 3 orders, then $18.00"
+        And the "COFFEE_QUARTERLY" plan should read "$15.00 for your first order, then $17.00"
+
+    @ui
+    Scenario: Seeing the introductory price of a line in my cart
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has an introductory discount of 50% for the first order
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        Then the "Coffee" line of my cart should read "$10.00 for your first order, then $18.00"
+        And I should see "Coffee" with unit price "$10.00" in my cart
+
+    @ui
     Scenario: Not being offered a disabled plan
         Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month
         And the "Coffee" variant offers a "COFFEE_QUARTERLY" subscription plan renewing every 3 months

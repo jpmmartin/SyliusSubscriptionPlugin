@@ -27,6 +27,10 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
 
     protected ?int $maxCycles = null;
 
+    protected ?int $introductoryDiscountPercentage = null;
+
+    protected int $introductoryCycles = 1;
+
     /** @var Collection<array-key, ChannelInterface> */
     protected Collection $channels;
 
@@ -98,6 +102,26 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
     public function setMaxCycles(?int $maxCycles): void
     {
         $this->maxCycles = $maxCycles;
+    }
+
+    public function getIntroductoryDiscountPercentage(): ?int
+    {
+        return $this->introductoryDiscountPercentage;
+    }
+
+    public function setIntroductoryDiscountPercentage(?int $introductoryDiscountPercentage): void
+    {
+        $this->introductoryDiscountPercentage = $introductoryDiscountPercentage;
+    }
+
+    public function getIntroductoryCycles(): int
+    {
+        return $this->introductoryCycles;
+    }
+
+    public function setIntroductoryCycles(int $introductoryCycles): void
+    {
+        $this->introductoryCycles = $introductoryCycles;
     }
 
     public function getChannels(): Collection

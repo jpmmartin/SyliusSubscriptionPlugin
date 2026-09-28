@@ -59,7 +59,8 @@ final class StartScheduleListener
             Assert::isInstanceOf($cycleItem, SubscriptionCycleItemInterface::class);
             $cycleItem->setSubscriptionItem($item);
             $cycleItem->setQuantity($item->getQuantity());
-            $cycleItem->setUnitPrice($item->getUnitPrice());
+            // Before the cycle counts as paid, so an introductory price is the one of the initial order.
+            $cycleItem->setUnitPrice($item->getUnitPriceForCycle());
             $first->addItem($cycleItem);
 
             $item->setPaidCycles($item->getPaidCycles() + 1);

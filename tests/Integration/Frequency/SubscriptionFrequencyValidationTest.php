@@ -38,6 +38,22 @@ final class SubscriptionFrequencyValidationTest extends LifecycleTestCase
         ], $this->violationsOf($frequency));
     }
 
+    public function testItsIntroductoryDiscountIsFromZeroToAHundredAndLastsOneCycleAtLeast(): void
+    {
+        $frequency = $this->frequency('MONTHLY');
+        $frequency->setIntroductoryDiscountPercentage(101);
+        $frequency->setIntroductoryCycles(0);
+
+        self::assertSame([
+            'introductoryCycles' => 'jpm_martin_sylius_subscription.subscription_frequency.introductory_cycles.positive',
+            'introductoryDiscountPercentage' => 'jpm_martin_sylius_subscription.subscription_frequency.introductory_discount_percentage.range',
+        ], $this->violationsOf($frequency));
+
+        $frequency->setIntroductoryDiscountPercentage(100);
+        $frequency->setIntroductoryCycles(1);
+        self::assertSame([], $this->violationsOf($frequency));
+    }
+
     public function testItIsOfferedInOneChannelAtLeast(): void
     {
         $frequency = $this->frequency('MONTHLY');

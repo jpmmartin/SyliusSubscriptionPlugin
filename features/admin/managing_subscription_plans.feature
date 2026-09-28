@@ -19,6 +19,40 @@ Feature: Managing the subscription plans of a variant
         And I add it
         Then I should be notified that it has been successfully created
         And the "Coffee" variant should offer the "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan of the "Coffee" variant should have no introductory price
+
+    @ui
+    Scenario: Adding a plan with an introductory price
+        When I want to add a subscription plan to the "Coffee" variant
+        And I specify its code as "COFFEE_MONTHLY"
+        And I name it "Monthly"
+        And I set it to renew every 1 month
+        And I set its subscriber discount to 10 percent
+        And I give it an introductory discount of 50 percent for the first 3 cycles
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the "COFFEE_MONTHLY" subscription plan of the "Coffee" variant should have an introductory price of "50% off the first 3 orders"
+
+    @ui
+    Scenario: Adding a plan whose introductory price is for the first order only
+        When I want to add a subscription plan to the "Coffee" variant
+        And I specify its code as "COFFEE_MONTHLY"
+        And I name it "Monthly"
+        And I set it to renew every 1 month
+        And I give it an introductory discount of 30 percent for the first order only
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the "COFFEE_MONTHLY" subscription plan of the "Coffee" variant should have an introductory price of "30% off the first order"
+
+    @ui
+    Scenario: Trying to add an introductory price without its discount
+        When I want to add a subscription plan to the "Coffee" variant
+        And I specify its code as "COFFEE_MONTHLY"
+        And I name it "Monthly"
+        And I set it to renew every 1 month
+        And I give it an introductory price for the first order only without a discount
+        And I try to add it
+        Then I should be notified that the introductory discount is required
 
     @ui
     Scenario: Trying to add a plan with a code another plan already uses

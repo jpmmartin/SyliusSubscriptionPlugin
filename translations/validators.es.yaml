@@ -18,6 +18,11 @@ jpm_martin_sylius_subscription:
             range: El descuento de suscriptor debe estar entre 0 y 100.
         max_cycles:
             positive: El máximo de ciclos debe ser al menos 1.
+        introductory_discount_percentage:
+            range: El descuento de entrada debe estar entre 0 y 100.
+            not_blank: Introduce el descuento de entrada.
+        introductory_cycles:
+            positive: El precio de entrada debe durar al menos 1 ciclo.
     subscription_frequency:
         code:
             unique: Ya existe una frecuencia de suscripción con este código.
@@ -31,6 +36,10 @@ jpm_martin_sylius_subscription:
             range: El descuento de suscriptor debe estar entre 0 y 100.
         max_cycles:
             positive: El máximo de ciclos debe ser al menos 1.
+        introductory_discount_percentage:
+            range: El descuento de entrada debe estar entre 0 y 100.
+        introductory_cycles:
+            positive: El precio de entrada debe durar al menos 1 ciclo.
         channels:
             min: Elige al menos un canal.
     subscription_item:

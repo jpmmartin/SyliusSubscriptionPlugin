@@ -36,6 +36,7 @@
                                 <th>{{ 'sylius.ui.name'|trans }}</th>
                                 <th>{{ 'jpm_martin_sylius_subscription.ui.interval'|trans }}</th>
                                 <th>{{ 'jpm_martin_sylius_subscription.ui.discount'|trans }}</th>
+                                <th>{{ 'jpm_martin_sylius_subscription.ui.introductory_price'|trans }}</th>
                                 <th>{{ 'jpm_martin_sylius_subscription.ui.max_cycles'|trans }}</th>
                                 <th>{{ 'sylius.ui.enabled'|trans }}</th>
                                 <th></th>
@@ -50,6 +51,9 @@
                                         {{ plan.intervalCount }} {{ ('jpm_martin_sylius_subscription.ui.interval_unit.' ~ plan.intervalUnit.value)|trans }}
                                     </td>
                                     <td {{ sylius_test_html_attribute('subscription-plan-discount') }}>{{ plan.discountPercentage }} %</td>
+                                    <td {{ sylius_test_html_attribute('subscription-plan-introductory-price') }}>
+                                        {{ plan.introductoryDiscountPercentage is null ? '—' : 'jpm_martin_sylius_subscription.ui.introductory_price_summary'|trans({ '%count%': plan.introductoryCycles, '%discount%': plan.introductoryDiscountPercentage }) }}
+                                    </td>
                                     <td>{{ plan.maxCycles ?? 'jpm_martin_sylius_subscription.ui.until_cancelled'|trans }}</td>
                                     <td {{ sylius_test_html_attribute('subscription-plan-enabled') }}>
                                         {% if plan.enabled %}

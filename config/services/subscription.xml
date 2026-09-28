@@ -13,6 +13,7 @@
             <argument type="service" id=".inner" />
             <argument type="service" id="jpm_martin_sylius_subscription.factory.subscription_item" />
             <argument type="service" id="jpm_martin_sylius_subscription.consent.recorder" />
+            <argument type="service" id="sylius.calculator.product_variant_price" />
         </service>
 
         <service id="jpm_martin_sylius_subscription.schedule.calendar" class="JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionCalendar" />

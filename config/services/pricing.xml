@@ -25,6 +25,11 @@
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Pricing\SubscriptionPriceUpdaterInterface" alias="jpm_martin_sylius_subscription.pricing.price_updater" public="true" />
 
+        <service id="jpm_martin_sylius_subscription.twig.extension.subscription_price" class="JpmMartin\SyliusSubscriptionPlugin\Twig\SubscriptionPriceExtension">
+            <argument type="service" id="sylius.calculator.product_variant_price" />
+            <tag name="twig.extension" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.pricing.pending_price_applier"
                  class="JpmMartin\SyliusSubscriptionPlugin\Pricing\PendingPriceApplier"
         >

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Form\Type;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit;
+use JpmMartin\SyliusSubscriptionPlugin\Form\IntroductoryPriceFields;
 use Sylius\Bundle\ChannelBundle\Form\Type\ChannelChoiceType;
 use Sylius\Bundle\ResourceBundle\Form\EventSubscriber\AddCodeFormSubscriber;
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
@@ -47,6 +48,13 @@ final class SubscriptionFrequencyType extends AbstractResourceType
                 'required' => false,
                 'attr' => ['min' => 1],
             ])
+        ;
+
+        /** @var list<string> $validationGroups */
+        $validationGroups = \is_array($options['validation_groups'] ?? null) ? $options['validation_groups'] : ['jpm_martin_sylius_subscription'];
+        IntroductoryPriceFields::addTo($builder, $validationGroups);
+
+        $builder
             ->add('channels', ChannelChoiceType::class, [
                 'multiple' => true,
                 'expanded' => true,

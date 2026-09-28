@@ -92,6 +92,31 @@ final class ChangingSubscriptionItemsTest extends LifecycleTestCase
         self::assertNotContains('T_SHIRT_XL', $this->variants($this->editor()->variantsFor($shirt)));
     }
 
+    public function testAnotherQuantityKeepsTheIntroductoryPriceAndAnotherSizeEndsIt(): void
+    {
+        [$medium, $large] = $this->tShirtSizes();
+        $mediumMonthly = $this->planOf($medium, 'TSHIRT_M_MONTHLY');
+        $mediumMonthly->setIntroductoryDiscountPercentage(50);
+        $mediumMonthly->setIntroductoryCycles(3);
+        $this->planOf($large, 'TSHIRT_L_MONTHLY')->setIntroductoryDiscountPercentage(50);
+        $this->entityManager()->flush();
+        $subscription = $this->subscriptionOf($medium, 'TSHIRT_M_MONTHLY');
+
+        $changes = new SubscriptionItemChanges();
+        $changes->edit($this->itemOf($subscription, $medium))->quantity = 2;
+        $this->editor()->apply($subscription, $changes, 'en_US');
+        $this->entityManager()->flush();
+        $shirt = $this->itemOf($this->refreshed($subscription), $medium);
+        self::assertSame([1000, 3, 1000], [$shirt->getIntroductoryUnitPrice(), $shirt->getIntroductoryCycles(), $shirt->getUnitPriceForCycle()]);
+
+        $changes = new SubscriptionItemChanges();
+        $changes->edit($shirt)->variant = $large;
+        $this->editor()->apply($subscription, $changes, 'en_US');
+        $this->entityManager()->flush();
+        $shirt = $this->itemOf($this->refreshed($subscription), $large);
+        self::assertSame([null, null, 2250], [$shirt->getIntroductoryUnitPrice(), $shirt->getIntroductoryCycles(), $shirt->getUnitPriceForCycle()], 'L at $25.00 less 10%: its plan\'s introductory price is for new subscribers.');
+    }
+
     public function testASizeWhosePlanAllowsNoMoreCyclesThanTheItemWasPaidIsNotOffered(): void
     {
         [$medium, $large] = $this->tShirtSizes();

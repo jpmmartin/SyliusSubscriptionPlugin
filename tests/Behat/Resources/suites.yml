@@ -113,8 +113,10 @@ default:
         ui_subscribing_to_products:
             contexts:
                 - sylius.behat.context.hook.doctrine_orm
+                - sylius.behat.context.hook.guest_cart
                 - sylius.behat.context.hook.session
 
+                - sylius.behat.context.transform.cart
                 - sylius.behat.context.transform.channel
                 - sylius.behat.context.transform.currency
                 - sylius.behat.context.transform.lexical
@@ -123,6 +125,7 @@ default:
                 - sylius.behat.context.transform.product_variant
                 - sylius.behat.context.transform.shared_storage
 
+                - sylius.behat.context.setup.cart
                 - sylius.behat.context.setup.channel
                 - sylius.behat.context.setup.currency
                 - sylius.behat.context.setup.locale
@@ -131,6 +134,7 @@ default:
                 - sylius.behat.context.ui.shop.cart
 
                 - jpm_martin_sylius_subscription.behat.context.setup.subscription_plan
+                - jpm_martin_sylius_subscription.behat.context.setup.subscription_cart
                 - jpm_martin_sylius_subscription.behat.context.ui.shop.subscribing_to_products
 
             filters:

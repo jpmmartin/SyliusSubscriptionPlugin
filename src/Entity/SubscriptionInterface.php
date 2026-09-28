@@ -150,7 +150,8 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
 
     /**
      * What the items still renewing cost per renewal at their frozen prices, before the taxes, shipping
-     * charges and promotions of each renewal order.
+     * charges and promotions of each renewal order. An item still on its introductory price counts at
+     * its frozen, normal, price: the one it renews at once that price ends.
      */
     public function getRenewalTotal(): int;
 

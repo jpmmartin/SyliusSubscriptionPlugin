@@ -18,6 +18,11 @@ jpm_martin_sylius_subscription:
             range: The subscriber discount must be between 0 and 100.
         max_cycles:
             positive: The maximum number of cycles must be at least 1.
+        introductory_discount_percentage:
+            range: The introductory discount must be between 0 and 100.
+            not_blank: Please enter the introductory discount.
+        introductory_cycles:
+            positive: The introductory price must last at least 1 cycle.
     subscription_frequency:
         code:
             unique: A subscription frequency with this code already exists.
@@ -31,6 +36,10 @@ jpm_martin_sylius_subscription:
             range: The subscriber discount must be between 0 and 100.
         max_cycles:
             positive: The maximum number of cycles must be at least 1.
+        introductory_discount_percentage:
+            range: The introductory discount must be between 0 and 100.
+        introductory_cycles:
+            positive: The introductory price must last at least 1 cycle.
         channels:
             min: Please choose at least one channel.
     subscription_item:

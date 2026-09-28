@@ -127,7 +127,7 @@ final class SubscriptionAddressChanger implements SubscriptionAddressChangerInte
             }
             $line = $this->orderItemFactory->createNew();
             $line->setVariant($item->getProductVariant());
-            $line->setUnitPrice($item->getUnitPrice());
+            $line->setUnitPrice($item->getUnitPriceForCycle());
             $this->quantityModifier->modify($line, $item->getQuantity());
             $order->addItem($line);
 

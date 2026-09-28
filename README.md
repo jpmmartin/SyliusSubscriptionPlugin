@@ -10,6 +10,9 @@ with all of them, charged without the customer present, with retries when a char
 
 - **Plans per variant**: interval (days, weeks, months or years), subscriber discount and an optional
   maximum of cycles, managed from the variant's Subscription tab in the admin.
+- **Introductory prices**: a plan or a store frequency can take a discount of its own off the first
+  order, or the first cycles, of each new subscription, before the subscriber price applies. See
+  [Introductory prices](#introductory-prices).
 - **Store frequencies and "Repeat this cart"**: the store defines its own frequencies (interval,
   discount, optional maximum of cycles and the channels that offer them) and marks the variants that
   can be repeated. On the cart page, and through the API, the customer repeats the cart with one of
@@ -332,7 +335,7 @@ cycle. On the "Change items" page, each item still renewing can:
   (`sylius.order_item_quantity_modifier.limit`, 9999 by default), keeping its frozen price;
 - move to another variant of the same product, which renews at that variant's current price less the
   discount of its plan, or of the store's frequency, of the subscription's interval, and keeps the
-  cycles the item has been paid;
+  cycles the item has been paid; an introductory price the item was still on ends;
 - be removed, while another item still renews.
 
 A variant is offered when the channel sells it (enabled, its product in the channel, and at least one
@@ -497,6 +500,8 @@ up, go down or stay the same; confirming it needs the form's token.
 - **A renewal order already placed**, for instance one awaiting a retry, keeps its price.
 - **A new variant or frequency**, chosen by the customer, freezes today's price and drops the increase
   pending on that item.
+- **An introductory price** is left as it was sold: an update reprices the normal price, which the item
+  renews at once its introductory cycles are paid.
 
 With `price_increase_acceptance: required`, the customer accepts the new price from their account. If
 the first renewal at the new price comes before they do, the subscription is paused instead of renewed,
@@ -519,6 +524,38 @@ framework:
         routing:
             JpmMartin\SyliusSubscriptionPlugin\Command\UpdateSubscriptionPrices: async
 ```
+
+## Introductory prices
+
+A plan, on the variant's Subscription tab, or a store frequency can have an introductory price: an
+introductory discount, taken off the variant's price instead of the subscriber discount, for the first
+cycles of each new subscription. The form asks for it as "None", "First order only" or "The first N
+cycles", with the discount and, for the last, the number of cycles. The initial order is the first
+cycle: "First order only" discounts the order the customer places, and "The first 3 cycles" that order
+and the next two renewals.
+
+- **The cart** prices the line at the introductory discount, before promotions and taxes, like any
+  subscription line. The product page, under each plan, and the cart line tell the customer the
+  introductory price, how many orders it lasts and the price after: "$10.00 for your first 3 orders,
+  then $18.00". A line repeated with a store frequency says it too.
+- **The subscription** freezes the normal price, the variant's price less the subscriber discount, and
+  each item keeps the introductory price and the cycles it was sold with (`introductoryUnitPrice`,
+  `introductoryCycles`): changing the plan or the frequency later changes neither. An item is charged
+  its introductory price until it has paid that many cycles, the initial order included, and its
+  frozen price after (`SubscriptionItemInterface::getUnitPriceForCycle()`); a skipped or failed cycle
+  does not count. The customer's account shows the frozen price with the introductory price and how
+  many renewals it still lasts; the price per renewal of the account and of the admin, and the totals
+  of every event but `IntroductoryPriceEnding`, are at the frozen prices.
+- **It ends early** when the item moves to another plan, frequency or variant: its next renewal is
+  charged the normal price of its new terms, whose own introductory price is for new subscriptions.
+  Changing the quantity keeps it, and so does a price update, which reprices the normal price only.
+- **A product added** to an existing subscription from the customer's account gets no introductory
+  price.
+- **`IntroductoryPriceEnding`** is published with `RenewalUpcoming` when the renewal it announces is the
+  first in which an item is charged its normal price, with what that renewal will charge for its items,
+  an increase that applies by then included. It is published only when renewals are announced: with
+  `renewal_notice_days: null`, keep a notice of your own if you tell customers the introductory price
+  ends. See [Events](#events).
 
 ## Missed dates
 
@@ -602,7 +639,9 @@ of that acceptance instead; the consent recorded on the initial order stays as t
 ## Store frequencies and repeated carts
 
 - **Frequencies** are managed in the admin under Configuration > Subscription frequencies. Each has a
-  code, a name, an interval, a discount, an optional maximum of cycles and the channels that offer it.
+  code, a name, an interval, a discount, an optional introductory price (see
+  [Introductory prices](#introductory-prices)), an optional maximum of cycles and the channels that
+  offer it.
   Disable one to stop offering it; the subscriptions already on it keep renewing. One that a cart, an
   order line or a subscription item uses cannot be deleted.
 - **Variants that can be repeated** are marked with the "Can be repeated with the store's frequencies"
@@ -674,6 +713,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionPriceIncreaseAnnounced` | an administrator's price update announced an increase | `previousRenewalTotal`, `renewalTotal`, `appliesFrom`, `acceptanceRequired` |
 | `SubscriptionPriceChanged` | a price update applied a decrease, or an announced increase applied when its first renewal was processed | `previousRenewalTotal`, `renewalTotal` |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
+| `IntroductoryPriceEnding` | with `RenewalUpcoming`, when that renewal is the first in which an item is charged its normal price after its introductory one | `cycleId`, `cycleNumber`, `scheduledAt`, `renewalTotal`: what that renewal charges for its items, before taxes, shipping and promotions, in minor units of the subscription's currency |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
 | `RenewalChargeDeclined` | a charge is declined or not attempted, and will be retried | `cycleId`, `cycleNumber`, `orderId`, `nextAttemptAt`, `reason`, `code` |
@@ -764,6 +804,11 @@ logged. Only a handler of yours that throws, run synchronously, stops it, as abo
 
 ## Upgrading
 
+From a version without introductory prices, `doctrine:migrations:migrate` adds them to plans, store
+frequencies and items, with none set, and one introductory cycle on each plan and frequency for when
+one is. Going back down drops the introductory prices of the items still on theirs, which then renew
+at their frozen price.
+
 From a version without price updates, `doctrine:migrations:migrate` adds the pending price of each item
 and the acceptance of each subscription, all empty: nothing changes until an administrator updates
 prices. Going back down drops the increases still pending: wait until they apply, or tell the
@@ -837,6 +882,9 @@ From a version with one subscription per order line:
   Sylius 2's own.
 - A change of items saved while the command places the open cycle's order may miss that order, which
   keeps the items it was placed with; the next renewal carries the change.
+- An introductory price is offered to every new subscription, including one from a customer who
+  cancelled another after its introductory cycles. To keep a first-order discount for first-time
+  customers, use a Sylius promotion with the "Nth order" rule instead.
 
 ## Development
 

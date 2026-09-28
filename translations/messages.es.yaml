@@ -68,6 +68,10 @@ jpm_martin_sylius_subscription:
             nothing_to_renew: 'Ahora no se puede recuperar: ninguno de sus productos está a la venta.'
         pending_price: '%price% desde el %date%'
         pending_price_from: '%price% desde el %date%'
+        introductory_offer: '{1}%introductory_price% en tu primer pedido, después %price%|]1,Inf[%introductory_price% en tus %count% primeros pedidos, después %price%'
+        introductory_price_left: '{1}%price% en tu próxima renovación|]1,Inf[%price% en tus %count% próximas renovaciones'
+        introductory_price: Precio de entrada
+        introductory_price_summary: '{1}%discount% % en el primer pedido|]1,Inf[%discount% % en los %count% primeros pedidos'
         accept_new_price: Aceptar el precio nuevo
         accept_new_price_and_resume: Aceptar el precio nuevo y reanudar
         price_increase_help:
@@ -144,3 +148,10 @@ jpm_martin_sylius_subscription:
             discount_percentage: Descuento de suscriptor (%)
             max_cycles: Máximo de ciclos
             max_cycles_help: Déjalo vacío para renovar hasta que el cliente cancele.
+            introductory_price: Precio de entrada
+            introductory_price_none: Ninguno
+            introductory_price_first_order: Solo el primer pedido
+            introductory_price_first_cycles: Los N primeros ciclos
+            introductory_discount_percentage: Descuento de entrada (%)
+            introductory_cycles: Ciclos de entrada
+            introductory_cycles_help: 'Para «Los N primeros ciclos»: cuántos pedidos, el primero incluido, se cobran con el precio de entrada.'

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Unit\Event;
 
+use JpmMartin\SyliusSubscriptionPlugin\Event\IntroductoryPriceEnding;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalCancelled;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalChargeDeclined;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalFailed;
@@ -57,6 +58,7 @@ final class EventSerializationTest extends TestCase
         yield 'price increase announced' => [new SubscriptionPriceIncreaseAnnounced(7, 2000, 2200, $at, true)];
         yield 'price changed' => [new SubscriptionPriceChanged(7, 2000, 2200)];
         yield 'upcoming' => [new RenewalUpcoming(7, 11, 2, $at)];
+        yield 'introductory price ending' => [new IntroductoryPriceEnding(7, 11, 2, $at, 9000)];
         yield 'held' => [new RenewalHeld(7, 11, 2, $at, 'Waiting for the prescriber.')];
         yield 'held without a date' => [new RenewalHeld(7, 11, 2, null, null)];
         yield 'order placed' => [new RenewalOrderPlaced(7, 11, 2, 13)];

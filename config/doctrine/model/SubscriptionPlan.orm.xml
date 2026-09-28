@@ -30,6 +30,9 @@
         <field name="intervalUnit" column="interval_unit" type="string" length="8" enum-type="JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit" />
         <field name="discountPercentage" column="discount_percentage" type="integer" />
         <field name="maxCycles" column="max_cycles" type="integer" nullable="true" />
+        <!-- Without a discount, no introductory price: the cycles are then unused. -->
+        <field name="introductoryDiscountPercentage" column="introductory_discount_percentage" type="integer" nullable="true" />
+        <field name="introductoryCycles" column="introductory_cycles" type="integer" />
         <field name="enabled" column="enabled" type="boolean" />
 
         <!-- A plan means nothing without its variant. A variant that still has subscriptions cannot

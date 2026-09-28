@@ -76,7 +76,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         foreach ($taken as $item) {
             $line = $this->orderItemFactory->createNew();
             $line->setVariant($item->getProductVariant());
-            $line->setUnitPrice($item->getUnitPrice());
+            $line->setUnitPrice($item->getUnitPriceForCycle());
             $line->setImmutable(true);
             $this->quantityModifier->modify($line, $item->getQuantity());
             $order->addItem($line);
@@ -135,7 +135,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
             Assert::isInstanceOf($cycleItem, SubscriptionCycleItemInterface::class);
             $cycleItem->setSubscriptionItem($item);
             $cycleItem->setQuantity($item->getQuantity());
-            $cycleItem->setUnitPrice($item->getUnitPrice());
+            $cycleItem->setUnitPrice($item->getUnitPriceForCycle());
             $cycleItem->setSkippedReason($skippedReason);
             $cycle->addItem($cycleItem);
 

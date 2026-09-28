@@ -280,6 +280,27 @@ Feature: Managing my subscriptions
         Then I should not be able to pay and reactivate it, because "It cannot be recovered now: none of its products can be sold."
 
     @ui
+    Scenario: Seeing the price a product renews at after its introductory price
+        Given the store has a product "Honey" priced at "$10.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "HONEY_MONTHLY" subscription plan has an introductory discount of 50% for the first 3 orders
+        And I subscribed to "Honey" on the "HONEY_MONTHLY" plan
+        When I view my subscription to "Honey"
+        Then this subscription should have 1 "Honey" at "$9.00"
+        And "Honey" should cost "$5.00" on my next 2 renewals
+        And it should cost "$9.00" per renewal
+
+    @ui
+    Scenario: Seeing no introductory price once it is over
+        Given the store has a product "Honey" priced at "$10.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "HONEY_MONTHLY" subscription plan has an introductory discount of 50% for the first order
+        And I subscribed to "Honey" on the "HONEY_MONTHLY" plan
+        When I view my subscription to "Honey"
+        Then this subscription should have 1 "Honey" at "$9.00"
+        And "Honey" should have no introductory price left
+
+    @ui
     Scenario: Seeing a price increase announced for my subscription
         Given the product "Coffee" changed its price to "$22.00"
         And the prices of the subscriptions on the "COFFEE_MONTHLY" plan have been updated

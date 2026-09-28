@@ -8,6 +8,9 @@ use JpmMartin\SyliusSubscriptionPlugin\Consent\SubscriptionConsentRecorderInterf
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
+use JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\SubscriptionPlanPriceProcessor;
+use Sylius\Component\Core\Calculator\ProductVariantPricesCalculatorInterface;
+use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
@@ -21,6 +24,9 @@ use Webmozart\Assert\Assert;
  * Each item keeps what its line renewed on: its plan, or else the frequency its cart was repeated with.
  * The frozen price is the line's unit price, the variant's price less that discount, before the
  * order's promotions: a promotion on the first order does not carry over to the renewals.
+ *
+ * A line on terms with an introductory price carries that price instead. Its item then freezes the
+ * normal price, worked out as the cart does, and keeps the introductory one with the cycles it lasts.
  */
 final class SubscriptionFactory implements SubscriptionFactoryInterface
 {
@@ -32,6 +38,7 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         private readonly FactoryInterface $decorated,
         private readonly FactoryInterface $itemFactory,
         private readonly SubscriptionConsentRecorderInterface $consentRecorder,
+        private readonly ProductVariantPricesCalculatorInterface $productVariantPricesCalculator,
     ) {
     }
 
@@ -62,7 +69,7 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         $shippingRequired = false;
         foreach ($orderItems as $orderItem) {
             Assert::same($orderItem->getOrder(), $order, 'A subscription starts from the lines of one order.');
-            $item = $this->createItem($orderItem);
+            $item = $this->createItem($orderItem, $order->getChannel());
             $terms = $item->getTerms();
             Assert::notNull($terms);
             if ($subscription->getItems()->isEmpty()) {
@@ -95,10 +102,11 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         return $subscription;
     }
 
-    private function createItem(OrderItemInterface $orderItem): SubscriptionItemInterface
+    private function createItem(OrderItemInterface $orderItem, ?ChannelInterface $channel): SubscriptionItemInterface
     {
         Assert::isInstanceOf($orderItem, SubscriptionPlanAwareInterface::class);
-        Assert::notNull($orderItem->getSubscriptionTerms(), 'Only a line with a plan or a frequency starts a subscription.');
+        $terms = $orderItem->getSubscriptionTerms();
+        Assert::notNull($terms, 'Only a line with a plan or a frequency starts a subscription.');
         $variant = $orderItem->getVariant();
         Assert::notNull($variant);
 
@@ -106,7 +114,14 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         Assert::isInstanceOf($item, SubscriptionItemInterface::class);
         $item->setProductVariant($variant);
         $item->setQuantity($orderItem->getQuantity());
-        $item->setUnitPrice($orderItem->getUnitPrice());
+        if (null === $terms->getIntroductoryDiscountPercentage()) {
+            $item->setUnitPrice($orderItem->getUnitPrice());
+        } else {
+            Assert::notNull($channel);
+            $price = $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]);
+            $item->setUnitPrice(SubscriptionPlanPriceProcessor::applyDiscount($price, $terms->getDiscountPercentage()));
+            $item->setIntroductoryPrice($orderItem->getUnitPrice(), $terms->getIntroductoryCycles());
+        }
         $item->setPlan($orderItem->getSubscriptionPlan());
         $item->setFrequency(null === $orderItem->getSubscriptionPlan() ? $orderItem->getSubscriptionFrequency() : null);
         $item->setOriginOrderItem($orderItem);

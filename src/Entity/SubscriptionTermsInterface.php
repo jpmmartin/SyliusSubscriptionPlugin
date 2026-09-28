@@ -25,4 +25,13 @@ interface SubscriptionTermsInterface
 
     /** Cycles after which an item on these terms stops renewing; null renews until cancelled. */
     public function getMaxCycles(): ?int;
+
+    /**
+     * Whole percentage taken off the variant's channel price instead of the normal discount during the
+     * first getIntroductoryCycles() cycles, from 0 to 100; null offers no introductory price.
+     */
+    public function getIntroductoryDiscountPercentage(): ?int;
+
+    /** How many cycles the introductory price lasts, the initial order being the first. At least 1. */
+    public function getIntroductoryCycles(): int;
 }

@@ -48,6 +48,8 @@ final class CreatingSubscriptionsTest extends LifecycleTestCase
         self::assertSame('COFFEE_MONTHLY', $coffee->getPlan()?->getCode());
         self::assertSame($coffeeLine->getId(), $coffee->getOriginOrderItem()?->getId());
         self::assertSame(0, $coffee->getPaidCycles());
+        self::assertNull($coffee->getIntroductoryUnitPrice(), 'Its plan has no introductory price.');
+        self::assertNull($coffee->getIntroductoryCycles());
 
         self::assertSame($this->tea->getCode(), $tea->getProductVariant()?->getCode());
         self::assertSame(1, $tea->getQuantity());
@@ -120,6 +122,32 @@ final class CreatingSubscriptionsTest extends LifecycleTestCase
 
         self::assertSame('MONTHLY', $honey->getFrequency()?->getCode());
         self::assertSame(1900, $honey->getUnitPrice());
+    }
+
+    public function testALineWithAnIntroductoryPriceFreezesTheNormalPriceAndKeepsTheIntroductoryOne(): void
+    {
+        $this->coffeeMonthly->setIntroductoryDiscountPercentage(50);
+        $this->coffeeMonthly->setIntroductoryCycles(3);
+        $monthly = $this->storeFrequency('MONTHLY', 1, SubscriptionIntervalUnit::Month, 5, $this->tea);
+        $monthly->setIntroductoryDiscountPercentage(20);
+        $order = $this->cart();
+        $coffeeLine = $this->addLine($order, $this->coffee, 1, $this->coffeeMonthly);
+        $teaLine = $this->addLine($order, $this->tea, 1, null);
+        $this->repeat($order, $monthly);
+        $this->placeWithConsent($order);
+
+        self::assertSame(5000, $coffeeLine->getUnitPrice(), 'The initial order is the first cycle, at the introductory price.');
+        self::assertSame(4000, $teaLine->getUnitPrice());
+
+        $subscriptions = $this->subscriptionsByPlan();
+        self::assertSame(['COFFEE_MONTHLY+MONTHLY'], array_keys($subscriptions));
+        [$coffee, $tea] = $this->itemsOf($subscriptions['COFFEE_MONTHLY+MONTHLY']);
+        self::assertSame(9000, $coffee->getUnitPrice(), 'The normal price, less the plan\'s 10%.');
+        self::assertSame(5000, $coffee->getIntroductoryUnitPrice());
+        self::assertSame(3, $coffee->getIntroductoryCycles());
+        self::assertSame(4750, $tea->getUnitPrice(), 'The normal price, less the frequency\'s 5%.');
+        self::assertSame(4000, $tea->getIntroductoryUnitPrice());
+        self::assertSame(1, $tea->getIntroductoryCycles(), 'One cycle unless the store says otherwise.');
     }
 
     public function testARepeatedLineOfAnotherIntervalStartsASubscriptionOfItsOwn(): void
