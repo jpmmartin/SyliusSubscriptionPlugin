@@ -26,7 +26,14 @@
                         {% endif %}
                     </td>
                     <td {{ sylius_test_html_attribute('item-quantity') }}>{{ item.quantity }}</td>
-                    <td {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</td>
+                    <td>
+                        <span {{ sylius_test_html_attribute('item-unit-price') }}>{{ format(item.unitPrice, subscription.currencyCode) }}</span>
+                        {% if item.pendingUnitPrice is not null %}
+                            <div class="small text-body-secondary" {{ sylius_test_html_attribute('item-pending-price') }}>
+                                {{ 'jpm_martin_sylius_subscription.ui.pending_price_from'|trans({ '%price%': format(item.pendingUnitPrice, subscription.currencyCode), '%date%': item.pendingPriceFrom|format_date }) }}
+                            </div>
+                        {% endif %}
+                    </td>
                     <td {{ sylius_test_html_attribute('item-total') }}>{{ format(item.unitPrice * item.quantity, subscription.currencyCode) }}</td>
                 </tr>
             {% endfor %}

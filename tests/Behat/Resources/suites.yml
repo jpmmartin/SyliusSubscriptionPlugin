@@ -200,6 +200,7 @@ default:
                 - jpm_martin_sylius_subscription.behat.context.setup.subscription
                 - jpm_martin_sylius_subscription.behat.context.setup.subscription_frequency
                 - jpm_martin_sylius_subscription.behat.context.ui.shop.managing_my_subscriptions
+                - jpm_martin_sylius_subscription.behat.context.setup.price_update
                 - jpm_martin_sylius_subscription.behat.context.domain.processing_renewals
 
             filters:

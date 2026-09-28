@@ -87,6 +87,7 @@
             <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface" />
             <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
             <argument type="service" id="jpm_martin_sylius_subscription.payment.customer_payment_in_progress_checker" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 

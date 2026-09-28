@@ -66,6 +66,24 @@ jpm_martin_sylius_subscription:
         recovery_help: 'This subscription was suspended because its renewals could not be charged. Pay its last renewal, with another card if you like, and it renews again.'
         not_recoverable:
             nothing_to_renew: 'It cannot be recovered now: none of its products can be sold.'
+        pending_price: '%price% from %date%'
+        pending_price_from: '%price% from %date%'
+        accept_new_price: Accept the new price
+        accept_new_price_and_resume: Accept the new price and resume
+        price_increase_help:
+            active: 'The price of this subscription goes up, as shown next to each product. Accept the new price to keep receiving it, or cancel it before then.'
+            paused: 'This subscription was paused because its new price was not accepted. Accept it to resume the subscription.'
+        update_subscription_prices: Update subscription prices
+        update_subscription_prices_help:
+            plan: 'Reprices the subscriptions on the plan "%name%": each item takes its variant''s current price less the plan''s discount. A lower price applies at once; a higher one is announced and applies from the first renewal %days% days or more from now.'
+            frequency: 'Reprices the subscriptions repeated with the frequency "%name%": each item takes its variant''s current price less the frequency''s discount. A lower price applies at once; a higher one is announced and applies from the first renewal %days% days or more from now.'
+            variant: 'Reprices the subscriptions with "%name%": each item takes the variant''s current price less the discount of its plan or frequency. A lower price applies at once; a higher one is announced and applies from the first renewal %days% days or more from now.'
+        price_update:
+            increases: Subscriptions whose price goes up
+            decreases: Subscriptions whose price goes down
+            unchanged: Subscriptions whose price stays the same
+        confirm_price_update: Update the prices
+        no_subscriptions_to_update: No active subscription has an item to update.
         change_items: Change items
         change_items_help: 'The changes apply from the next renewal whose order is not placed yet. A quantity keeps its price; another variant renews at its current subscriber price.'
         add_product: Add a product

@@ -11,6 +11,7 @@ use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedGateway;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestCommandProvider;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestHandler;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\TestCardUpdateProvider;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Pricing\SwitchablePriceIncreaseAcceptancePolicy;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Readme\TellTheCustomerAboutTheRenewal;
 
 return function (ContainerConfigurator $container) {
@@ -49,6 +50,16 @@ return function (ContainerConfigurator $container) {
         $services
             ->set('jpm_martin_sylius_subscription.test.card_update_provider', TestCardUpdateProvider::class)
                 ->autoconfigure()
+        ;
+
+        // The configured price increase acceptance, unless a scenario asks for it through a file.
+        $services
+            ->set('jpm_martin_sylius_subscription.test.acceptance_policy', SwitchablePriceIncreaseAcceptancePolicy::class)
+                ->decorate('jpm_martin_sylius_subscription.pricing.acceptance_policy')
+                ->args([
+                    service('.inner'),
+                    '%kernel.project_dir%/var/price_increase_acceptance.txt',
+                ])
         ;
 
         // The "scripted" gateway factory: a card gateway whose answers the tests decide.

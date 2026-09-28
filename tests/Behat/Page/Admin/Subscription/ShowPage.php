@@ -118,6 +118,14 @@ final class ShowPage extends SymfonyPage
         $button->press();
     }
 
+    /** The increase announced for the product's item, as the page says it; empty when none is pending. */
+    public function getItemPendingPrice(string $productName): string
+    {
+        return $this->hasElement('item_pending_price', ['%product%' => $productName])
+            ? trim($this->getElement('item_pending_price', ['%product%' => $productName])->getText())
+            : '';
+    }
+
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
@@ -127,6 +135,7 @@ final class ShowPage extends SymfonyPage
             'cycle' => '[data-test-cycle="%number%"]',
             'detail' => '[data-test-subscription-%detail%]',
             'item' => '[data-test-item="%product%"]',
+            'item_pending_price' => '[data-test-item="%product%"] [data-test-item-pending-price]',
             'skip_renewal' => 'button[data-test-skip-renewal]',
             'transition' => 'button[data-test-%transition%]',
         ]);

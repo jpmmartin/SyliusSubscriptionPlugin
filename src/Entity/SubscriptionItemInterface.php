@@ -55,6 +55,19 @@ interface SubscriptionItemInterface extends ResourceInterface
 
     public function setPaidCycles(int $paidCycles): void;
 
+    /**
+     * The unit price an announced increase will freeze it at, from the first renewal scheduled on or
+     * after getPendingPriceFrom(); null when none is pending. A decrease is applied at once.
+     */
+    public function getPendingUnitPrice(): ?int;
+
+    public function getPendingPriceFrom(): ?\DateTimeImmutable;
+
+    /** Announces an increase, replacing any pending one; null and null clear it. */
+    public function setPendingPrice(?int $pendingUnitPrice, ?\DateTimeImmutable $pendingPriceFrom): void;
+
+    public function hasPendingPrice(): bool;
+
     /** When its customer removed it from the subscription; it stays so the cycles that carried it keep it. */
     public function getRemovedAt(): ?\DateTimeImmutable;
 

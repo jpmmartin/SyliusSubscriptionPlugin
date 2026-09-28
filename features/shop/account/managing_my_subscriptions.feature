@@ -278,3 +278,33 @@ Feature: Managing my subscriptions
         And it is "2027-04-10 09:00" now
         When I view my subscription to "Coffee"
         Then I should not be able to pay and reactivate it, because "It cannot be recovered now: none of its products can be sold."
+
+    @ui
+    Scenario: Seeing a price increase announced for my subscription
+        Given the product "Coffee" changed its price to "$22.00"
+        And the prices of the subscriptions on the "COFFEE_MONTHLY" plan have been updated
+        When I view my subscription to "Coffee"
+        Then "Coffee" should go up to "$19.80" from "Jan 31, 2027"
+        And I should not be asked to accept the new price
+
+    @ui
+    Scenario: Accepting a price increase the store asks me to accept
+        Given the store requires customers to accept a price increase
+        And the product "Coffee" changed its price to "$22.00"
+        And the prices of the subscriptions on the "COFFEE_MONTHLY" plan have been updated
+        When I view my subscription to "Coffee"
+        And I accept the new price
+        Then I should be notified that the new price has been accepted
+        And I should not be asked to accept the new price
+
+    @ui
+    Scenario: Resuming a subscription paused because I had not accepted its new price
+        Given the store requires customers to accept a price increase
+        And the product "Coffee" changed its price to "$22.00"
+        And the prices of the subscriptions on the "COFFEE_MONTHLY" plan have been updated
+        And the renewals due on "2027-02-01 09:00" are processed
+        When I view my subscription to "Coffee"
+        Then this subscription should be "Paused"
+        When I accept the new price and resume it
+        Then I should be notified that the new price has been accepted and the subscription resumed
+        And this subscription should be "Active"

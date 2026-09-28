@@ -60,6 +60,8 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
             $item->setPlan($terms instanceof SubscriptionPlanInterface ? $terms : null);
             $item->setFrequency($terms instanceof SubscriptionFrequencyInterface ? $terms : null);
             $item->setUnitPrice(SubscriptionPlanPriceProcessor::applyDiscount($price, $terms->getDiscountPercentage()));
+            // The price just frozen from today's catalogue replaces any increase announced for the old terms.
+            $item->setPendingPrice(null, null);
         }
 
         $subscription->setBillingIntervalCount($interval->count);

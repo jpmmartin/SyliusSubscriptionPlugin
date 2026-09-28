@@ -1,0 +1,44 @@
+{#
+    What the update would do, counted by subscription, before anything changes. Confirming sends one
+    message per subscription; see the README's "Price updates".
+#}
+{% set context = hookable_metadata.context %}
+{% set preview = context.preview %}
+
+<div class="container-xl">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-secondary">
+                {{ ('jpm_martin_sylius_subscription.ui.update_subscription_prices_help.' ~ context.target)|trans({ '%name%': context.target_name, '%days%': context.notice_days }) }}
+            </p>
+            <table class="table table-vcenter card-table mb-3" {{ sylius_test_html_attribute('price-update-preview') }}>
+                <tbody>
+                    <tr>
+                        <td>{{ 'jpm_martin_sylius_subscription.ui.price_update.increases'|trans }}</td>
+                        <td class="text-end" {{ sylius_test_html_attribute('price-update-count', 'increases') }}>{{ preview.increases }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ 'jpm_martin_sylius_subscription.ui.price_update.decreases'|trans }}</td>
+                        <td class="text-end" {{ sylius_test_html_attribute('price-update-count', 'decreases') }}>{{ preview.decreases }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ 'jpm_martin_sylius_subscription.ui.price_update.unchanged'|trans }}</td>
+                        <td class="text-end" {{ sylius_test_html_attribute('price-update-count', 'unchanged') }}>{{ preview.unchanged }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% if preview.total > 0 %}
+                <form method="post">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token(context.csrf_token_id) }}">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('confirm-price-update') }}>{{ 'jpm_martin_sylius_subscription.ui.confirm_price_update'|trans }}</button>
+                        <a class="btn" href="{{ context.back_url }}">{{ 'sylius.ui.cancel'|trans }}</a>
+                    </div>
+                </form>
+            {% else %}
+                <p {{ sylius_test_html_attribute('no-subscriptions-to-update') }}>{{ 'jpm_martin_sylius_subscription.ui.no_subscriptions_to_update'|trans }}</p>
+                <a class="btn" href="{{ context.back_url }}">{{ 'sylius.ui.back'|trans }}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>

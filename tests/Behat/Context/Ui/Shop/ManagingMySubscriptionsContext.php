@@ -113,6 +113,13 @@ final class ManagingMySubscriptionsContext implements Context
         $this->changeFrequencyPage->confirm();
     }
 
+    #[When('I accept the new price')]
+    #[When('I accept the new price and resume it')]
+    public function iAcceptTheNewPrice(): void
+    {
+        $this->showPage->acceptTheNewPrice();
+    }
+
     #[When('I pay and reactivate it')]
     public function iPayAndReactivateIt(): void
     {
@@ -304,6 +311,30 @@ final class ManagingMySubscriptionsContext implements Context
     {
         Assert::true($this->changeItemsPage->isConsentAsked(), 'The consent is not asked.');
         Assert::contains($this->changeItemsPage->getNewRenewalTotal(), $total);
+    }
+
+    #[Then('/^"([^"]+)" should go up to "([^"]+)" from "([^"]+)"$/')]
+    public function shouldGoUpToFrom(string $productName, string $price, string $date): void
+    {
+        Assert::same($this->showPage->getItem($productName, 'pending-price'), \sprintf('%s from %s', $price, $date));
+    }
+
+    #[Then('I should not be asked to accept the new price')]
+    public function iShouldNotBeAskedToAcceptTheNewPrice(): void
+    {
+        Assert::false($this->showPage->isAskedToAcceptTheNewPrice(), 'Accepting the new price is asked.');
+    }
+
+    #[Then('I should be notified that the new price has been accepted')]
+    public function iShouldBeNotifiedThatTheNewPriceHasBeenAccepted(): void
+    {
+        $this->notificationChecker->checkNotification('The new price has been accepted.', NotificationType::success());
+    }
+
+    #[Then('I should be notified that the new price has been accepted and the subscription resumed')]
+    public function iShouldBeNotifiedThatTheNewPriceHasBeenAcceptedAndTheSubscriptionResumed(): void
+    {
+        $this->notificationChecker->checkNotification('The new price has been accepted and the subscription resumed.', NotificationType::success());
     }
 
     #[Then('/^I should not be able to pay and reactivate it, because "([^"]+)"$/')]

@@ -53,6 +53,10 @@ with all of them, charged without the customer present, with retries when a char
   took in or skipped and each charge attempt (date, outcome and reason), where it is shipped, and the
   actions the state allows: pause, resume, suspend, reactivate, cancel, skip the next renewal, change
   the frequency, change the address and retry a failed renewal.
+- **Price updates**: an administrator reprices the existing subscriptions of a plan, a store frequency
+  or a variant from today's catalogue. A decrease applies at once; an increase is announced with a
+  configurable notice, and can be made to need the customer's acceptance. See
+  [Price updates](#price-updates).
 - **Committed cycles**: a read-only query of what the active subscriptions of a variant will renew
   within a horizon, for planning stock.
 - **Events, no emails**: the plugin tells no customer anything. It publishes an event of its own at every
@@ -181,6 +185,12 @@ jpm_martin_sylius_subscription:
     # Minutes a retry waits for a payment the customer is making of the same renewal, counted from its
     # last change. See "Paying a declined renewal".
     customer_payment_wait_minutes: 60
+    # Days of notice of a price increase: it applies from the first renewal that many days or more after
+    # it is announced. See "Price updates".
+    price_increase_notice_days: 30
+    # What the default acceptance policy asks of a price increase: notice (the customer is told and can
+    # cancel) or required (the customer accepts it, or the subscription is paused when it would apply).
+    price_increase_acceptance: notice
     # What becomes of the dates of a calendar that came before a cycle could be scheduled on them:
     # skip, charge or skip_late. See "Missed dates".
     missed_cycles: skip
@@ -467,6 +477,49 @@ in, the customer starts the recovery there and goes on to pay. It is `null` when
 cannot be recovered. The recovery is a service, `SubscriptionRecoveryInterface`: replace it to let
 customers recover another way.
 
+## Price updates
+
+A subscription item keeps the price it was frozen at: a change of the catalogue does not reach it, so a
+temporary sale never touches the subscriptions. To pass a price change on, an administrator uses
+"Update subscription prices" on a plan's page, a store frequency's page, or the "Subscription" tab of a
+variant. Each item on it, of a subscription neither cancelled nor completed, is repriced as the cart
+prices a subscription line: its variant's current price in the subscription's channel, less the
+discount of its plan or store frequency. A preview first counts the subscriptions whose price would go
+up, go down or stay the same; confirming it needs the form's token.
+
+- **A decrease** applies at once, without notice: the next renewal whose order is not placed yet is
+  charged the new price.
+- **An increase** is announced: it applies from the first renewal scheduled `price_increase_notice_days`
+  days or more after the update, 30 by default. The renewals before it keep the current price; the
+  customer's account and the subscription's admin page show the new price and its date. Another
+  increase of the same item replaces the pending one and starts the notice again; updating again to
+  the price already pending changes nothing, and today's price withdraws it.
+- **A renewal order already placed**, for instance one awaiting a retry, keeps its price.
+- **A new variant or frequency**, chosen by the customer, freezes today's price and drops the increase
+  pending on that item.
+
+With `price_increase_acceptance: required`, the customer accepts the new price from their account. If
+the first renewal at the new price comes before they do, the subscription is paused instead of renewed,
+and it can only be resumed by accepting it: the account offers "Accept the new price and resume". Each
+new increase asks again. Whether the default is `notice` or `required` in your country, and how many
+days of notice you owe, is for you to find out: the plugin gives you the choice, not the law. Tell your
+customers from `SubscriptionPriceIncreaseAnnounced` before asking for their acceptance; the plugin
+sends nothing. To ask for it in some channels or countries only, implement
+`JpmMartin\SyliusSubscriptionPlugin\Pricing\PriceIncreaseAcceptancePolicyInterface` and point the
+interface's alias at your service.
+
+Confirming an update sends one `JpmMartin\SyliusSubscriptionPlugin\Command\UpdateSubscriptionPrices`
+per subscription on `sylius.command_bus`, each in its own transaction. They are handled at once by
+default; when an update may reach thousands of subscriptions, route the message to an asynchronous
+transport:
+
+```yaml
+framework:
+    messenger:
+        routing:
+            JpmMartin\SyliusSubscriptionPlugin\Command\UpdateSubscriptionPrices: async
+```
+
 ## Missed dates
 
 A cycle's date comes from its subscription's calendar, so a late charge never moves the cycles after
@@ -618,6 +671,8 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionAddressChanged` | its addresses change, by its customer or an administrator | `shippingMethodChanged` |
 | `SubscriptionItemsChanged` | its customer changes, removes or adds items | `previousRenewalTotal`, `renewalTotal`, in minor units of the subscription's currency |
 | `SubscriptionPaymentMethodChanged` | its customer paid a declined renewal with another method the plugin can charge, which it renews with from then on | `paymentMethodCode` |
+| `SubscriptionPriceIncreaseAnnounced` | an administrator's price update announced an increase | `previousRenewalTotal`, `renewalTotal`, `appliesFrom`, `acceptanceRequired` |
+| `SubscriptionPriceChanged` | a price update applied a decrease, or an announced increase applied when its first renewal was processed | `previousRenewalTotal`, `renewalTotal` |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
@@ -708,6 +763,11 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without price updates, `doctrine:migrations:migrate` adds the pending price of each item
+and the acceptance of each subscription, all empty: nothing changes until an administrator updates
+prices. Going back down drops the increases still pending: wait until they apply, or tell the
+customers.
 
 From a version without customers recovering a suspended subscription, `doctrine:migrations:migrate`
 adds whether each subscription was suspended for unpaid renewals. Nothing says why a subscription

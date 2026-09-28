@@ -138,6 +138,11 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
 
     public function setSuspendedForUnpaidRenewals(bool $suspendedForUnpaidRenewals): void;
 
+    /** When its customer accepted the price increase pending on its items; null until then, and again when another is announced. */
+    public function getPriceIncreaseAcceptedAt(): ?\DateTimeImmutable;
+
+    public function setPriceIncreaseAcceptedAt(?\DateTimeImmutable $priceIncreaseAcceptedAt): void;
+
     /** @return Collection<int, SubscriptionItemInterface> */
     public function getItems(): Collection;
 

@@ -1,0 +1,5 @@
+{% set plan = hookable_metadata.context.resource %}
+
+<a class="btn" href="{{ path('jpm_martin_sylius_subscription_admin_price_update', { target: 'plan', id: plan.id }) }}" {{ sylius_test_html_attribute('update-subscription-prices') }}>
+    {{ 'jpm_martin_sylius_subscription.ui.update_subscription_prices'|trans }}
+</a>

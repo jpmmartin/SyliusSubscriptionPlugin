@@ -65,6 +65,36 @@ final class ConfigurationTest extends TestCase
         $this->process(['missed_cycles' => 'charge_all']);
     }
 
+    public function testAPriceIncreaseGetsThirtyDaysOfNoticeAndAsksForNoAcceptanceUnlessTheStoreSaysOtherwise(): void
+    {
+        $defaults = $this->process([]);
+        self::assertSame(30, $defaults['price_increase_notice_days']);
+        self::assertSame('notice', $defaults['price_increase_acceptance']);
+
+        $config = $this->process(['price_increase_notice_days' => 60, 'price_increase_acceptance' => 'required']);
+        self::assertSame(60, $config['price_increase_notice_days']);
+        self::assertSame('required', $config['price_increase_acceptance']);
+    }
+
+    /** @return iterable<string, array{array<string, mixed>}> */
+    public static function invalidPriceIncreaseSettings(): iterable
+    {
+        yield 'no notice' => [['price_increase_notice_days' => 0]];
+        yield 'negative notice' => [['price_increase_notice_days' => -30]];
+        yield 'notice not a number' => [['price_increase_notice_days' => 'a month']];
+        yield 'no notice at all' => [['price_increase_notice_days' => null]];
+        yield 'unknown acceptance' => [['price_increase_acceptance' => 'optional']];
+    }
+
+    /** @param array<string, mixed> $settings */
+    #[DataProvider('invalidPriceIncreaseSettings')]
+    public function testItRejectsPriceIncreaseSettingsItDoesNotKnow(array $settings): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process($settings);
+    }
+
     public function testARetryWaitsAnHourForACustomersPaymentUnlessTheStoreSaysOtherwise(): void
     {
         self::assertSame(60, $this->process([])['customer_payment_wait_minutes']);

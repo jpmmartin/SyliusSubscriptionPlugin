@@ -11,6 +11,10 @@ jpm_martin_sylius_subscription:
         items_unchanged: No se ha cambiado nada.
         item_added: Se ha añadido el producto a la suscripción.
         recovery_not_possible: Esta suscripción no se puede recuperar ahora.
+        price_increase_accepted: Se ha aceptado el precio nuevo.
+        price_increase_accepted_and_resumed: Se ha aceptado el precio nuevo y se ha reanudado la suscripción.
+        price_increase_not_pending: No hay ningún precio nuevo pendiente de aceptar.
+        prices_updated: '{1}Actualizando el precio de 1 suscripción.|]1,Inf[Actualizando el precio de %count% suscripciones.'
         suspended: La suscripción se ha suspendido.
         reactivated: La suscripción se ha reactivado.
         paused: La suscripción se ha pausado.

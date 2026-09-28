@@ -89,6 +89,16 @@ final class ShowPage extends SymfonyPage
         return $this->hasElement('pay_and_reactivate');
     }
 
+    public function isAskedToAcceptTheNewPrice(): bool
+    {
+        return $this->hasElement('accept_price_increase');
+    }
+
+    public function acceptTheNewPrice(): void
+    {
+        $this->getElement('accept_price_increase')->press();
+    }
+
     public function payAndReactivate(): void
     {
         $this->getElement('pay_and_reactivate')->click();
@@ -162,6 +172,7 @@ final class ShowPage extends SymfonyPage
     protected function getDefinedElements(): array
     {
         return array_merge(parent::getDefinedElements(), [
+            'accept_price_increase' => 'button[data-test-accept-price-increase]',
             'add_product' => '[data-test-add-product]',
             'cancel' => '[data-test-cancel]',
             'change_card' => '[data-test-change-card]',

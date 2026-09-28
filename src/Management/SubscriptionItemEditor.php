@@ -382,5 +382,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
         $item->setPlan($offer->terms instanceof SubscriptionPlanInterface ? $offer->terms : null);
         $item->setFrequency($offer->terms instanceof SubscriptionFrequencyInterface ? $offer->terms : null);
         $item->setUnitPrice($offer->unitPrice);
+        // Today's price of the variant replaces any increase announced for the one it had.
+        $item->setPendingPrice(null, null);
     }
 }

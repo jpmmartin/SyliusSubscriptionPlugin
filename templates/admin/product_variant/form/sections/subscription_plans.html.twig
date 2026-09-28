@@ -80,6 +80,12 @@
             >
                 {{ 'jpm_martin_sylius_subscription.ui.add_subscription_plan'|trans }}
             </a>
+            <a class="btn"
+               href="{{ path('jpm_martin_sylius_subscription_admin_price_update', { target: 'variant', id: variant.id }) }}"
+               {{ sylius_test_html_attribute('update-subscription-prices') }}
+            >
+                {{ 'jpm_martin_sylius_subscription.ui.update_subscription_prices'|trans }}
+            </a>
         </div>
     </div>
 </div>

@@ -16,6 +16,20 @@
     {% endif %}
 {% endif %}
 
+{% if jpm_martin_sylius_subscription_price_increase_awaits_acceptance(subscription) %}
+    {% set resume = subscription.state == 'paused' %}
+    <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2" {{ sylius_test_html_attribute('price-increase') }}>
+        <span>{{ ('jpm_martin_sylius_subscription.ui.price_increase_help.' ~ (resume ? 'paused' : 'active'))|trans }}</span>
+        <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_accept_price_increase', { id: subscription.id }) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('jpm_martin_sylius_subscription_accept_price_increase_' ~ subscription.id) }}">
+            {% if resume %}<input type="hidden" name="resume" value="1">{% endif %}
+            <button type="submit" class="btn btn-primary" {{ sylius_test_html_attribute('accept-price-increase') }}>
+                {{ ('jpm_martin_sylius_subscription.ui.' ~ (resume ? 'accept_new_price_and_resume' : 'accept_new_price'))|trans }}
+            </button>
+        </form>
+    </div>
+{% endif %}
+
 <div class="d-flex flex-wrap gap-2 mb-3">
     {% if jpm_martin_sylius_subscription_frequencies_to_change_to(subscription) is not empty %}
         <a class="btn btn-outline-primary" href="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_change_frequency', { id: subscription.id }) }}" {{ sylius_test_html_attribute('change-frequency') }}>

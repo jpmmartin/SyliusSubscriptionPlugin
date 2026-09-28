@@ -219,6 +219,15 @@ jpm_martin_sylius_subscription_admin_subscription_cycle_retry:
 
 # The store's frequencies, with Sylius's resource routes and CRUD pages. A frequency in use cannot be
 # deleted: Sylius reports it, and it is disabled instead.
+jpm_martin_sylius_subscription_admin_price_update:
+    path: /subscription-price-updates/{target}/{id}
+    methods: [GET, POST]
+    requirements:
+        target: plan|frequency|variant
+        id: \d+
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.update_subscription_prices
+
 jpm_martin_sylius_subscription_admin_subscription_frequency:
     resource: |
         alias: jpm_martin_sylius_subscription.subscription_frequency

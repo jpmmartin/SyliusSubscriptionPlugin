@@ -214,6 +214,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" />
             <argument type="service" id="jpm_martin_sylius_subscription.payment.card_update_provider_registry" />
             <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
             <tag name="twig.extension" />
         </service>
 

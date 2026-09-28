@@ -13,6 +13,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Gate\CycleGateKeeperInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\RenewalOrderPlacerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\CustomerPaymentInProgressChecker;
+use JpmMartin\SyliusSubscriptionPlugin\Pricing\PendingPriceApplier;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\MissedCyclePolicyInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
@@ -50,6 +51,7 @@ final class ProcessSubscriptionCycleHandler
         private readonly MissedCyclePolicyInterface $missedCyclePolicy,
         private readonly SubscriptionSchedulerInterface $scheduler,
         private readonly CustomerPaymentInProgressChecker $customerPaymentInProgressChecker,
+        private readonly PendingPriceApplier $pendingPriceApplier,
     ) {
     }
 
@@ -73,6 +75,11 @@ final class ProcessSubscriptionCycleHandler
         }
 
         if (\in_array($cycle->getState(), [SubscriptionCycleInterface::STATE_SCHEDULED, SubscriptionCycleInterface::STATE_ON_HOLD], true)) {
+            // An increase not accepted pauses the subscription, which cancels the cycle: nothing to place.
+            if (!$this->pendingPriceApplier->applyDue($cycle)) {
+                return;
+            }
+
             if ($this->gateKeeper->admit($cycle)) {
                 $this->placeAndCharge($cycle);
             }

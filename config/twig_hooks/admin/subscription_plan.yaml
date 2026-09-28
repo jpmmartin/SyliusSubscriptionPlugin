@@ -20,3 +20,6 @@ sylius_twig_hooks:
             delete:
                 template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_plan/update/header/delete.html.twig'
                 priority: 150
+            update_subscription_prices:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_plan/update/header/update_prices.html.twig'
+                priority: 200

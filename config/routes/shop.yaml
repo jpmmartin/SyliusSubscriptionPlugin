@@ -141,6 +141,12 @@ jpm_martin_sylius_subscription_shop_account_subscription_recover:
         _controller: jpm_martin_sylius_subscription.controller.recover_subscription
         redirect_route: jpm_martin_sylius_subscription_shop_account_subscription_show
 
+jpm_martin_sylius_subscription_shop_account_subscription_accept_price_increase:
+    path: /account/subscriptions/{id}/accept-price-increase
+    methods: [POST]
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.accept_price_increase
+
 jpm_martin_sylius_subscription_shop_cart_repeat:
     path: /cart/repeat
     methods: [POST]

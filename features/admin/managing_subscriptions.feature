@@ -205,3 +205,13 @@ Feature: Managing subscriptions
         Then its renewal #2 should be "Paid"
         And its renewal #2 should show a "Declined" charge on "01-02-2027 09:00" because "Insufficient funds."
         And its renewal #2 should show a payment by its customer on "01-02-2027 12:00"
+
+    @ui
+    Scenario: Updating the prices of a plan's subscriptions after its product's price went up
+        Given the product "Coffee" changed its price to "$22.00"
+        When I want to update the prices of the subscriptions on the "COFFEE_MONTHLY" plan
+        Then I should see that 1 subscription would go up, 0 down and 0 stay the same
+        When I confirm the price update
+        Then I should be notified that the prices of 1 subscription are being updated
+        When I view the subscription of "ann@example.com"
+        Then its "Coffee" should go up to "$19.80" from "31-01-2027"

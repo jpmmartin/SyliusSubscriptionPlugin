@@ -7,12 +7,16 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin;
 use Behat\Behat\Context\Context;
 use Behat\Step\Then;
 use Behat\Step\When;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
 use Sylius\Behat\NotificationType;
 use Sylius\Behat\Service\NotificationCheckerInterface;
+use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeAddressPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ChangeFrequencyPage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\IndexPage;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\PriceUpdatePage;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\ShowPage;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\SubscriptionPlan\UpdatePage as PlanUpdatePage;
 use Webmozart\Assert\Assert;
 
 final class ManagingSubscriptionsContext implements Context
@@ -25,6 +29,9 @@ final class ManagingSubscriptionsContext implements Context
         private readonly ChangeFrequencyPage $changeFrequencyPage,
         private readonly ChangeAddressPage $changeAddressPage,
         private readonly NotificationCheckerInterface $notificationChecker,
+        private readonly PlanUpdatePage $planUpdatePage,
+        private readonly PriceUpdatePage $priceUpdatePage,
+        private readonly RepositoryInterface $planRepository,
     ) {
     }
 
@@ -93,6 +100,47 @@ final class ManagingSubscriptionsContext implements Context
     public function iRetryItsRenewal(int $number): void
     {
         $this->showPage->retryRenewal($number);
+    }
+
+    #[When('/^I want to update the prices of the subscriptions on the "([^"]+)" plan$/')]
+    public function iWantToUpdateThePricesOfTheSubscriptionsOnThePlan(string $planCode): void
+    {
+        $plan = $this->planRepository->findOneBy(['code' => $planCode]);
+        Assert::isInstanceOf($plan, SubscriptionPlanInterface::class);
+        $variant = $plan->getProductVariant();
+        Assert::notNull($variant);
+
+        $this->planUpdatePage->open(['productId' => $variant->getProduct()?->getId(), 'variantId' => $variant->getId(), 'id' => $plan->getId()]);
+        $this->planUpdatePage->updateSubscriptionPrices();
+    }
+
+    #[When('I confirm the price update')]
+    public function iConfirmThePriceUpdate(): void
+    {
+        $this->priceUpdatePage->confirm();
+    }
+
+    #[Then('/^I should see that (\d+) subscriptions? would go up, (\d+) down and (\d+) stay the same$/')]
+    public function iShouldSeeWhatThePriceUpdateWouldDo(int $increases, int $decreases, int $unchanged): void
+    {
+        Assert::same($this->priceUpdatePage->getCount('increases'), $increases);
+        Assert::same($this->priceUpdatePage->getCount('decreases'), $decreases);
+        Assert::same($this->priceUpdatePage->getCount('unchanged'), $unchanged);
+    }
+
+    #[Then('/^I should be notified that the prices of (\d+) subscriptions? are being updated$/')]
+    public function iShouldBeNotifiedThatThePricesAreBeingUpdated(int $count): void
+    {
+        $this->notificationChecker->checkNotification(
+            1 === $count ? 'Updating the prices of 1 subscription.' : \sprintf('Updating the prices of %d subscriptions.', $count),
+            NotificationType::success(),
+        );
+    }
+
+    #[Then('/^its "([^"]+)" should go up to "([^"]+)" from "([^"]+)"$/')]
+    public function itsItemShouldGoUpTo(string $productName, string $price, string $date): void
+    {
+        Assert::same($this->showPage->getItemPendingPrice($productName), \sprintf('%s from %s', $price, $date));
     }
 
     #[Then('/^I should see (\d+) subscriptions? in the list$/')]

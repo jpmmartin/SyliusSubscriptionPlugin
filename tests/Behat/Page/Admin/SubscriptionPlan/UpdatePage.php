@@ -16,6 +16,11 @@ final class UpdatePage extends BaseUpdatePage
     }
 
     /** Presses the modal's confirmation, which the browser-kit driver reaches without opening it. */
+    public function updateSubscriptionPrices(): void
+    {
+        $this->getElement('update_subscription_prices')->click();
+    }
+
     public function delete(): void
     {
         $this->getDocument()->find('css', '[data-test-confirm-button]')->press();
@@ -23,6 +28,8 @@ final class UpdatePage extends BaseUpdatePage
 
     protected function getDefinedElements(): array
     {
-        return array_merge(parent::getDefinedElements(), $this->getDefinedFormElements());
+        return array_merge(parent::getDefinedElements(), $this->getDefinedFormElements(), [
+            'update_subscription_prices' => '[data-test-update-subscription-prices]',
+        ]);
     }
 }

@@ -1,0 +1,7 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'jpm_martin_sylius_subscription.ui.update_subscription_prices'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    {% hook 'update' with { _prefixes: ['jpm_martin_sylius_subscription.admin.subscription_price_update', 'sylius_admin.common'], resource, target, target_id, target_name, preview, notice_days, csrf_token_id, back_url } %}
+{% endblock %}

@@ -82,6 +82,11 @@
                  parent="sylius.behat.symfony_page"
         />
 
+        <service id="jpm_martin_sylius_subscription.behat.page.admin.subscription.price_update"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Admin\Subscription\PriceUpdatePage"
+                 parent="sylius.behat.symfony_page"
+        />
+
         <service id="jpm_martin_sylius_subscription.behat.page.shop.order.payment"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Page\Shop\Order\PaymentPage"
                  parent="sylius.behat.symfony_page"
@@ -152,6 +157,9 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_frequency" />
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.change_address" />
             <argument type="service" id="sylius.behat.notification_checker.admin" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription_plan.update" />
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.admin.subscription.price_update" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
         </service>
 
         <service id="jpm_martin_sylius_subscription.behat.context.setup.subscription"
@@ -188,6 +196,15 @@
             <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.order.payment" />
             <argument type="service" id="sylius.behat.notification_checker.shop" />
             <argument type="service" id="sylius.behat.shared_storage" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.behat.context.setup.price_update"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Setup\PriceUpdateContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.price_updater" />
+            <argument type="service" id="sylius.command_bus" />
+            <argument>%kernel.project_dir%/var/price_increase_acceptance.txt</argument>
         </service>
 
         <service id="jpm_martin_sylius_subscription.behat.context.domain.processing_renewals"

@@ -66,6 +66,24 @@ jpm_martin_sylius_subscription:
         recovery_help: 'Esta suscripción se suspendió porque no se pudieron cobrar sus renovaciones. Paga su última renovación, con otra tarjeta si quieres, y volverá a renovarse.'
         not_recoverable:
             nothing_to_renew: 'Ahora no se puede recuperar: ninguno de sus productos está a la venta.'
+        pending_price: '%price% desde el %date%'
+        pending_price_from: '%price% desde el %date%'
+        accept_new_price: Aceptar el precio nuevo
+        accept_new_price_and_resume: Aceptar el precio nuevo y reanudar
+        price_increase_help:
+            active: 'El precio de esta suscripción sube, como se indica junto a cada producto. Acepta el precio nuevo para seguir recibiéndola, o cancélala antes.'
+            paused: 'Esta suscripción se pausó porque no se aceptó su precio nuevo. Acéptalo para reanudarla.'
+        update_subscription_prices: Actualizar el precio de las suscripciones
+        update_subscription_prices_help:
+            plan: 'Recalcula el precio de las suscripciones del plan «%name%»: cada artículo toma el precio actual de su variante menos el descuento del plan. Un precio más bajo se aplica al momento; uno más alto se anuncia y se aplica desde la primera renovación a %days% días o más de hoy.'
+            frequency: 'Recalcula el precio de las suscripciones repetidas con la frecuencia «%name%»: cada artículo toma el precio actual de su variante menos el descuento de la frecuencia. Un precio más bajo se aplica al momento; uno más alto se anuncia y se aplica desde la primera renovación a %days% días o más de hoy.'
+            variant: 'Recalcula el precio de las suscripciones con «%name%»: cada artículo toma el precio actual de la variante menos el descuento de su plan o frecuencia. Un precio más bajo se aplica al momento; uno más alto se anuncia y se aplica desde la primera renovación a %days% días o más de hoy.'
+        price_update:
+            increases: Suscripciones cuyo precio sube
+            decreases: Suscripciones cuyo precio baja
+            unchanged: Suscripciones cuyo precio no cambia
+        confirm_price_update: Actualizar los precios
+        no_subscriptions_to_update: Ninguna suscripción activa tiene artículos que actualizar.
         change_items: Cambiar los artículos
         change_items_help: 'Los cambios se aplican desde la próxima renovación que aún no tenga pedido. Una cantidad conserva su precio; otra variante se renueva a su precio de suscriptor actual.'
         add_product: Añadir un producto

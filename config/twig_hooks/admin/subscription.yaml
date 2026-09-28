@@ -35,3 +35,17 @@ sylius_twig_hooks:
             form:
                 template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription/change_address/form.html.twig'
                 priority: 100
+
+        # "Update subscription prices" of a plan, a store frequency or a variant: the preview and its confirmation.
+        'jpm_martin_sylius_subscription.admin.subscription_price_update.update.content':
+            header:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_price_update/header.html.twig'
+                priority: 300
+            preview:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_price_update/preview.html.twig'
+                priority: 100
+
+        'sylius_admin.subscription_frequency.update.content.header.title_block.actions':
+            update_subscription_prices:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/subscription_frequency/update/header/update_prices.html.twig'
+                priority: 200

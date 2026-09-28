@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <!-- Replace this service, or point the interface alias elsewhere, to ask for acceptance another way. -->
+        <service id="jpm_martin_sylius_subscription.pricing.acceptance_policy"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Pricing\ConfiguredPriceIncreaseAcceptancePolicy"
+        >
+            <argument>%jpm_martin_sylius_subscription.price_increase_acceptance%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Pricing\PriceIncreaseAcceptancePolicyInterface" alias="jpm_martin_sylius_subscription.pricing.acceptance_policy" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.pricing.price_updater"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Pricing\SubscriptionPriceUpdater"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_item" />
+            <argument type="service" id="sylius.calculator.product_variant_price" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Pricing\PriceIncreaseAcceptancePolicyInterface" />
+            <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+            <argument>%jpm_martin_sylius_subscription.price_increase_notice_days%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Pricing\SubscriptionPriceUpdaterInterface" alias="jpm_martin_sylius_subscription.pricing.price_updater" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.pricing.pending_price_applier"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Pricing\PendingPriceApplier"
+        >
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Pricing\PriceIncreaseAcceptancePolicyInterface" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="clock" />
+            <argument type="service" id="jpm_martin_sylius_subscription.event.publisher" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Pricing\PendingPriceApplier" alias="jpm_martin_sylius_subscription.pricing.pending_price_applier" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.command_handler.update_subscription_prices"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\UpdateSubscriptionPricesHandler"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.price_updater" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.update_subscription_prices"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\UpdateSubscriptionPricesAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="sylius.repository.product_variant" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.price_updater" />
+            <argument type="service" id="sylius.command_bus" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="twig" />
+            <argument type="service" id="router" />
+            <argument>%jpm_martin_sylius_subscription.price_increase_notice_days%</argument>
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.accept_price_increase"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\AcceptPriceIncreaseAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.listener.workflow.subscription.require_price_increase_acceptance_to_resume"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Subscription\RequirePriceIncreaseAcceptanceToResumeListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <tag name="kernel.event_listener" event="workflow.jpm_martin_sylius_subscription.guard.resume" />
+        </service>
+    </services>
+</container>

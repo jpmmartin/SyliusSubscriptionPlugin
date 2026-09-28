@@ -29,6 +29,10 @@ class SubscriptionItem implements SubscriptionItemInterface
 
     protected ?\DateTimeImmutable $removedAt = null;
 
+    protected ?int $pendingUnitPrice = null;
+
+    protected ?\DateTimeImmutable $pendingPriceFrom = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -117,6 +121,27 @@ class SubscriptionItem implements SubscriptionItemInterface
     public function getTerms(): ?SubscriptionTermsInterface
     {
         return $this->plan ?? $this->frequency;
+    }
+
+    public function getPendingUnitPrice(): ?int
+    {
+        return $this->pendingUnitPrice;
+    }
+
+    public function getPendingPriceFrom(): ?\DateTimeImmutable
+    {
+        return $this->pendingPriceFrom;
+    }
+
+    public function setPendingPrice(?int $pendingUnitPrice, ?\DateTimeImmutable $pendingPriceFrom): void
+    {
+        $this->pendingUnitPrice = $pendingUnitPrice;
+        $this->pendingPriceFrom = null === $pendingUnitPrice ? null : $pendingPriceFrom;
+    }
+
+    public function hasPendingPrice(): bool
+    {
+        return null !== $this->pendingUnitPrice;
     }
 
     public function getRemovedAt(): ?\DateTimeImmutable
