@@ -19,6 +19,7 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
+use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -89,6 +90,14 @@ final class RepeatingACartTest extends WebTestCase
 
     public function testListingTheFrequenciesOfTheChannel(): void
     {
+        /** @var RepositoryInterface<SubscriptionFrequencyInterface> $frequencies */
+        $frequencies = self::getContainer()->get('jpm_martin_sylius_subscription.repository.subscription_frequency');
+        $monthly = $frequencies->findOneBy(['code' => 'MONTHLY']);
+        self::assertInstanceOf(SubscriptionFrequencyInterface::class, $monthly);
+        $monthly->setIntroductoryDiscountPercentage(50);
+        $monthly->setIntroductoryCycles(3);
+        $this->entityManager()->flush();
+
         $this->client->request('GET', '/api/v2/shop/subscription-frequencies', [], [], ['HTTP_ACCEPT' => 'application/ld+json']);
 
         self::assertResponseIsSuccessful();
@@ -97,11 +106,11 @@ final class RepeatingACartTest extends WebTestCase
         $members = $response['hydra:member'] ?? $response['member'] ?? [];
         self::assertSame(
             [
-                ['code' => 'MONTHLY', 'name' => 'Every month', 'intervalCount' => 1, 'intervalUnit' => 'month', 'discountPercentage' => 5],
-                ['code' => 'EVERY_TWO_WEEKS', 'name' => 'Every two weeks', 'intervalCount' => 2, 'intervalUnit' => 'week', 'discountPercentage' => 0],
+                ['code' => 'MONTHLY', 'name' => 'Every month', 'intervalCount' => 1, 'intervalUnit' => 'month', 'discountPercentage' => 5, 'introductoryDiscountPercentage' => 50, 'introductoryCycles' => 3],
+                ['code' => 'EVERY_TWO_WEEKS', 'name' => 'Every two weeks', 'intervalCount' => 2, 'intervalUnit' => 'week', 'discountPercentage' => 0, 'introductoryDiscountPercentage' => null, 'introductoryCycles' => 1],
             ],
             array_map(
-                static fn (array $member): array => array_intersect_key($member, array_flip(['code', 'name', 'intervalCount', 'intervalUnit', 'discountPercentage'])),
+                static fn (array $member): array => array_intersect_key($member, array_flip(['code', 'name', 'intervalCount', 'intervalUnit', 'discountPercentage', 'introductoryDiscountPercentage', 'introductoryCycles'])),
                 $members,
             ),
             'The disabled frequency and the one of another channel are left out.',

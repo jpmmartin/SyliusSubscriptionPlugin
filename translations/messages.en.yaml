@@ -7,6 +7,8 @@ jpm_martin_sylius_subscription:
         repeat_this_cart_help: "Receive the products of this cart again, with a discount, until you stop. Products you subscribed to on a plan keep their plan; those that cannot be repeated are bought once."
         do_not_repeat: "Don't repeat"
         frequency_choice_with_discount: "%frequency% (save %discount%%)"
+        frequency_choice_with_introductory_discount: "{1}%frequency% (%introductory_discount%% off your first order)|]1,Inf[%frequency% (%introductory_discount%% off your first %count% orders)"
+        frequency_choice_with_introductory_discount_and_discount: "{1}%frequency% (%introductory_discount%% off your first order, then save %discount%%)|]1,Inf[%frequency% (%introductory_discount%% off your first %count% orders, then save %discount%%)"
         repeated_line: "Repeated: %frequency%"
         repeated_line_with_discount: "Repeated: %frequency% (save %discount%%)"
         apply: "Apply"

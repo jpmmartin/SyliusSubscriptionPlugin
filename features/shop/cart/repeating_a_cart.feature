@@ -31,6 +31,18 @@ Feature: Repeating my cart
         And my cart total should be "$28.50"
 
     @ui
+    Scenario: Repeating my cart with a frequency that has an introductory price
+        Given the "MONTHLY" subscription frequency has an introductory discount of 50% for the first 3 orders
+        And the "BIWEEKLY" subscription frequency has an introductory discount of 20% for the first order
+        And I have product "Coffee" in the cart
+        When I see the summary of my cart
+        Then I should be offered to repeat my cart "Every month (50% off your first 3 orders, then save 5%)" or "Every 2 weeks (20% off your first order)"
+        When I choose to repeat my cart "Every month (50% off your first 3 orders, then save 5%)"
+        Then the "Coffee" item should be repeated "Every month (save 5%)"
+        And the "Coffee" item should read "$10.00 for your first 3 orders, then $19.00"
+        And my cart total should be "$10.00"
+
+    @ui
     Scenario: Seeing which products are bought once in a repeated cart
         Given I have product "Coffee" in the cart
         And I have product "Gift card" in the cart

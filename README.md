@@ -537,7 +537,8 @@ and the next two renewals.
 - **The cart** prices the line at the introductory discount, before promotions and taxes, like any
   subscription line. The product page, under each plan, and the cart line tell the customer the
   introductory price, how many orders it lasts and the price after: "$10.00 for your first 3 orders,
-  then $18.00". A line repeated with a store frequency says it too.
+  then $18.00". A line repeated with a store frequency says it too, and "Repeat this cart" gives each
+  frequency's introductory discount: "Every month (50% off your first 3 orders, then save 5%)".
 - **The subscription** freezes the normal price, the variant's price less the subscriber discount, and
   each item keeps the introductory price and the cycles it was sold with (`introductoryUnitPrice`,
   `introductoryCycles`): changing the plan or the frequency later changes neither. An item is charged
@@ -670,7 +671,8 @@ of that acceptance instead; the consent recorded on the initial order stays as t
 - `PATCH /api/v2/shop/orders/{tokenValue}/subscription-consent` records the customer's consent before
   the order is completed.
 - `GET /api/v2/shop/subscription-frequencies` lists the frequencies the request's channel offers, with
-  their code, name, `intervalCount`, `intervalUnit` and `discountPercentage`.
+  their code, name, `intervalCount`, `intervalUnit`, `discountPercentage`, and their introductory price:
+  `introductoryDiscountPercentage`, null without one, and `introductoryCycles`.
 - `PATCH /api/v2/shop/orders/{tokenValue}/subscription-frequency` repeats the cart with one of them,
   `{"subscriptionFrequency": "MONTHLY"}`, or stops repeating it with `{"subscriptionFrequency": null}`
   (`Content-Type: application/merge-patch+json`). A frequency the channel does not offer is refused

@@ -1,7 +1,8 @@
 {#
     "Repeat this cart": the frequencies the cart's channel offers, and not repeating it. Offered only
     when the channel has a frequency and the cart a line that could be repeated. It is a form of its
-    own, outside the cart's live form, and posts to the plugin's route, which comes back here.
+    own, outside the cart's live form, and posts to the plugin's route, which comes back here. A
+    frequency with an introductory price says its discounts; each repeated line then says its prices.
 #}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
 {% set cart = hookable_metadata.context.cart %}
@@ -38,7 +39,14 @@
                                    {{ sylius_test_html_attribute('repeat-cart-option', frequency.code) }}
                             >
                             <label class="form-check-label" for="{{ id }}">
-                                {% if frequency.discountPercentage > 0 %}
+                                {% if frequency.introductoryDiscountPercentage is not null %}
+                                    {{ (frequency.discountPercentage > 0 ? 'jpm_martin_sylius_subscription.ui.frequency_choice_with_introductory_discount_and_discount' : 'jpm_martin_sylius_subscription.ui.frequency_choice_with_introductory_discount')|trans({
+                                        '%frequency%': every(frequency.intervalCount, frequency.intervalUnit),
+                                        '%count%': frequency.introductoryCycles,
+                                        '%introductory_discount%': frequency.introductoryDiscountPercentage,
+                                        '%discount%': frequency.discountPercentage,
+                                    }) }}
+                                {% elseif frequency.discountPercentage > 0 %}
                                     {{ 'jpm_martin_sylius_subscription.ui.frequency_choice_with_discount'|trans({'%frequency%': every(frequency.intervalCount, frequency.intervalUnit), '%discount%': frequency.discountPercentage}) }}
                                 {% else %}
                                     {{ every(frequency.intervalCount, frequency.intervalUnit) }}

@@ -66,6 +66,12 @@ final class RepeatingACartContext implements Context
         Assert::same($this->repeatCartPage->getRepetitionOf($productName), 'Repeated: ' . $repetition);
     }
 
+    #[Then('/^the "([^"]+)" item should read "([^"]+)"$/')]
+    public function theItemShouldRead(string $productName, string $introductoryPrice): void
+    {
+        Assert::same($this->repeatCartPage->getIntroductoryPriceOf($productName), $introductoryPrice);
+    }
+
     #[Then('/^the "([^"]+)" item should be bought once$/')]
     public function theItemShouldBeBoughtOnce(string $productName): void
     {

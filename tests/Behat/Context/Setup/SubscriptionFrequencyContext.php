@@ -61,6 +61,16 @@ final class SubscriptionFrequencyContext implements Context
         $this->sharedStorage->set('subscription_frequency', $frequency);
     }
 
+    #[Given('/^the "([^"]+)" subscription frequency has an introductory discount of (\d+)% for the first order$/')]
+    #[Given('/^the "([^"]+)" subscription frequency has an introductory discount of (\d+)% for the first (\d+) orders$/')]
+    public function theSubscriptionFrequencyHasAnIntroductoryDiscount(string $code, string $percentage, string $cycles = '1'): void
+    {
+        $frequency = $this->frequency($code);
+        $frequency->setIntroductoryDiscountPercentage((int) $percentage);
+        $frequency->setIntroductoryCycles((int) $cycles);
+        $this->entityManager->flush();
+    }
+
     #[Given('/^the "([^"]+)" subscription frequency is disabled$/')]
     public function theSubscriptionFrequencyIsDisabled(string $code): void
     {
