@@ -24,6 +24,9 @@
                         <td>{{ cycle.scheduledAt|date('d-m-Y') }}</td>
                         <td>
                             {{ label(cycle.skipped ? 'skipped' : cycle.state) }}
+                            {% if not cycle.charging %}
+                                <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('prepaid-delivery') }}>{{ 'jpm_martin_sylius_subscription.ui.prepaid_delivery'|trans }}</div>
+                            {% endif %}
                             {% if cycle.state == 'on_hold' %}
                                 <div class="fs-5 text-secondary" {{ sylius_test_html_attribute('hold') }}>{{ 'jpm_martin_sylius_subscription.ui.held_until'|trans({ '%date%': cycle.holdUntil|date('d-m-Y') }) }}: {{ cycle.holdReason }}</div>
                             {% endif %}

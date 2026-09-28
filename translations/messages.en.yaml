@@ -81,7 +81,10 @@ jpm_martin_sylius_subscription:
         commitment_offer: '{1}Minimum commitment: you can cancel once your first order is paid|]1,Inf[Minimum commitment: you can cancel once you have paid %count% orders'
         minimum_commitment: Minimum commitment
         commitment_left: '{1}1 more paid renewal before you can cancel or pause it|]1,Inf[%count% more paid renewals before you can cancel or pause it'
-        prepaid_offer: 'Each charge pays for %count% deliveries: %price%'
+        prepaid_offer: 'Each charge pays for %count% deliveries, %frequency%: %price%'
+        price_per_charge: Price per charge
+        charge_for_deliveries: '%price% for %count% deliveries'
+        prepaid_delivery: Prepaid delivery
         deliveries_per_charge: Deliveries per charge
         prepaid_deliveries: Prepaid deliveries
         prepaid_deliveries_left: '{1}1 delivery paid for, on %date%|]1,Inf[%count% deliveries paid for, the last on %date%'

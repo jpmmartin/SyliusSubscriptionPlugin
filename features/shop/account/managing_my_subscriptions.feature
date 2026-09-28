@@ -288,6 +288,9 @@ Feature: Managing my subscriptions
         When I view my subscription to "Honey"
         Then this subscription should have 1 "Honey" at "$10.00"
         And it should say "2 deliveries paid for, the last on Mar 1, 2027" about its prepaid deliveries
+        And it should cost "$30.00 for 3 deliveries" per charge
+        And its renewal #1 should be "Paid" on "Jan 1, 2027"
+        And its renewal #2 should be a prepaid delivery
 
     @ui
     Scenario: Not being able to cancel a subscription within its minimum commitment

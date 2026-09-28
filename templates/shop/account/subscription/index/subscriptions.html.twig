@@ -1,3 +1,4 @@
+{% import '@JpmMartinSyliusSubscriptionPlugin/shared/macro/charge.html.twig' as charge %}
 {% from '@SyliusShop/shared/macro/money.html.twig' import format %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
@@ -36,7 +37,7 @@
                             {% endfor %}
                         </td>
                         <td {{ sylius_test_html_attribute('frequency') }}>{{ frequency(subscription) }}</td>
-                        <td {{ sylius_test_html_attribute('price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</td>
+                        <td {{ sylius_test_html_attribute('price') }}>{{ charge.amount(subscription, format(subscription.renewalTotal * subscription.deliveriesPerCharge, subscription.currencyCode)) }}</td>
                         <td {{ sylius_test_html_attribute('state') }}>{{ label(subscription.state) }}</td>
                         <td {{ sylius_test_html_attribute('next-renewal') }}>{{ open_cycle is not null ? open_cycle.scheduledAt|format_date : '—' }}</td>
                         <td class="text-end">

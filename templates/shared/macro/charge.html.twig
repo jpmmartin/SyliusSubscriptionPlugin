@@ -1,0 +1,13 @@
+{# What a subscription charges each time: its renewal, or the charge of its block when it is prepaid. #}
+{%- macro label(subscription) -%}
+    {{ (subscription.deliveriesPerCharge > 1 ? 'jpm_martin_sylius_subscription.ui.price_per_charge' : 'jpm_martin_sylius_subscription.ui.price_per_renewal')|trans }}
+{%- endmacro -%}
+
+{# "formatted" is the renewal total times the deliveries per charge, formatted by the caller's money macro. #}
+{%- macro amount(subscription, formatted) -%}
+    {%- if subscription.deliveriesPerCharge > 1 -%}
+        {{ 'jpm_martin_sylius_subscription.ui.charge_for_deliveries'|trans({ '%price%': formatted, '%count%': subscription.deliveriesPerCharge }) }}
+    {%- else -%}
+        {{ formatted }}
+    {%- endif -%}
+{%- endmacro -%}

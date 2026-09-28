@@ -21,6 +21,9 @@
                     <td {{ sylius_test_html_attribute('date') }}>{{ cycle.scheduledAt|format_date }}</td>
                     <td>
                         <span {{ sylius_test_html_attribute('state') }}>{{ label(cycle.skipped ? 'skipped' : cycle.state) }}</span>
+                        {% if not cycle.charging %}
+                            <div class="small text-body-secondary" {{ sylius_test_html_attribute('prepaid-delivery') }}>{{ 'jpm_martin_sylius_subscription.ui.prepaid_delivery'|trans }}</div>
+                        {% endif %}
                         {% if cycle.attempts|filter(attempt => attempt.type == 'customer')|length > 0 %}
                             <div class="small text-body-secondary" {{ sylius_test_html_attribute('paid-by-customer') }}>{{ 'jpm_martin_sylius_subscription.ui.paid_by_you'|trans }}</div>
                         {% endif %}

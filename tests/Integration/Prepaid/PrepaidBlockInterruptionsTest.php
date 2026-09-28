@@ -63,24 +63,26 @@ final class PrepaidBlockInterruptionsTest extends LifecycleTestCase
 
     public function testPausingKeepsTheDeliveriesLeftAndResumingDeliversThemBeforeTheNextCharge(): void
     {
-        $this->renewOn('2027-02-01');
-        $this->itIsNow('2027-02-10 09:00');
-        // Paid for its initial order and February: March is still to come... and a pause keeps it.
+        $this->itIsNow('2027-01-10 09:00');
         $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_PAUSE);
         $this->entityManager()->flush();
-        self::assertSame(1, $this->subscription()->getPrepaidDeliveriesLeft());
+        self::assertSame(2, $this->subscription()->getPrepaidDeliveriesLeft(), 'February and March are paid for.');
 
-        $this->itIsNow('2027-03-15 09:00');
+        $this->itIsNow('2027-02-10 09:00');
         $this->apply($this->subscription(), SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_RESUME);
         $this->entityManager()->flush();
         $open = $this->openCycle();
         self::assertFalse($open->isCharging());
-        self::assertSame('2027-04-01 09:00', $open->getScheduledAt()?->format('Y-m-d H:i'));
+        self::assertSame('2027-03-01 09:00', $open->getScheduledAt()?->format('Y-m-d H:i'));
 
+        $this->renewOn('2027-03-01');
+        self::assertFalse($this->openCycle()->isCharging(), 'The second delivery paid for.');
         $this->renewOn('2027-04-01');
 
         self::assertSame(0, $this->subscription()->getPrepaidDeliveriesLeft());
-        self::assertTrue($this->openCycle()->isCharging(), 'Then comes the charge of the next block.');
+        $open = $this->openCycle();
+        self::assertTrue($open->isCharging(), 'Then comes the charge of the next block.');
+        self::assertSame('2027-05-01 09:00', $open->getScheduledAt()?->format('Y-m-d H:i'));
         self::assertSame([], $this->scriptedGateway()->requests(), 'Nothing was charged since January.');
     }
 

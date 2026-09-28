@@ -1,3 +1,4 @@
 {% from '@SyliusAdmin/shared/helper/money.html.twig' import format %}
+{% import '@JpmMartinSyliusSubscriptionPlugin/shared/macro/charge.html.twig' as charge %}
 
-{{ format(data.renewalTotal, data.currencyCode) }}
+{{ charge.amount(data, format(data.renewalTotal * data.deliveriesPerCharge, data.currencyCode)) }}

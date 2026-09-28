@@ -81,7 +81,10 @@ jpm_martin_sylius_subscription:
         commitment_offer: '{1}Compromiso mínimo: puedes cancelar cuando hayas pagado tu primer pedido|]1,Inf[Compromiso mínimo: puedes cancelar cuando hayas pagado %count% pedidos'
         minimum_commitment: Compromiso mínimo
         commitment_left: '{1}1 renovación pagada más antes de poder cancelarla o pausarla|]1,Inf[%count% renovaciones pagadas más antes de poder cancelarla o pausarla'
-        prepaid_offer: 'Cada cobro paga %count% entregas: %price%'
+        prepaid_offer: 'Cada cobro paga %count% entregas, %frequency%: %price%'
+        price_per_charge: Precio por cobro
+        charge_for_deliveries: '%price% por %count% entregas'
+        prepaid_delivery: Entrega prepagada
         deliveries_per_charge: Entregas por cobro
         prepaid_deliveries: Entregas prepagadas
         prepaid_deliveries_left: '{1}1 entrega pagada, el %date%|]1,Inf[%count% entregas pagadas, la última el %date%'

@@ -69,6 +69,14 @@ final class SubscribingToProductsContext implements Context
         Assert::same($this->productPage->getCommitment($planCode), $commitment);
     }
 
+    #[Then('/^the "([^"]+)" line of my cart should explain "([^"]+)"$/')]
+    public function theLineOfMyCartShouldExplain(string $productName, string $prepaid): void
+    {
+        $this->cartPage->open();
+
+        Assert::same($this->cartPage->getPrepaidOf($productName), $prepaid);
+    }
+
     #[Then('/^the "([^"]+)" line of my cart should warn "([^"]+)"$/')]
     public function theLineOfMyCartShouldWarn(string $productName, string $commitment): void
     {

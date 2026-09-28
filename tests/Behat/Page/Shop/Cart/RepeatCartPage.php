@@ -60,6 +60,11 @@ final class RepeatCartPage extends SymfonyPage
         return $this->getItemRow($productName)->find('css', '[data-test-cart-item-introductory-price]')?->getText();
     }
 
+    public function getPrepaidOf(string $productName): ?string
+    {
+        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-prepaid]')?->getText();
+    }
+
     public function getCommitmentOf(string $productName): ?string
     {
         return $this->getItemRow($productName)->find('css', '[data-test-cart-item-commitment]')?->getText();

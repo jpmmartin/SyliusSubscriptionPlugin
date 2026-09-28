@@ -7,6 +7,7 @@
     cancelling.
 #}
 {% import '@SyliusShop/shared/macro/money.html.twig' as money %}
+{% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
 
 {% set cart_item_form = hookable_metadata.context.form.cartItem %}
 
@@ -27,7 +28,7 @@
             {% set prepaid = plan is null ? null : jpm_martin_sylius_subscription_prepaid_offer(plan.productVariant, plan, sylius.channel) %}
             {% if prepaid is not null %}
                 <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('prepaid', plan.code) }}>
-                    {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': prepaid.deliveries, '%price%': money.convertAndFormat(prepaid.price) }) }}
+                    {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': prepaid.deliveries, '%frequency%': every(plan.intervalCount, plan.intervalUnit)|lower, '%price%': money.convertAndFormat(prepaid.price) }) }}
                 </div>
             {% endif %}
             {% if plan is not null and plan.commitmentCycles is not null %}

@@ -41,7 +41,7 @@
 
     {% if (terms.deliveriesPerCharge ?? 1) > 1 %}
         <div class="small text-body-secondary mt-1" {{ sylius_test_html_attribute('cart-item-prepaid') }}>
-            {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': terms.deliveriesPerCharge, '%price%': money.convertAndFormat(item.unitPrice) }) }}
+            {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': terms.deliveriesPerCharge, '%frequency%': every(terms.intervalCount, terms.intervalUnit)|lower, '%price%': money.convertAndFormat(item.unitPrice) }) }}
         </div>
     {% endif %}
 

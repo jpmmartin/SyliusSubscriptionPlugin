@@ -254,6 +254,18 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::same($this->showPage->getSkippedItemsOfRenewal($number), [$productName => $reason]);
     }
 
+    #[Then('/^it should cost "([^"]+)" per charge$/')]
+    public function itShouldCostPerCharge(string $price): void
+    {
+        Assert::same($this->showPage->getDetail('price'), $price);
+    }
+
+    #[Then('/^its renewal #(\d+) should be a prepaid delivery$/')]
+    public function itsRenewalShouldBeAPrepaidDelivery(int $number): void
+    {
+        Assert::same($this->showPage->getRenewal($number, 'prepaid-delivery'), 'Prepaid delivery');
+    }
+
     #[Then('/^it should cost "([^"]+)" per renewal$/')]
     public function itShouldCost(string $price): void
     {

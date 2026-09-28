@@ -1,3 +1,4 @@
+{% import '@JpmMartinSyliusSubscriptionPlugin/shared/macro/charge.html.twig' as charge %}
 {% from '@SyliusShop/shared/macro/money.html.twig' import format %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shop/account/subscription/macro/state.html.twig' import label %}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import frequency %}
@@ -18,8 +19,8 @@
         <div class="col" {{ sylius_test_html_attribute('subscription-frequency') }}>{{ frequency(subscription) }}</div>
     </div>
     <div class="row mb-1">
-        <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</div>
-        <div class="col" {{ sylius_test_html_attribute('subscription-price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</div>
+        <div class="col-12 col-sm-4">{{ charge.label(subscription) }}</div>
+        <div class="col" {{ sylius_test_html_attribute('subscription-price') }}>{{ charge.amount(subscription, format(subscription.renewalTotal * subscription.deliveriesPerCharge, subscription.currencyCode)) }}</div>
     </div>
     {% if last_prepaid_delivery is not null %}
         <div class="row mb-1">

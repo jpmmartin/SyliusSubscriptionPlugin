@@ -31,7 +31,14 @@ Feature: Seeing the subscription plans of a product
         Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
         And the "COFFEE_MONTHLY" subscription plan charges 3 deliveries at a time
         When I view product "Coffee" in the store
-        Then the "COFFEE_MONTHLY" plan should explain "Each charge pays for 3 deliveries: $54.00"
+        Then the "COFFEE_MONTHLY" plan should explain "Each charge pays for 3 deliveries, every month: $54.00"
+
+    @ui
+    Scenario: Seeing the deliveries each charge of a line in my cart pays for
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan charges 3 deliveries at a time
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        Then the "Coffee" line of my cart should explain "Each charge pays for 3 deliveries, every month: $54.00"
 
     @ui
     Scenario: Seeing the minimum commitment of a plan
