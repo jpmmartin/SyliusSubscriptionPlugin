@@ -59,6 +59,8 @@ class Subscription implements SubscriptionInterface
 
     protected bool $suspendedForUnpaidRenewals = false;
 
+    protected ?int $trialDays = null;
+
     protected ?\DateTimeImmutable $priceIncreaseAcceptedAt = null;
 
     /** @var Collection<int, SubscriptionItemInterface> */
@@ -276,6 +278,16 @@ class Subscription implements SubscriptionInterface
     public function setSuspendedForUnpaidRenewals(bool $suspendedForUnpaidRenewals): void
     {
         $this->suspendedForUnpaidRenewals = $suspendedForUnpaidRenewals;
+    }
+
+    public function getTrialDays(): ?int
+    {
+        return $this->trialDays;
+    }
+
+    public function setTrialDays(?int $trialDays): void
+    {
+        $this->trialDays = $trialDays;
     }
 
     public function getPriceIncreaseAcceptedAt(): ?\DateTimeImmutable

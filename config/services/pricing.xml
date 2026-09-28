@@ -27,6 +27,8 @@
 
         <service id="jpm_martin_sylius_subscription.twig.extension.subscription_price" class="JpmMartin\SyliusSubscriptionPlugin\Twig\SubscriptionPriceExtension">
             <argument type="service" id="sylius.calculator.product_variant_price" />
+            <argument type="service" id="jpm_martin_sylius_subscription.trial.offer" />
+            <argument type="service" id="sylius.context.customer" />
             <tag name="twig.extension" />
         </service>
 

@@ -31,6 +31,8 @@ class SubscriptionPlan implements SubscriptionPlanInterface
 
     protected int $introductoryCycles = 1;
 
+    protected ?int $trialDays = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -124,5 +126,15 @@ class SubscriptionPlan implements SubscriptionPlanInterface
     public function setIntroductoryCycles(int $introductoryCycles): void
     {
         $this->introductoryCycles = $introductoryCycles;
+    }
+
+    public function getTrialDays(): ?int
+    {
+        return $this->trialDays;
+    }
+
+    public function setTrialDays(?int $trialDays): void
+    {
+        $this->trialDays = $trialDays;
     }
 }

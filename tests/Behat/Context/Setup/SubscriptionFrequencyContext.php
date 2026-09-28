@@ -71,6 +71,13 @@ final class SubscriptionFrequencyContext implements Context
         $this->entityManager->flush();
     }
 
+    #[Given('/^the "([^"]+)" subscription frequency has a free trial of (\d+) days$/')]
+    public function theSubscriptionFrequencyHasAFreeTrial(string $code, string $days): void
+    {
+        $this->frequency($code)->setTrialDays((int) $days);
+        $this->entityManager->flush();
+    }
+
     #[Given('/^the "([^"]+)" subscription frequency is disabled$/')]
     public function theSubscriptionFrequencyIsDisabled(string $code): void
     {

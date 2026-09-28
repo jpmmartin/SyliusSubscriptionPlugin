@@ -26,6 +26,9 @@ interface SubscriptionRepositoryInterface extends RepositoryInterface
     /** @return list<SubscriptionInterface> the customer's subscriptions, the latest first */
     public function findByCustomer(CustomerInterface $customer): array;
 
+    /** Whether the customer has, or had, a subscription with the variant, in any state and even removed from it. */
+    public function existsWithCustomerAndVariant(CustomerInterface $customer, ProductVariantInterface $productVariant): bool;
+
     /**
      * For the admin grid. The open cycle is joined, not selected, under the "openCycle" alias, so the
      * grid can filter and sort on the next renewal without loading a partial list of cycles; the

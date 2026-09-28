@@ -65,6 +65,12 @@ final class ManagingSubscriptionPlansContext implements Context
         $this->createPage->setIntroductoryPrice('first_cycles', (int) $percentage, (int) $cycles);
     }
 
+    #[When('/^I give it a free trial of (\d+) days$/')]
+    public function iGiveItAFreeTrial(string $days): void
+    {
+        $this->createPage->giveAFreeTrial((int) $days);
+    }
+
     #[When('I give it an introductory price for the first order only without a discount')]
     public function iGiveItAnIntroductoryPriceWithoutADiscount(): void
     {

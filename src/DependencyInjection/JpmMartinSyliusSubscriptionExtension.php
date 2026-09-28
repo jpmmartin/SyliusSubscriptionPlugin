@@ -19,12 +19,13 @@ final class JpmMartinSyliusSubscriptionExtension extends AbstractResourceExtensi
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{driver: string, resources: array<string, mixed>, payment_methods: list<string>, retry_delays: list<int>, final_decline_codes: list<string>, suspend_after_failed_cycles: int|null, max_consecutive_skips: int|null, customer_payment_wait_minutes: int, price_increase_notice_days: int, price_increase_acceptance: string, missed_cycles: string, renewal_notice_days: int|null, consent_version: string} $config */
+        /** @var array{driver: string, resources: array<string, mixed>, payment_methods: list<string>, trial_payment_methods: list<string>, retry_delays: list<int>, final_decline_codes: list<string>, suspend_after_failed_cycles: int|null, max_consecutive_skips: int|null, customer_payment_wait_minutes: int, price_increase_notice_days: int, price_increase_acceptance: string, missed_cycles: string, renewal_notice_days: int|null, consent_version: string} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('jpm_martin_sylius_subscription', $config['driver'], $config['resources'], $container);
 
         $container->setParameter('jpm_martin_sylius_subscription.payment_methods', $config['payment_methods']);
+        $container->setParameter('jpm_martin_sylius_subscription.trial_payment_methods', $config['trial_payment_methods']);
         $container->setParameter('jpm_martin_sylius_subscription.retry_delays', $config['retry_delays']);
         $container->setParameter('jpm_martin_sylius_subscription.final_decline_codes', $config['final_decline_codes']);
         $container->setParameter('jpm_martin_sylius_subscription.suspend_after_failed_cycles', $config['suspend_after_failed_cycles']);

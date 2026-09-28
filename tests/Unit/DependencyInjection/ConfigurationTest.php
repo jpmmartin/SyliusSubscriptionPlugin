@@ -17,6 +17,7 @@ final class ConfigurationTest extends TestCase
         $config = $this->process([]);
 
         self::assertSame([], $config['payment_methods']);
+        self::assertSame([], $config['trial_payment_methods'], 'No free trial can be taken until the store says which methods keep a card.');
         self::assertSame([1, 3, 7], $config['retry_delays']);
         self::assertSame([], $config['final_decline_codes']);
         self::assertSame(3, $config['suspend_after_failed_cycles']);
@@ -31,6 +32,7 @@ final class ConfigurationTest extends TestCase
     {
         $config = $this->process([
             'payment_methods' => ['card_on_file'],
+            'trial_payment_methods' => ['card_on_file'],
             'retry_delays' => [2, 5],
             'final_decline_codes' => ['stolen_card', 'lost_card'],
             'suspend_after_failed_cycles' => 5,
@@ -38,6 +40,7 @@ final class ConfigurationTest extends TestCase
         ]);
 
         self::assertSame(['card_on_file'], $config['payment_methods']);
+        self::assertSame(['card_on_file'], $config['trial_payment_methods']);
         self::assertSame([2, 5], $config['retry_delays']);
         self::assertSame(['stolen_card', 'lost_card'], $config['final_decline_codes']);
         self::assertSame(5, $config['suspend_after_failed_cycles']);

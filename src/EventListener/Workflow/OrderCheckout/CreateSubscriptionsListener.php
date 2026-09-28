@@ -44,7 +44,9 @@ final class CreateSubscriptionsListener
         foreach (SubscriptionLines::of($order) as $orderItem) {
             $terms = $orderItem->getSubscriptionTerms();
             Assert::notNull($terms);
-            $linesByInterval[$terms->getIntervalCount() . ' ' . $terms->getIntervalUnit()->value][] = $orderItem;
+            // Lines given a free trial start a subscription of their own, whose calendar starts when it ends.
+            $key = $terms->getIntervalCount() . ' ' . $terms->getIntervalUnit()->value . ' ' . ($orderItem->getSubscriptionTrialDays() ?? '-');
+            $linesByInterval[$key][] = $orderItem;
         }
 
         foreach ($linesByInterval as $lines) {

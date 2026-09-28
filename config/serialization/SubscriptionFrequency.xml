@@ -26,5 +26,8 @@
         <attribute name="introductoryCycles">
             <group>jpm_martin_sylius_subscription:shop:subscription_frequency:index</group>
         </attribute>
+        <attribute name="trialDays">
+            <group>jpm_martin_sylius_subscription:shop:subscription_frequency:index</group>
+        </attribute>
     </class>
 </serializer>

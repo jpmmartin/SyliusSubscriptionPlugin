@@ -229,6 +229,14 @@
             <argument type="service" id="security.token_storage" on-invalid="null" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.behat.context.domain.free_trial"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Domain\FreeTrialContext"
+        >
+            <argument type="service" id="sylius.repository.payment_method" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="doctrine.orm.entity_manager" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.subscription_checkout"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\SubscriptionCheckoutContext"
         >

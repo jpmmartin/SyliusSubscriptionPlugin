@@ -5,6 +5,8 @@ jpm_martin_sylius_subscription:
         account_required: Subscriptions need an account. Please sign in or create an account to place this order.
         payment_method_not_supported: 'The "%payment_method%" payment method cannot be used for subscriptions. Please choose another one.'
         consent_required: Please accept the recurring charges of your subscriptions to place this order.
+        trial_payment_method_required: 'A free trial needs a payment method that keeps your card without charging it, and "%payment_method%" cannot. Please choose another one.'
+        trial_not_through_the_api: A free trial cannot be started through the API yet. Please place this order in the shop.
     subscription_plan:
         code:
             unique: A subscription plan with this code already exists.
@@ -23,6 +25,10 @@ jpm_martin_sylius_subscription:
             not_blank: Please enter the introductory discount.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        trial_days:
+            positive: A free trial must last at least 1 day.
+            not_with_introductory_price: A free trial cannot be combined with an introductory price.
+            not_blank: Please enter the days of the free trial.
     subscription_frequency:
         code:
             unique: A subscription frequency with this code already exists.
@@ -40,6 +46,9 @@ jpm_martin_sylius_subscription:
             range: The introductory discount must be between 0 and 100.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        trial_days:
+            positive: A free trial must last at least 1 day.
+            not_with_introductory_price: A free trial cannot be combined with an introductory price.
         channels:
             min: Please choose at least one channel.
     subscription_item:

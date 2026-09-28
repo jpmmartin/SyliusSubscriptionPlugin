@@ -34,4 +34,11 @@ interface SubscriptionTermsInterface
 
     /** How many cycles the introductory price lasts, the initial order being the first. At least 1. */
     public function getIntroductoryCycles(): int;
+
+    /**
+     * Days of free trial a new subscription starts with: its initial order charges nothing for it, and
+     * its first charge is the renewal on the day the trial ends. Null offers none. Never together with
+     * an introductory price.
+     */
+    public function getTrialDays(): ?int;
 }

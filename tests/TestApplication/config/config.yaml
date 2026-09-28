@@ -20,9 +20,12 @@ doctrine:
 
 # The payment methods the test store charges renewals with: "Card on file", as Behat's
 # "the store allows paying with ..." names it, and "Other card", for the tests that pay a renewal with
-# another method. Any other method is refused for subscriptions.
+# another method. Any other method is refused for subscriptions, and only "Card on file" takes a free
+# trial.
 jpm_martin_sylius_subscription:
     payment_methods: ['Card_on_file', 'Other_card']
+    # Its gateway authorizes a payment of 0 and keeps the card, so a free trial can be taken with it.
+    trial_payment_methods: ['Card_on_file']
     # The test store's gateway declines a stolen card for good; any other decline is retried.
     final_decline_codes: ['stolen_card']
 

@@ -38,6 +38,12 @@ trait FormElementsTrait
         }
     }
 
+    public function giveAFreeTrial(int $days): void
+    {
+        $this->getElement('introductory_price')->selectOption('free_trial');
+        $this->getElement('trial_days')->setValue((string) $days);
+    }
+
     /** @return array<string, string> */
     protected function getDefinedFormElements(): array
     {
@@ -51,6 +57,7 @@ trait FormElementsTrait
             'introductory_price' => '[name="jpm_martin_sylius_subscription_subscription_plan[introductoryPrice]"]',
             'introductory_discount_percentage' => '#jpm_martin_sylius_subscription_subscription_plan_introductoryDiscountPercentage',
             'introductory_cycles' => '#jpm_martin_sylius_subscription_subscription_plan_introductoryCycles',
+            'trial_days' => '#jpm_martin_sylius_subscription_subscription_plan_trialDays',
             'enabled' => '#jpm_martin_sylius_subscription_subscription_plan_enabled',
         ];
     }

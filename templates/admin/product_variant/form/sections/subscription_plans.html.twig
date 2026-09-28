@@ -52,7 +52,11 @@
                                     </td>
                                     <td {{ sylius_test_html_attribute('subscription-plan-discount') }}>{{ plan.discountPercentage }} %</td>
                                     <td {{ sylius_test_html_attribute('subscription-plan-introductory-price') }}>
-                                        {{ plan.introductoryDiscountPercentage is null ? '—' : 'jpm_martin_sylius_subscription.ui.introductory_price_summary'|trans({ '%count%': plan.introductoryCycles, '%discount%': plan.introductoryDiscountPercentage }) }}
+                                        {% if plan.trialDays is not null %}
+                                            {{ 'jpm_martin_sylius_subscription.ui.trial_summary'|trans({ '%count%': plan.trialDays }) }}
+                                        {% else %}
+                                            {{ plan.introductoryDiscountPercentage is null ? '—' : 'jpm_martin_sylius_subscription.ui.introductory_price_summary'|trans({ '%count%': plan.introductoryCycles, '%discount%': plan.introductoryDiscountPercentage }) }}
+                                        {% endif %}
                                     </td>
                                     <td>{{ plan.maxCycles ?? 'jpm_martin_sylius_subscription.ui.until_cancelled'|trans }}</td>
                                     <td {{ sylius_test_html_attribute('subscription-plan-enabled') }}>

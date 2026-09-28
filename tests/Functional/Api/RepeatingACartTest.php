@@ -106,11 +106,11 @@ final class RepeatingACartTest extends WebTestCase
         $members = $response['hydra:member'] ?? $response['member'] ?? [];
         self::assertSame(
             [
-                ['code' => 'MONTHLY', 'name' => 'Every month', 'intervalCount' => 1, 'intervalUnit' => 'month', 'discountPercentage' => 5, 'introductoryDiscountPercentage' => 50, 'introductoryCycles' => 3],
-                ['code' => 'EVERY_TWO_WEEKS', 'name' => 'Every two weeks', 'intervalCount' => 2, 'intervalUnit' => 'week', 'discountPercentage' => 0, 'introductoryDiscountPercentage' => null, 'introductoryCycles' => 1],
+                ['code' => 'MONTHLY', 'name' => 'Every month', 'intervalCount' => 1, 'intervalUnit' => 'month', 'discountPercentage' => 5, 'introductoryDiscountPercentage' => 50, 'introductoryCycles' => 3, 'trialDays' => null],
+                ['code' => 'EVERY_TWO_WEEKS', 'name' => 'Every two weeks', 'intervalCount' => 2, 'intervalUnit' => 'week', 'discountPercentage' => 0, 'introductoryDiscountPercentage' => null, 'introductoryCycles' => 1, 'trialDays' => null],
             ],
             array_map(
-                static fn (array $member): array => array_intersect_key($member, array_flip(['code', 'name', 'intervalCount', 'intervalUnit', 'discountPercentage', 'introductoryDiscountPercentage', 'introductoryCycles'])),
+                static fn (array $member): array => array_intersect_key($member, array_flip(['code', 'name', 'intervalCount', 'intervalUnit', 'discountPercentage', 'introductoryDiscountPercentage', 'introductoryCycles', 'trialDays'])),
                 $members,
             ),
             'The disabled frequency and the one of another channel are left out.',

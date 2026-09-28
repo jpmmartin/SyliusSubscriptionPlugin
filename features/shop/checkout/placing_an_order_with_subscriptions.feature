@@ -25,6 +25,21 @@ Feature: Placing an order with subscriptions
         Then I should see the thank you page
         And the recurring charges I accepted on my order should be recorded as version "1"
 
+    @ui
+    Scenario: Starting a free trial
+        Given the "COFFEE_MONTHLY" subscription plan has a free trial of 14 days
+        And the "Card on file" payment method keeps cards through the test gateway
+        And I am a logged in customer
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        And I am at the checkout addressing step
+        When I specify the billing address as "Ankh Morpork", "Frost Alley", "90210", "United States" for "Jon Snow"
+        And I complete the addressing step
+        And I proceed with "Free" shipping method and "Card on file" payment
+        And I accept the recurring charges of my subscriptions
+        And I confirm my order
+        Then I should see the thank you page
+        And my subscription to "Coffee" should have started with a free trial of 14 days
+
     @ui @javascript
     Scenario: Placing an order with a subscription in the browser
         Given I am a logged in customer

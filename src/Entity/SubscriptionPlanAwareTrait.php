@@ -23,6 +23,9 @@ trait SubscriptionPlanAwareTrait
     #[ORM\JoinColumn(name: 'subscription_frequency_id', referencedColumnName: 'id', nullable: true)]
     protected ?SubscriptionFrequencyInterface $subscriptionFrequency = null;
 
+    #[ORM\Column(name: 'subscription_trial_days', type: 'integer', nullable: true)]
+    protected ?int $subscriptionTrialDays = null;
+
     public function getSubscriptionPlan(): ?SubscriptionPlanInterface
     {
         return $this->subscriptionPlan;
@@ -46,5 +49,15 @@ trait SubscriptionPlanAwareTrait
     public function getSubscriptionTerms(): ?SubscriptionTermsInterface
     {
         return $this->subscriptionPlan ?? $this->subscriptionFrequency;
+    }
+
+    public function getSubscriptionTrialDays(): ?int
+    {
+        return $this->subscriptionTrialDays;
+    }
+
+    public function setSubscriptionTrialDays(?int $subscriptionTrialDays): void
+    {
+        $this->subscriptionTrialDays = $subscriptionTrialDays;
     }
 }

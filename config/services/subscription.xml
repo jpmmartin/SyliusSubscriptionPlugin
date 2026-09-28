@@ -87,6 +87,15 @@
             <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.pay" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.listener.workflow.order.activate_trial_subscriptions"
+                 class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\ActivateTrialSubscriptionsListener"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.trial.orders" />
+            <tag name="kernel.event_listener" event="workflow.sylius_order_payment.completed.authorize" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.listener.workflow.order.cancel_subscriptions"
                  class="JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order\CancelSubscriptionsListener"
         >

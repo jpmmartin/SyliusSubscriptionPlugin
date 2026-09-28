@@ -1,7 +1,8 @@
 {#
     Only present when the selected variant has enabled plans; otherwise the variant is bought once
     and nothing is rendered. Each plan with an introductory price says it below its choice: that
-    price, how many orders it lasts, and the price after.
+    price, how many orders it lasts, and the price after; one with a free trial the customer can still
+    have, how many days it lasts and the price after.
 #}
 {% import '@SyliusShop/shared/macro/money.html.twig' as money %}
 
@@ -20,7 +21,12 @@
             {{ form_widget(choice_field) }}
             {% set plan = plans[choice_field.vars.value] ?? null %}
             {% set offer = plan is null ? null : jpm_martin_sylius_subscription_introductory_offer(plan.productVariant, plan, sylius.channel) %}
-            {% if offer is not null %}
+            {% set trial = plan is null ? null : jpm_martin_sylius_subscription_trial_offer(plan.productVariant, plan, sylius.channel) %}
+            {% if trial is not null %}
+                <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('introductory-price', plan.code) }}>
+                    {{ 'jpm_martin_sylius_subscription.ui.trial_offer'|trans({ '%count%': trial.days, '%price%': money.convertAndFormat(trial.price) }) }}
+                </div>
+            {% elseif offer is not null %}
                 <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('introductory-price', plan.code) }}>
                     {{ 'jpm_martin_sylius_subscription.ui.introductory_offer'|trans({
                         '%count%': offer.cycles,

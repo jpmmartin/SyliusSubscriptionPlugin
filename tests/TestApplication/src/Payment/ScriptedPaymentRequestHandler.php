@@ -6,11 +6,16 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Payment;
 
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Component\Payment\Model\PaymentInterface;
+use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
 use Webmozart\Assert\Assert;
 
-/** What a real gateway does with its answer: an approval completes the payment, a decline fails it with the issuer's reason. */
+/**
+ * What a real gateway does with its answer: an approval completes the payment, or authorizes it when
+ * the request only asks for an authorization, and a decline fails it with the issuer's reason.
+ */
 final class ScriptedPaymentRequestHandler
 {
     public function __construct(
@@ -30,8 +35,14 @@ final class ScriptedPaymentRequestHandler
 
         if (ScriptedGateway::APPROVE === $answer) {
             $this->stateMachine->apply($paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_COMPLETE);
-            if ($this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE)) {
-                $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);
+            // A status request reports what happened: an authorized payment stays authorized.
+            $transition = match ($paymentRequest->getAction()) {
+                PaymentRequestInterface::ACTION_AUTHORIZE => PaymentTransitions::TRANSITION_AUTHORIZE,
+                PaymentRequestInterface::ACTION_STATUS => PaymentInterface::STATE_AUTHORIZED === $payment->getState() ? null : PaymentTransitions::TRANSITION_COMPLETE,
+                default => PaymentTransitions::TRANSITION_COMPLETE,
+            };
+            if (null !== $transition && $this->stateMachine->can($payment, PaymentTransitions::GRAPH, $transition)) {
+                $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, $transition);
             }
 
             return;

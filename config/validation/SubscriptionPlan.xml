@@ -82,6 +82,20 @@
             </constraint>
         </property>
 
+        <property name="trialDays">
+            <constraint name="GreaterThanOrEqual">
+                <option name="value">1</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.trial_days.positive</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+            <!-- A free trial is one way in, an introductory price another: never both on the same terms. -->
+            <constraint name="Expression">
+                <option name="expression">value === null or this.getIntroductoryDiscountPercentage() === null</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.trial_days.not_with_introductory_price</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+        </property>
+
         <property name="productVariant">
             <constraint name="NotNull">
                 <option name="groups">jpm_martin_sylius_subscription</option>

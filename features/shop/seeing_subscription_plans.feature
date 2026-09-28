@@ -27,6 +27,21 @@ Feature: Seeing the subscription plans of a product
         And the "COFFEE_QUARTERLY" plan should read "$15.00 for your first order, then $17.00"
 
     @ui
+    Scenario: Seeing the free trial of a plan
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has a free trial of 14 days
+        When I view product "Coffee" in the store
+        Then the "COFFEE_MONTHLY" plan should read "14 days free, then $18.00"
+
+    @ui
+    Scenario: Seeing the free trial of a line in my cart
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan has a free trial of 14 days
+        And I have product "Coffee" in the cart on the "COFFEE_MONTHLY" plan
+        Then the "Coffee" line of my cart should read "14 days free, then $18.00"
+        And I should see "Coffee" with unit price "$0.00" in my cart
+
+    @ui
     Scenario: Seeing the introductory price of a line in my cart
         Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
         And the "COFFEE_MONTHLY" subscription plan has an introductory discount of 50% for the first order

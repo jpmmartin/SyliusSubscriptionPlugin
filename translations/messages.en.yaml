@@ -9,6 +9,8 @@ jpm_martin_sylius_subscription:
         frequency_choice_with_discount: "%frequency% (save %discount%%)"
         frequency_choice_with_introductory_discount: "{1}%frequency% (%introductory_discount%% off your first order)|]1,Inf[%frequency% (%introductory_discount%% off your first %count% orders)"
         frequency_choice_with_introductory_discount_and_discount: "{1}%frequency% (%introductory_discount%% off your first order, then save %discount%%)|]1,Inf[%frequency% (%introductory_discount%% off your first %count% orders, then save %discount%%)"
+        frequency_choice_with_trial: "{1}%frequency% (1 day free)|]1,Inf[%frequency% (%count% days free)"
+        frequency_choice_with_trial_and_discount: "{1}%frequency% (1 day free, then save %discount%%)|]1,Inf[%frequency% (%count% days free, then save %discount%%)"
         repeated_line: "Repeated: %frequency%"
         repeated_line_with_discount: "Repeated: %frequency% (save %discount%%)"
         apply: "Apply"
@@ -74,6 +76,8 @@ jpm_martin_sylius_subscription:
         introductory_price_left: '{1}%price% on your next renewal|]1,Inf[%price% on your next %count% renewals'
         introductory_price: Introductory price
         introductory_price_summary: '{1}%discount%% off the first order|]1,Inf[%discount%% off the first %count% orders'
+        trial_offer: '{1}1 day free, then %price%|]1,Inf[%count% days free, then %price%'
+        trial_summary: '{1}1 day free|]1,Inf[%count% days free'
         accept_new_price: Accept the new price
         accept_new_price_and_resume: Accept the new price and resume
         price_increase_help:
@@ -150,10 +154,13 @@ jpm_martin_sylius_subscription:
             discount_percentage: Subscriber discount (%)
             max_cycles: Maximum cycles
             max_cycles_help: Leave empty to renew until the customer cancels.
-            introductory_price: Introductory price
+            introductory_price: Introductory offer
             introductory_price_none: None
             introductory_price_first_order: First order only
             introductory_price_first_cycles: The first N cycles
             introductory_discount_percentage: Introductory discount (%)
             introductory_cycles: Introductory cycles
             introductory_cycles_help: 'For "The first N cycles": how many orders, the first one included, are charged the introductory price.'
+            introductory_price_free_trial: A free trial of N days
+            trial_days: Free trial days
+            trial_days_help: 'For "A free trial of N days": the initial order charges nothing for it, and the first charge is the renewal on the day the trial ends. Only given when the store has a payment method in trial_payment_methods, and once per customer and variant.'

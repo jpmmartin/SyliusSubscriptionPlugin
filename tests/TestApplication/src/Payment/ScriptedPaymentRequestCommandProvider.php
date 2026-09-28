@@ -11,7 +11,7 @@ final class ScriptedPaymentRequestCommandProvider implements PaymentRequestComma
 {
     public function supports(PaymentRequestInterface $paymentRequest): bool
     {
-        return \in_array($paymentRequest->getAction(), [PaymentRequestInterface::ACTION_CAPTURE, PaymentRequestInterface::ACTION_STATUS], true);
+        return \in_array($paymentRequest->getAction(), [PaymentRequestInterface::ACTION_CAPTURE, PaymentRequestInterface::ACTION_AUTHORIZE, PaymentRequestInterface::ACTION_STATUS], true);
     }
 
     public function provide(PaymentRequestInterface $paymentRequest): object

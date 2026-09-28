@@ -36,6 +36,19 @@ final class SubscriptionPlanValidationTest extends LifecycleTestCase
         self::assertSame([], $this->violationsOf($plan));
     }
 
+    public function testItsFreeTrialLastsOneDayAtLeastAndIsNeverCombinedWithAnIntroductoryPrice(): void
+    {
+        $plan = $this->coffeeMonthly;
+        $plan->setTrialDays(0);
+        self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_plan.trial_days.positive'], $this->violationsOf($plan));
+
+        $plan->setTrialDays(14);
+        self::assertSame([], $this->violationsOf($plan));
+
+        $plan->setIntroductoryDiscountPercentage(50);
+        self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_plan.trial_days.not_with_introductory_price'], $this->violationsOf($plan));
+    }
+
     /** @return array<string, string> the message template of each violation, by property */
     private function violationsOf(SubscriptionPlanInterface $plan): array
     {

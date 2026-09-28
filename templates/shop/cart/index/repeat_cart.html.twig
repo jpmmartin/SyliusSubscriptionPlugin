@@ -39,7 +39,13 @@
                                    {{ sylius_test_html_attribute('repeat-cart-option', frequency.code) }}
                             >
                             <label class="form-check-label" for="{{ id }}">
-                                {% if frequency.introductoryDiscountPercentage is not null %}
+                                {% if frequency.trialDays is not null and jpm_martin_sylius_subscription_trials_offered() %}
+                                    {{ (frequency.discountPercentage > 0 ? 'jpm_martin_sylius_subscription.ui.frequency_choice_with_trial_and_discount' : 'jpm_martin_sylius_subscription.ui.frequency_choice_with_trial')|trans({
+                                        '%frequency%': every(frequency.intervalCount, frequency.intervalUnit),
+                                        '%count%': frequency.trialDays,
+                                        '%discount%': frequency.discountPercentage,
+                                    }) }}
+                                {% elseif frequency.introductoryDiscountPercentage is not null %}
                                     {{ (frequency.discountPercentage > 0 ? 'jpm_martin_sylius_subscription.ui.frequency_choice_with_introductory_discount_and_discount' : 'jpm_martin_sylius_subscription.ui.frequency_choice_with_introductory_discount')|trans({
                                         '%frequency%': every(frequency.intervalCount, frequency.intervalUnit),
                                         '%count%': frequency.introductoryCycles,

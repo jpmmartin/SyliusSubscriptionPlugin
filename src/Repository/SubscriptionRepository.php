@@ -70,6 +70,21 @@ class SubscriptionRepository extends EntityRepository implements SubscriptionRep
         return $subscriptions;
     }
 
+    public function existsWithCustomerAndVariant(CustomerInterface $customer, ProductVariantInterface $productVariant): bool
+    {
+        return null !== $this->createQueryBuilder('o')
+            ->select('o.id')
+            ->innerJoin('o.items', 'item')
+            ->andWhere('o.customer = :customer')
+            ->andWhere('item.productVariant = :productVariant')
+            ->setParameter('customer', $customer)
+            ->setParameter('productVariant', $productVariant)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
     public function createAdminListQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('o')

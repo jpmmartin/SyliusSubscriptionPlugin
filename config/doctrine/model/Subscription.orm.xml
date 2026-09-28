@@ -46,6 +46,8 @@
         <field name="consecutiveFailedCycles" column="consecutive_failed_cycles" type="integer" />
         <!-- Suspended because its renewals could not be charged, which its customer can recover from by paying. -->
         <field name="suspendedForUnpaidRenewals" column="suspended_for_unpaid_renewals" type="boolean" />
+        <!-- The free trial it started with, in days: its second cycle is due when it ends. -->
+        <field name="trialDays" column="trial_days" type="integer" nullable="true" />
         <!-- When its customer accepted the price increase pending on its items; cleared when another is announced. -->
         <field name="priceIncreaseAcceptedAt" column="price_increase_accepted_at" type="datetime_immutable" nullable="true" />
 

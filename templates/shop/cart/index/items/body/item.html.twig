@@ -1,7 +1,7 @@
 {#
     Sylius's product cell, with what the line renews on added below the product: its plan, or the
-    frequency its cart is repeated with, and their introductory price if they have one. In a repeated
-    cart, a line that is not repeated says it is bought once.
+    frequency its cart is repeated with, and their introductory price or the free trial the line got. In
+    a repeated cart, a line that is not repeated says it is bought once.
 #}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
 {% import '@SyliusShop/shared/macro/money.html.twig' as money %}
@@ -10,6 +10,7 @@
 {% set frequency = item.subscriptionFrequency ?? null %}
 {% set terms = plan ?? frequency %}
 {% set offer = terms is null or item.variant is null or item.order is null or item.order.channel is null ? null : jpm_martin_sylius_subscription_introductory_offer(item.variant, terms, item.order.channel) %}
+{% set trial = offer is not null or (item.subscriptionTrialDays ?? null) is null ? null : jpm_martin_sylius_subscription_trial_offer(item.variant, terms, item.order.channel) %}
 {% set cart_is_repeated = item.order is not null and item.order.items|filter(line => (line.subscriptionFrequency ?? null) is not null)|length > 0 %}
 
 <td {{ sylius_test_html_attribute('cart-item-product') }}>
@@ -38,7 +39,11 @@
         </div>
     {% endif %}
 
-    {% if offer is not null %}
+    {% if trial is not null %}
+        <div class="small text-body-secondary mt-1" {{ sylius_test_html_attribute('cart-item-introductory-price') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.trial_offer'|trans({ '%count%': item.subscriptionTrialDays, '%price%': money.convertAndFormat(trial.price) }) }}
+        </div>
+    {% elseif offer is not null %}
         <div class="small text-body-secondary mt-1" {{ sylius_test_html_attribute('cart-item-introductory-price') }}>
             {{ 'jpm_martin_sylius_subscription.ui.introductory_offer'|trans({
                 '%count%': offer.cycles,

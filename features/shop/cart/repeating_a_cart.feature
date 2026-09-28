@@ -43,6 +43,16 @@ Feature: Repeating my cart
         And my cart total should be "$10.00"
 
     @ui
+    Scenario: Repeating my cart with a frequency that has a free trial
+        Given the "MONTHLY" subscription frequency has a free trial of 7 days
+        And I have product "Coffee" in the cart
+        When I see the summary of my cart
+        Then I should be offered to repeat my cart "Every month (7 days free, then save 5%)" or "Every 2 weeks"
+        When I choose to repeat my cart "Every month (7 days free, then save 5%)"
+        Then the "Coffee" item should read "7 days free, then $19.00"
+        And my cart total should be "$0.00"
+
+    @ui
     Scenario: Seeing which products are bought once in a repeated cart
         Given I have product "Coffee" in the cart
         And I have product "Gift card" in the cart

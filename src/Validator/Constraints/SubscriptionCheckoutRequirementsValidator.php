@@ -7,6 +7,8 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints;
 use JpmMartin\SyliusSubscriptionPlugin\Consent\SubscriptionConsentRecorderInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Order\SubscriptionLines;
 use JpmMartin\SyliusSubscriptionPlugin\Payment\RenewalChargerInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Trial\TrialOffer;
+use JpmMartin\SyliusSubscriptionPlugin\Trial\TrialOrders;
 use Sylius\Bundle\ApiBundle\Command\Checkout\CompleteOrder;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -23,6 +25,8 @@ final class SubscriptionCheckoutRequirementsValidator extends ConstraintValidato
         private readonly OrderRepositoryInterface $orderRepository,
         private readonly RenewalChargerInterface $renewalCharger,
         private readonly SubscriptionConsentRecorderInterface $consentRecorder,
+        private readonly TrialOrders $trialOrders,
+        private readonly TrialOffer $trialOffer,
     ) {
     }
 
@@ -44,6 +48,20 @@ final class SubscriptionCheckoutRequirementsValidator extends ConstraintValidato
         if (!$paymentMethod instanceof PaymentMethodInterface || !$this->renewalCharger->supports($paymentMethod)) {
             $this->context
                 ->buildViolation($constraint->paymentMethodNotSupportedMessage)
+                ->setParameter('%payment_method%', (string) $paymentMethod?->getName())
+                ->addViolation()
+            ;
+        }
+
+        // The API asks its payment of 0 to be captured, not authorized, so no gateway would keep the card.
+        if ($value instanceof CompleteOrder && $this->trialOrders->hasATrial($order)) {
+            $this->context->buildViolation($constraint->trialNotThroughTheApiMessage)->addViolation();
+        } elseif (
+            $this->trialOrders->hasATrial($order) &&
+            !\in_array($paymentMethod?->getCode(), $this->trialOffer->trialPaymentMethodCodes(), true)
+        ) {
+            $this->context
+                ->buildViolation($constraint->trialPaymentMethodRequiredMessage)
                 ->setParameter('%payment_method%', (string) $paymentMethod?->getName())
                 ->addViolation()
             ;

@@ -138,6 +138,14 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
 
     public function setSuspendedForUnpaidRenewals(bool $suspendedForUnpaidRenewals): void;
 
+    /**
+     * The days of free trial it started with: its initial order charged nothing for its items, and its
+     * first charge is the renewal on the day the trial ends. Null when it had none.
+     */
+    public function getTrialDays(): ?int;
+
+    public function setTrialDays(?int $trialDays): void;
+
     /** When its customer accepted the price increase pending on its items; null until then, and again when another is announced. */
     public function getPriceIncreaseAcceptedAt(): ?\DateTimeImmutable;
 

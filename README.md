@@ -13,6 +13,9 @@ with all of them, charged without the customer present, with retries when a char
 - **Introductory prices**: a plan or a store frequency can take a discount of its own off the first
   order, or the first cycles, of each new subscription, before the subscriber price applies. See
   [Introductory prices](#introductory-prices).
+- **Free trials**: a plan or a store frequency can start each new subscriber with some days free,
+  once per customer and variant, with a payment method whose gateway keeps the card without charging
+  it. See [Free trials](#free-trials).
 - **Store frequencies and "Repeat this cart"**: the store defines its own frequencies (interval,
   discount, optional maximum of cycles and the channels that offer them) and marks the variants that
   can be repeated. On the cart page, and through the API, the customer repeats the cart with one of
@@ -171,6 +174,9 @@ with all of them, charged without the customer present, with retries when a char
 jpm_martin_sylius_subscription:
     # Codes of the payment methods the default charging service may charge without the customer.
     payment_methods: []
+    # Codes of the payment methods whose gateway authorizes a payment of 0 and keeps the card. A cart
+    # with a free trial needs one; [] gives no free trial. See "Free trials".
+    trial_payment_methods: []
     # Days after the first attempt at which a declined charge is retried. Strictly increasing; [] never
     # retries.
     retry_delays: [1, 3, 7]
@@ -546,7 +552,7 @@ and the next two renewals.
   frozen price after (`SubscriptionItemInterface::getUnitPriceForCycle()`); a skipped or failed cycle
   does not count. The customer's account shows the frozen price with the introductory price and how
   many renewals it still lasts; the price per renewal of the account and of the admin, and the totals
-  of every event but `IntroductoryPriceEnding`, are at the frozen prices.
+  of every event but `IntroductoryPriceEnding` and `TrialEnding`, are at the frozen prices.
 - **It ends early** when the item moves to another plan, frequency or variant: its next renewal is
   charged the normal price of its new terms, whose own introductory price is for new subscriptions.
   Changing the quantity keeps it, and so does a price update, which reprices the normal price only.
@@ -557,6 +563,41 @@ and the next two renewals.
   an increase that applies by then included. It is published only when renewals are announced: with
   `renewal_notice_days: null`, keep a notice of your own if you tell customers the introductory price
   ends. See [Events](#events).
+
+## Free trials
+
+A plan or a store frequency can start each new subscription with a free trial of some days: in its
+admin form, "Introductory offer" is then "A free trial of N days", which an introductory price cannot
+go with. The initial order charges nothing for it, the subscription is activated once the gateway
+authorizes that order's payment of 0, right after it is placed, and its first charge is the renewal on
+the day the trial ends; the calendar follows the interval from there. Subscribing on 1 March to a monthly plan with 14 days free, the customer is first
+charged on 15 March, then on 15 April.
+
+- **The gateway keeps the card.** A cart whose only charge is a free trial costs nothing, yet it keeps
+  a payment of 0, goes through Sylius's payment step, and has that payment authorized through a payment
+  request with the `authorize` action, whatever the method does with other orders. Your gateway's
+  integration must answer it by keeping the card without charging it, as a Stripe SetupIntent or a card
+  verification does, so the renewals can be charged later without the customer, and then mark the
+  payment `authorized`. The plugin knows no gateway: list in `trial_payment_methods` the methods whose
+  integration does, and keep them in `payment_methods` too. The checkout refuses a cart with a free
+  trial paid with any other; with none listed, no cart is given a free trial.
+- **Activation.** The authorized payment of 0 activates the subscription. An order that has something
+  else to pay, its shipping or other lines, is paid as any order, and paying it activates it. The
+  initial order stays with its payment of 0 authorized: nothing is ever captured from it.
+- **Its own subscription.** The lines given a free trial start a subscription of their own, even next
+  to lines of the same interval that are paid at once, so each keeps one calendar. Each item freezes its
+  normal price, the variant's price less the subscriber discount.
+- **Once per customer and variant.** A customer who has, or had, a subscription with the variant, in
+  any state, pays from the first order. The rule is
+  `JpmMartin\SyliusSubscriptionPlugin\Trial\TrialEligibilityInterface`: point its alias at your own
+  service to tell customers apart another way, by their card or their address for instance. A visitor
+  sees the trial, and the cart checks it again once the customer signs in.
+- **What the customer sees.** The product page, under each plan, the cart line and "Repeat this cart"
+  say how many days are free and the price after: "14 days free, then $18.00".
+- **`TrialEnding`** is published with `RenewalUpcoming` when the renewal it announces is the first
+  charge after the trial, with what it will charge. If the customer skips that renewal, the next one is
+  announced as the first charge. With `renewal_notice_days: null` neither is published. See
+  [Events](#events).
 
 ## Missed dates
 
@@ -672,7 +713,8 @@ of that acceptance instead; the consent recorded on the initial order stays as t
   the order is completed.
 - `GET /api/v2/shop/subscription-frequencies` lists the frequencies the request's channel offers, with
   their code, name, `intervalCount`, `intervalUnit`, `discountPercentage`, and their introductory price:
-  `introductoryDiscountPercentage`, null without one, and `introductoryCycles`.
+  `introductoryDiscountPercentage`, null without one, and `introductoryCycles`, and their free trial in
+  `trialDays`, null without one.
 - `PATCH /api/v2/shop/orders/{tokenValue}/subscription-frequency` repeats the cart with one of them,
   `{"subscriptionFrequency": "MONTHLY"}`, or stops repeating it with `{"subscriptionFrequency": null}`
   (`Content-Type: application/merge-patch+json`). A frequency the channel does not offer is refused
@@ -715,6 +757,7 @@ subscription; listen to that interface to receive them all.
 | `SubscriptionPriceIncreaseAnnounced` | an administrator's price update announced an increase | `previousRenewalTotal`, `renewalTotal`, `appliesFrom`, `acceptanceRequired` |
 | `SubscriptionPriceChanged` | a price update applied a decrease, or an announced increase applied when its first renewal was processed | `previousRenewalTotal`, `renewalTotal` |
 | `RenewalUpcoming` | a renewal is `renewal_notice_days` away, once per cycle | `cycleId`, `cycleNumber`, `scheduledAt` |
+| `TrialEnding` | with `RenewalUpcoming`, when that renewal is the first charge of a subscription that started with a free trial | `cycleId`, `cycleNumber`, `scheduledAt`, `renewalTotal`, as for `IntroductoryPriceEnding` |
 | `IntroductoryPriceEnding` | with `RenewalUpcoming`, when that renewal is the first in which an item is charged its normal price after its introductory one | `cycleId`, `cycleNumber`, `scheduledAt`, `renewalTotal`: what that renewal charges for its items, before taxes, shipping and promotions, in minor units of the subscription's currency |
 | `RenewalHeld` | a gate holds the cycle | `cycleId`, `cycleNumber`, `holdUntil`, `reason` |
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
@@ -806,6 +849,13 @@ logged. Only a handler of yours that throws, run synchronously, stops it, as abo
 
 ## Upgrading
 
+From a version without free trials, `doctrine:migrations:migrate` adds the days of free trial of plans,
+store frequencies, order lines and subscriptions, with none set. `trial_payment_methods` is new, and
+empty: no free trial is given until you list the methods whose gateway keeps the card. Sylius's
+services that drop the payments of an order of 0, skip its payment step and choose a payment request's
+action are decorated, and only act otherwise on an order with a free trial. Going back down drops the
+free trial of the subscriptions still pending: activate them first.
+
 From a version without introductory prices, `doctrine:migrations:migrate` adds them to plans, store
 frequencies and items, with none set, and one introductory cycle on each plan and frequency for when
 one is. Going back down drops the introductory prices of the items still on theirs, which then renew
@@ -859,8 +909,8 @@ From a version with one subscription per order line:
 - Renewal orders are placed from code, and Sylius sends its order confirmation email only from the
   shop's checkout and the API's, so no confirmation is sent for them. Send your own from `RenewalPaid`;
   see [Events](#events).
-- An order that skips the payment step cannot start a subscription: the plugin needs the payment
-  method it will charge the renewals with.
+- An order that skips the payment step, one of 0 without a free trial, cannot start a subscription: the
+  plugin needs the payment method it will charge the renewals with.
 - With `missed_cycles: charge`, the dates a subscription missed while the command did not run are
   processed one per run, each with its own order and its own charge.
 - Changing the frequency is not offered while the open cycle's order is awaiting payment, because that
@@ -884,6 +934,9 @@ From a version with one subscription per order line:
   Sylius 2's own.
 - A change of items saved while the command places the open cycle's order may miss that order, which
   keeps the items it was placed with; the next renewal carries the change.
+- The shop API does not take free trials yet: it would ask the payment of 0 to be captured, not
+  authorized, so the gateway would not keep the card. Completing a cart with a free trial through it is
+  refused with a message; the cart itself shows the trial as the shop does.
 - An introductory price is offered to every new subscription, including one from a customer who
   cancelled another after its introductory cycles. To keep a first-order discount for first-time
   customers, use a Sylius promotion with the "Nth order" rule instead.

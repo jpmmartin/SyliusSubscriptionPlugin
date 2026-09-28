@@ -27,6 +27,8 @@ use Webmozart\Assert\Assert;
  *
  * A line on terms with an introductory price carries that price instead. Its item then freezes the
  * normal price, worked out as the cart does, and keeps the introductory one with the cycles it lasts.
+ * A line given a free trial costs nothing: its item freezes the normal price too, and the subscription,
+ * whose lines all had the same trial, keeps its days.
  */
 final class SubscriptionFactory implements SubscriptionFactoryInterface
 {
@@ -82,6 +84,11 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
                 $terms->getIntervalCount() === $subscription->getBillingIntervalCount() && $terms->getIntervalUnit() === $subscription->getBillingIntervalUnit(),
                 'The items of a subscription share its interval.',
             );
+            Assert::isInstanceOf($orderItem, SubscriptionPlanAwareInterface::class);
+            if ($subscription->getItems()->isEmpty()) {
+                $subscription->setTrialDays($orderItem->getSubscriptionTrialDays());
+            }
+            Assert::same($orderItem->getSubscriptionTrialDays(), $subscription->getTrialDays(), 'The items of a subscription share its free trial.');
             $subscription->addItem($item);
             $shippingRequired = $shippingRequired || true === $orderItem->getVariant()?->isShippingRequired();
         }
@@ -114,13 +121,16 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         Assert::isInstanceOf($item, SubscriptionItemInterface::class);
         $item->setProductVariant($variant);
         $item->setQuantity($orderItem->getQuantity());
-        if (null === $terms->getIntroductoryDiscountPercentage()) {
+        $hasTrial = null !== $orderItem->getSubscriptionTrialDays();
+        if (null === $terms->getIntroductoryDiscountPercentage() && !$hasTrial) {
             $item->setUnitPrice($orderItem->getUnitPrice());
         } else {
             Assert::notNull($channel);
             $price = $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]);
             $item->setUnitPrice(SubscriptionPlanPriceProcessor::applyDiscount($price, $terms->getDiscountPercentage()));
-            $item->setIntroductoryPrice($orderItem->getUnitPrice(), $terms->getIntroductoryCycles());
+            if (!$hasTrial) {
+                $item->setIntroductoryPrice($orderItem->getUnitPrice(), $terms->getIntroductoryCycles());
+            }
         }
         $item->setPlan($orderItem->getSubscriptionPlan());
         $item->setFrequency(null === $orderItem->getSubscriptionPlan() ? $orderItem->getSubscriptionFrequency() : null);

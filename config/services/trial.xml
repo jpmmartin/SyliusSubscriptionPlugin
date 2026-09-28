@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <service id="jpm_martin_sylius_subscription.trial.orders" class="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialOrders" />
+
+        <!-- Replace it, or point the interface alias elsewhere, to decide who may have a free trial another way. -->
+        <service id="jpm_martin_sylius_subscription.trial.eligibility" class="JpmMartin\SyliusSubscriptionPlugin\Trial\SubscriptionHistoryTrialEligibility">
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialEligibilityInterface" alias="jpm_martin_sylius_subscription.trial.eligibility" public="true" />
+
+        <service id="jpm_martin_sylius_subscription.trial.offer" class="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialOffer">
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialEligibilityInterface" />
+            <argument>%jpm_martin_sylius_subscription.trial_payment_methods%</argument>
+        </service>
+
+        <!-- An order of 0 whose only charge is a free trial keeps its payment of 0, goes through the
+             payment step, and has that payment authorized, so its gateway keeps the card. -->
+        <service id="jpm_martin_sylius_subscription.trial.order_payments_remover"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialOrderPaymentsRemover"
+                 decorates="sylius.remover.payment.order"
+        >
+            <argument type="service" id=".inner" />
+            <argument type="service" id="jpm_martin_sylius_subscription.trial.orders" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.trial.payment_method_selection_requirement_checker"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialPaymentMethodSelectionRequirementChecker"
+                 decorates="sylius.checker.order_payment_method_selection_requirement"
+        >
+            <argument type="service" id=".inner" />
+            <argument type="service" id="jpm_martin_sylius_subscription.trial.orders" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.trial.payment_action_provider"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Trial\TrialPaymentActionProvider"
+                 decorates="sylius.provider.payment_request.default_action"
+        >
+            <argument type="service" id=".inner" />
+            <argument type="service" id="jpm_martin_sylius_subscription.trial.orders" />
+        </service>
+    </services>
+</container>

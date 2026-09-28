@@ -7,9 +7,11 @@ namespace JpmMartin\SyliusSubscriptionPlugin\CommandHandler;
 use JpmMartin\SyliusSubscriptionPlugin\Command\NotifyUpcomingRenewal;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher;
 use JpmMartin\SyliusSubscriptionPlugin\Event\IntroductoryPriceEnding;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalUpcoming;
+use JpmMartin\SyliusSubscriptionPlugin\Event\TrialEnding;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
 use Psr\Clock\ClockInterface;
 
@@ -17,7 +19,7 @@ use Psr\Clock\ClockInterface;
  * Announces a renewal once: the cycle keeps when it was announced, stored with its version checked, and the
  * event is delivered once that is stored. A cycle that changed since it was read, or that no longer should
  * be announced, is left alone. When the renewal is the first in which an item leaves its introductory
- * price, that is announced too, with what the renewal will charge.
+ * price, or the first charge after a free trial, that is announced too, with what the renewal will charge.
  */
 final class NotifyUpcomingRenewalHandler
 {
@@ -59,6 +61,17 @@ final class NotifyUpcomingRenewalHandler
         if (self::endsAnIntroductoryPrice($subscription)) {
             $this->eventPublisher->publish(new IntroductoryPriceEnding($subscriptionId, $cycleId, $cycle->getNumber(), $scheduledAt, self::renewalTotal($subscription, $scheduledAt)));
         }
+        if (self::isTheFirstChargeAfterATrial($subscription)) {
+            $this->eventPublisher->publish(new TrialEnding($subscriptionId, $cycleId, $cycle->getNumber(), $scheduledAt, self::renewalTotal($subscription, $scheduledAt)));
+        }
+    }
+
+    /** Whether it started with a free trial and no renewal was charged since: a skipped or failed one leaves the next as the first. */
+    private static function isTheFirstChargeAfterATrial(SubscriptionInterface $subscription): bool
+    {
+        return null !== $subscription->getTrialDays() && !$subscription->getItems()->exists(
+            static fn (int|string $key, SubscriptionItemInterface $item): bool => $item->getPaidCycles() > 1,
+        );
     }
 
     /**

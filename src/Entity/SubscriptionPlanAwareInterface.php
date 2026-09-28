@@ -25,4 +25,12 @@ interface SubscriptionPlanAwareInterface
 
     /** Its plan, or else its frequency; none for a one-off purchase. */
     public function getSubscriptionTerms(): ?SubscriptionTermsInterface;
+
+    /**
+     * The days of free trial the cart gave it, which is why it costs nothing; null when it got none,
+     * because its terms have none or its customer already had one of its variant.
+     */
+    public function getSubscriptionTrialDays(): ?int;
+
+    public function setSubscriptionTrialDays(?int $subscriptionTrialDays): void;
 }

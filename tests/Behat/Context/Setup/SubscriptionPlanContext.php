@@ -52,6 +52,14 @@ final class SubscriptionPlanContext implements Context
         $this->subscriptionPlanRepository->add($plan);
     }
 
+    #[Given('/^the "([^"]+)" subscription plan has a free trial of (\d+) days$/')]
+    public function theSubscriptionPlanHasAFreeTrial(string $code, string $days): void
+    {
+        $plan = $this->plan($code);
+        $plan->setTrialDays((int) $days);
+        $this->subscriptionPlanRepository->add($plan);
+    }
+
     #[Given('/^the "([^"]+)" subscription plan is disabled$/')]
     public function theSubscriptionPlanIsDisabled(string $code): void
     {

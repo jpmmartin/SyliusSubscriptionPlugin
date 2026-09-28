@@ -5,6 +5,8 @@ jpm_martin_sylius_subscription:
         account_required: Las suscripciones necesitan una cuenta. Inicia sesión o crea una cuenta para realizar este pedido.
         payment_method_not_supported: 'El método de pago "%payment_method%" no admite suscripciones. Elige otro.'
         consent_required: Acepta los cobros recurrentes de tus suscripciones para realizar este pedido.
+        trial_payment_method_required: 'Una prueba gratis necesita un método de pago que guarde tu tarjeta sin cobrarla, y "%payment_method%" no puede. Elige otro.'
+        trial_not_through_the_api: Todavía no se puede empezar una prueba gratis a través de la API. Realiza este pedido en la tienda.
     subscription_plan:
         code:
             unique: Ya existe un plan de suscripción con este código.
@@ -23,6 +25,10 @@ jpm_martin_sylius_subscription:
             not_blank: Introduce el descuento de entrada.
         introductory_cycles:
             positive: El precio de entrada debe durar al menos 1 ciclo.
+        trial_days:
+            positive: Una prueba gratis debe durar al menos 1 día.
+            not_with_introductory_price: Una prueba gratis no se puede combinar con un precio de entrada.
+            not_blank: Introduce los días de la prueba gratis.
     subscription_frequency:
         code:
             unique: Ya existe una frecuencia de suscripción con este código.
@@ -40,6 +46,9 @@ jpm_martin_sylius_subscription:
             range: El descuento de entrada debe estar entre 0 y 100.
         introductory_cycles:
             positive: El precio de entrada debe durar al menos 1 ciclo.
+        trial_days:
+            positive: Una prueba gratis debe durar al menos 1 día.
+            not_with_introductory_price: Una prueba gratis no se puede combinar con un precio de entrada.
         channels:
             min: Elige al menos un canal.
     subscription_item:

@@ -266,6 +266,7 @@ default:
                 - jpm_martin_sylius_subscription.behat.context.setup.subscription_frequency
                 - jpm_martin_sylius_subscription.behat.context.ui.shop.subscription_checkout
                 - jpm_martin_sylius_subscription.behat.context.domain.subscription_consent
+                - jpm_martin_sylius_subscription.behat.context.domain.free_trial
 
             filters:
                 tags: "@subscription_checkout&&@ui"

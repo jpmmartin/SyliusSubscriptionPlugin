@@ -54,6 +54,17 @@ final class SubscriptionFrequencyValidationTest extends LifecycleTestCase
         self::assertSame([], $this->violationsOf($frequency));
     }
 
+    public function testItsFreeTrialLastsOneDayAtLeastAndIsNeverCombinedWithAnIntroductoryPrice(): void
+    {
+        $frequency = $this->frequency('MONTHLY');
+        $frequency->setTrialDays(0);
+        self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_frequency.trial_days.positive'], $this->violationsOf($frequency));
+
+        $frequency->setTrialDays(7);
+        $frequency->setIntroductoryDiscountPercentage(20);
+        self::assertSame(['trialDays' => 'jpm_martin_sylius_subscription.subscription_frequency.trial_days.not_with_introductory_price'], $this->violationsOf($frequency));
+    }
+
     public function testItIsOfferedInOneChannelAtLeast(): void
     {
         $frequency = $this->frequency('MONTHLY');

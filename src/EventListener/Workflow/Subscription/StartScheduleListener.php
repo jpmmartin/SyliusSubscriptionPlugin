@@ -16,7 +16,8 @@ use Webmozart\Assert\Assert;
 
 /**
  * Activation anchors the calendar at the clock's now. The initial order is cycle 1, already paid with
- * every item in it, and the next cycle is scheduled from there.
+ * every item in it, and the next cycle is scheduled from there. After a free trial, cycle 1 charged
+ * nothing and cycle 2 is anchored on the day the trial ends.
  */
 final class StartScheduleListener
 {
@@ -38,9 +39,10 @@ final class StartScheduleListener
         Assert::isInstanceOf($subscription, SubscriptionInterface::class);
 
         $now = $this->clock->now();
+        $trialDays = $subscription->getTrialDays();
         $subscription->setActivatedAt($now);
-        $subscription->setScheduleAnchorAt($now);
-        $subscription->setScheduleAnchorCycle(1);
+        $subscription->setScheduleAnchorAt(null === $trialDays ? $now : $now->add(new \DateInterval(\sprintf('P%dD', $trialDays))));
+        $subscription->setScheduleAnchorCycle(null === $trialDays ? 1 : 2);
         $subscription->setConsecutiveFailedCycles(0);
 
         $first = $this->cycleFactory->createNew();
@@ -60,7 +62,7 @@ final class StartScheduleListener
             $cycleItem->setSubscriptionItem($item);
             $cycleItem->setQuantity($item->getQuantity());
             // Before the cycle counts as paid, so an introductory price is the one of the initial order.
-            $cycleItem->setUnitPrice($item->getUnitPriceForCycle());
+            $cycleItem->setUnitPrice(null === $trialDays ? $item->getUnitPriceForCycle() : 0);
             $first->addItem($cycleItem);
 
             $item->setPaidCycles($item->getPaidCycles() + 1);
