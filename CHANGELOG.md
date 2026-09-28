@@ -8,8 +8,9 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 ## [Unreleased]
 
-The first release. Nothing is tagged yet; this section becomes `## [1.0.0] - YYYY-MM-DD` when it
-is, and a new empty `## [Unreleased]` takes its place.
+## [1.0.0] - 2026-09-28
+
+The first release.
 
 For Sylius 2.2 on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4, on MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4,
 or PostgreSQL 15 to 17.
@@ -77,4 +78,5 @@ Stated here as well as in the README, because they decide whether this release f
 - **Changing the frequency is limited**: not while the open cycle's order awaits payment, and only to
   intervals every item can move to.
 
-[Unreleased]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/commits/main
+[Unreleased]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/compare/v1.0.0...main
+[1.0.0]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/releases/tag/v1.0.0
