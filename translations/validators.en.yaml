@@ -77,3 +77,20 @@ jpm_martin_sylius_subscription:
         subscription_plan:
             not_blank: Please choose a subscription plan.
             not_offered: This subscription plan is not offered for this product variant.
+    shop_api:
+        cancel_not_allowed: This subscription cannot be cancelled now.
+        pause_not_allowed: This subscription cannot be paused now.
+        resume_not_allowed: This subscription cannot be resumed now.
+        skip_renewal_not_allowed: The next renewal of this subscription cannot be skipped now.
+        change_frequency_not_allowed: The frequency of this subscription cannot be changed now.
+        change_address_not_allowed: The address of this subscription cannot be changed now.
+        change_items_not_allowed: The items of this subscription cannot be changed now.
+        add_item_not_allowed: No product can be added to this subscription now.
+        accept_price_increase_not_allowed: No price increase of this subscription awaits your acceptance.
+        frequency_not_offered: This frequency is not offered for this subscription.
+        shipping_method_not_offered: No shipping method, or not the one chosen, reaches this address.
+        item_not_changeable: This item of the subscription cannot be changed.
+        item_not_offered: These changes are not offered for this subscription.
+        item_not_removable: This item cannot be removed from the subscription.
+        quantity_out_of_range: The quantity must be a whole number between 1 and %max%.
+        consent_required: 'These changes raise what each renewal costs: accept the recurring charges of version %version% to save them.'

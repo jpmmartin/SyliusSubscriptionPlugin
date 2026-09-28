@@ -5,6 +5,108 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
 >
     <services>
+        <!-- The signed-in customer's subscriptions, and what their account would offer on each. -->
+        <service id="jpm_martin_sylius_subscription.api.logged_in_customer" class="JpmMartin\SyliusSubscriptionPlugin\Api\LoggedInCustomer">
+            <argument type="service" id="Sylius\Bundle\ApiBundle\Context\UserContextInterface" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.api.shop_subscription_actions" class="JpmMartin\SyliusSubscriptionPlugin\Api\ShopSubscriptionActions">
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.renewal_skipper" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.address_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="jpm_martin_sylius_subscription.payment.renewal_payment_link_generator" />
+            <argument type="service" id="jpm_martin_sylius_subscription.payment.card_update_provider_registry" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                 class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionProvider"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.logged_in_customer" />
+            <tag name="api_platform.state_provider" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.serializer.normalizer.shop_subscription"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Serializer\ShopSubscriptionNormalizer"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.shop_subscription_actions" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.order.renewal_addresses_resolver" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.prepaid_deliveries" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
+            <argument type="service" id="translator" />
+            <argument>%jpm_martin_sylius_subscription.consent_version%</argument>
+            <tag name="serializer.normalizer" priority="64" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.command_handler.shop.subscription_actions"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\Shop\ShopSubscriptionActionsHandler"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.logged_in_customer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.shop_subscription_actions" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.renewal_skipper" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.frequency_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.address_changer" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.item_editor" />
+            <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
+            <argument type="service" id="sylius.factory.address" />
+            <argument type="service" id="sylius.repository.shipping_method" />
+            <argument type="service" id="validator" />
+            <argument type="service" id="translator" />
+            <argument type="service" id="sylius.context.locale" />
+            <argument>%jpm_martin_sylius_subscription.consent_version%</argument>
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\CancelSubscription" method="cancel" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\PauseSubscription" method="pause" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ResumeSubscription" method="resume" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\SkipNextSubscriptionRenewal" method="skipNextRenewal" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionFrequency" method="changeFrequency" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionAddress" method="changeAddress" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionItems" method="changeItems" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\AddItemToSubscription" method="addItem" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" handles="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\AcceptSubscriptionPriceIncrease" method="acceptPriceIncrease" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription_renewal_payment_link"
+                 class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.state_provider.shop.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.shop_subscription_actions" />
+            <argument type="constant">JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider::RENEWAL_PAYMENT</argument>
+            <tag name="api_platform.state_provider" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription_recovery_link"
+                 class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.state_provider.shop.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.shop_subscription_actions" />
+            <argument type="constant">JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider::RECOVERY</argument>
+            <tag name="api_platform.state_provider" />
+        </service>
+        <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription_card_update_link"
+                 class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.state_provider.shop.subscription" />
+            <argument type="service" id="jpm_martin_sylius_subscription.api.shop_subscription_actions" />
+            <argument type="constant">JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionLinkProvider::CARD_UPDATE</argument>
+            <tag name="api_platform.state_provider" />
+        </service>
+
+        <!-- A shop API command about one of the customer's subscriptions gets the id of its URI. -->
+        <service id="jpm_martin_sylius_subscription.api.context_builder.subscription_id_aware"
+                 class="Sylius\Bundle\ApiBundle\Serializer\ContextBuilder\UriVariablesAwareContextBuilder"
+                 decorates="api_platform.serializer.context_builder"
+                 decoration-priority="64"
+        >
+            <argument type="service" id=".inner" />
+            <argument>JpmMartin\SyliusSubscriptionPlugin\Api\SubscriptionIdAware</argument>
+            <argument type="constant">JpmMartin\SyliusSubscriptionPlugin\Api\SubscriptionIdAware::DEFAULT_ARGUMENT_NAME</argument>
+            <argument>JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface</argument>
+        </service>
+
         <service id="jpm_martin_sylius_subscription.state_provider.shop.subscription_frequency_collection"
                  class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionFrequencyCollectionProvider"
         >

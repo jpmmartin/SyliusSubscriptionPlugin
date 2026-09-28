@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+    The signed-in customer's subscriptions, as their account shows and manages them. Every operation
+    finds the subscription among the customer's own, so another customer's answers 404, and runs as a
+    request of the customer's, which the minimum commitment is kept for.
+-->
+<resources
+    xmlns="https://api-platform.com/schema/metadata/resources-3.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://api-platform.com/schema/metadata/resources-3.0 https://api-platform.com/schema/metadata/resources-3.0.xsd"
+>
+    <resource class="%jpm_martin_sylius_subscription.model.subscription.class%" shortName="Subscription">
+        <defaults>
+            <values>
+                <value name="_subscription_actor">customer</value>
+            </values>
+        </defaults>
+
+        <operations>
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_get_collection"
+                class="ApiPlatform\Metadata\GetCollection"
+                uriTemplate="/shop/subscriptions"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                paginationEnabled="false"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:index</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_get"
+                class="ApiPlatform\Metadata\Get"
+                uriTemplate="/shop/subscriptions/{id}"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_cancel_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/cancel"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\CancelSubscription"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_pause_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/pause"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\PauseSubscription"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_resume_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/resume"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ResumeSubscription"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_skip_renewal_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/skip-renewal"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\SkipNextSubscriptionRenewal"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_frequency_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/frequency"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionFrequency"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_address_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/address"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionAddress"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_items_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/items"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\ChangeSubscriptionItems"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_add_item_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/add-item"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\AddItemToSubscription"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_accept_price_increase_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/subscriptions/{id}/accept-price-increase"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription"
+                security="is_granted('ROLE_USER')"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\Shop\AcceptSubscriptionPriceIncrease"
+            >
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:update</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <!-- {"url": "..."}, or 404 when the account would show no such link. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_renewal_payment_link_get"
+                class="ApiPlatform\Metadata\Get"
+                uriTemplate="/shop/subscriptions/{id}/renewal-payment-link"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription_renewal_payment_link"
+                security="is_granted('ROLE_USER')"
+                output="JpmMartin\SyliusSubscriptionPlugin\Api\ShopSubscriptionLink"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:link</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <!-- {"url": "..."}, or 404 when the account would show no such link. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_recovery_link_get"
+                class="ApiPlatform\Metadata\Get"
+                uriTemplate="/shop/subscriptions/{id}/recovery-link"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription_recovery_link"
+                security="is_granted('ROLE_USER')"
+                output="JpmMartin\SyliusSubscriptionPlugin\Api\ShopSubscriptionLink"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:link</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+
+            <!-- {"url": "..."}, or 404 when the account would show no such link. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_subscription_card_update_link_get"
+                class="ApiPlatform\Metadata\Get"
+                uriTemplate="/shop/subscriptions/{id}/card-update-link"
+                provider="jpm_martin_sylius_subscription.state_provider.shop.subscription_card_update_link"
+                security="is_granted('ROLE_USER')"
+                output="JpmMartin\SyliusSubscriptionPlugin\Api\ShopSubscriptionLink"
+            >
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:subscription:link</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
+        </operations>
+    </resource>
+</resources>

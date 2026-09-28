@@ -800,6 +800,50 @@ of that acceptance instead; the consent recorded on the initial order stays as t
   tells the code of its plan and of its frequency, or null:
   `"subscriptionPlan": "COFFEE_MONTHLY", "subscriptionFrequency": null`.
 
+### The customer's subscriptions
+
+The signed-in customer (the shop API's token, `POST /api/v2/shop/customers/token`) sees and manages their
+own subscriptions as their account does, with the same rules and the same services. A request without
+a token answers 401, and another customer's subscription 404.
+
+- `GET /api/v2/shop/subscriptions` lists them: `id`, `state`, `intervalCount` and `intervalUnit` of its
+  deliveries, `deliveriesPerCharge`, `renewalTotal` and `chargeTotal` in minor units of `currencyCode`,
+  `nextRenewalAt`, and `items` (`id`, `product`, `productVariant`, `quantity`, `unitPrice`, a pending or
+  introductory price, its plan or frequency, `removed`, `renewable`).
+- `GET /api/v2/shop/subscriptions/{id}` adds `cycles` (`number`, `scheduledAt`, `state`, `charging`, the
+  `orderNumber` of its order, `paidByCustomer`, and the `skippedItems` its order left out with their
+  `reason`), the addresses and methods it renews with, the `frequencies` it can change to, what is
+  pending (a price increase to accept, the cycles left of a minimum commitment or of an item's
+  introductory price, the deliveries paid for ahead and the date of the last of them), why a suspended
+  subscription cannot be recovered (`notRecoverableReason`, `nothing_to_renew` when nothing of it is sold
+  any more), the current `consent` (`version` and `text`), and `actions`: the names of what the account
+  would offer now, among `cancel`, `pause`, `resume`, `skip_renewal`, `change_frequency`, `change_address`,
+  `change_items`, `add_item`, `accept_price_increase`, `pay_renewal`, `recover` and `update_card`.
+- Each action is a `PATCH` (`Content-Type: application/merge-patch+json`) that answers the subscription
+  as its `GET` does:
+
+  | Path under `/api/v2/shop/subscriptions/{id}` | Body |
+  |---|---|
+  | `/cancel`, `/pause`, `/resume`, `/skip-renewal` | `{}` |
+  | `/frequency` | `{"intervalCount": 3, "intervalUnit": "month"}`, one of its `frequencies` |
+  | `/address` | `{"shippingAddress": {"firstName": ..., "lastName": ..., "street": ..., "city": ..., "postcode": ..., "countryCode": "US"}, "billingAddress": {...}, "shippingMethod": "DHL"}`; the billing address and the method are optional |
+  | `/items` | `{"items": [{"id": 12, "quantity": 2}, {"id": 13, "productVariant": "COFFEE_L"}, {"id": 14, "removed": true}], "acceptedConsentVersion": "1"}` |
+  | `/add-item` | `{"productVariant": "TEA", "quantity": 1, "acceptedConsentVersion": "1"}` |
+  | `/accept-price-increase` | `{"resume": true}` to resume a subscription paused for it |
+
+  An action the account would not offer now answers 422 with a violation saying why ("The next renewal
+  of this subscription cannot be skipped now."), and changes nothing: within a minimum commitment, for
+  one, it can be neither cancelled nor paused. With deliveries paid for ahead, `/cancel` keeps it active
+  until the last of them, and then cancels it. A quantity is a whole number from 1 to the highest a cart
+  line allows, and an address field is text; a number is taken as its text, so a postcode may be sent
+  as one. A change of items that raises what each renewal costs needs `acceptedConsentVersion`, the
+  version of the `consent` the detail gives to show: without it, it answers 422 and saves nothing. Each action is a command of `sylius.command_bus`, so its events are
+  delivered once its change is stored.
+- `GET /api/v2/shop/subscriptions/{id}/renewal-payment-link`, `/recovery-link` and `/card-update-link`
+  answer `{"url": "..."}`: the absolute address of the order payment page of a renewal whose charge was
+  declined, where the customer recovers a subscription suspended for unpaid renewals, or where their
+  gateway changes their card. With no such link, as when the account shows none, they answer 404.
+
 ## Committed cycles
 
 `JpmMartin\SyliusSubscriptionPlugin\Query\CommittedCyclesQueryInterface::forProductVariant($variant, new \DateInterval('P3M'))`
@@ -904,7 +948,8 @@ When they are delivered:
   activating it, may be handled while that request runs, before its changes are stored. It waits for
   them only when the action is itself a message of one of Sylius's command buses, which commit before
   delivering: skipping a renewal is one, so `RenewalSkipped` is delivered once the skip is stored, and
-  not at all if the cycles command changed the cycle meanwhile.
+  not at all if the cycles command changed the cycle meanwhile. So is every action of the shop API on a
+  customer's subscription.
 - A handler run synchronously that throws:
   - in the command, makes it report the cycle as failed although the cycle was stored. Running the
     command again does not charge it twice, since the cycle changed, but the report misleads;
