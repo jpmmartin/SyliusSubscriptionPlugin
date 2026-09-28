@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Pulls the shell commands out of the README's installation section, in the order a reader meets
+ * them, one per line, for .github/workflows/install.yaml to run.
+ *
+ * Extracted rather than copied into the workflow: a job carrying its own copy of the commands proves
+ * that the plugin installs, not that the README is right. Somebody changes a step, updates the
+ * workflow, forgets the README, and the job stays green. Extracted, what runs is what is published.
+ *
+ * The README's steps are a numbered list, so their fences are indented: a block is recognised by its
+ * fence whatever the indentation, and its lines are taken without it. Only bash, sh and shell blocks
+ * run; lines beginning with # are prose for the reader and are dropped. The file edits of the other
+ * blocks are bin/apply-readme-edits's.
+ *
+ * Usage:
+ *   bin/extract-readme-commands [--readme=README.md] [--until="## Configuration reference"]
+ */
+
+$options = getopt('', ['readme::', 'until::']);
+$readmePath = $options['readme'] ?? 'README.md';
+$until = $options['until'] ?? null;
+
+if (!is_string($readmePath) || !is_readable($readmePath)) {
+    fwrite(\STDERR, sprintf("Cannot read %s\n", (string) $readmePath));
+
+    exit(1);
+}
+
+$lines = explode("\n", (string) file_get_contents($readmePath));
+$from = array_search('## Installation', array_map('rtrim', $lines), true);
+if (false === $from) {
+    fwrite(\STDERR, "The README has no \"## Installation\" heading.\n");
+
+    exit(1);
+}
+
+const RUNNABLE = ['bash', 'sh', 'shell'];
+
+$commands = [];
+$fence = null;
+$language = '';
+$buffer = [];
+
+foreach (array_slice($lines, (int) $from) as $line) {
+    if (null === $fence && is_string($until) && str_starts_with($line, $until)) {
+        break;
+    }
+
+    if (null === $fence && 1 === preg_match('/^(\s*)```(\w*)\s*$/', $line, $matches)) {
+        $fence = $matches[1];
+        $language = strtolower($matches[2]);
+        $buffer = [];
+
+        continue;
+    }
+
+    if (null !== $fence && '```' === trim($line)) {
+        $fence = null;
+        if (!in_array($language, RUNNABLE, true)) {
+            continue;
+        }
+
+        foreach ($buffer as $command) {
+            $command = trim($command);
+            if ('' !== $command && !str_starts_with($command, '#')) {
+                $commands[] = $command;
+            }
+        }
+
+        continue;
+    }
+
+    if (null !== $fence) {
+        $buffer[] = str_starts_with($line, $fence) ? substr($line, strlen($fence)) : ltrim($line);
+    }
+}
+
+if ([] === $commands) {
+    fwrite(\STDERR, "No runnable commands found. Either the README changed shape or the fences lost their language.\n");
+
+    exit(1);
+}
+
+fwrite(\STDOUT, implode("\n", $commands) . "\n");

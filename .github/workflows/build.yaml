@@ -1,22 +1,11 @@
-# Checks every push and pull request on each database Sylius tests its plugins against, and on the
-# oldest and newest PHP and Symfony the plugin supports. The test application is built by Sylius's
-# own action, as in Sylius's PluginSkeleton, with headless Chrome for the JavaScript scenarios.
 name: Build
 
 on:
     push:
-        branches-ignore:
-            - 'dependabot/**'
-        paths-ignore:
-            - "*.md"
+        branches: [main]
+        paths-ignore: ["**.md"]
     pull_request:
-        paths-ignore:
-            - "*.md"
-    release:
-        types: [created]
-    schedule:
-        -
-            cron: "0 1 * * 6" # Saturdays at 1am, to catch breakage from new releases of the dependencies
+        paths-ignore: ["**.md"]
     workflow_dispatch: ~
 
 concurrency:
@@ -24,199 +13,172 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    static:
-        runs-on: ubuntu-24.04
-
-        name: "Static analysis"
-
-        steps:
-            -
-                uses: actions/checkout@v7
-
-            -
-                name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: "8.3"
-                    extensions: "intl, gd"
-                    coverage: none
-
-            -
-                name: Validate composer.json
-                run: composer validate --ansi --strict
-
-            -
-                name: Install PHP dependencies
-                run: composer install --no-interaction --no-progress
-                env:
-                    COMPOSER_ROOT_VERSION: dev-main
-
-            -
-                name: Check coding standard
-                run: vendor/bin/ecs check
-
-            -
-                name: Run PHPStan
-                run: vendor/bin/phpstan analyse --no-progress
-
     tests:
         runs-on: ubuntu-24.04
 
-        name: "PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }}, ${{ matrix.database }}"
+        name: "PHP ${{ matrix.php }}"
 
         strategy:
             fail-fast: false
             matrix:
-                php: ["8.3"]
-                symfony: ["^7.4"]
-                sylius: ["~2.2.0"]
-                database: ["mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:11.4", "postgres:15", "postgres:16", "postgres:17"]
-                node: ["22.x"]
-
-                # Every other PHP the plugin supports, on one database so that a failure there is PHP's:
-                # the oldest with the oldest Symfony, then 8.4 and the newest with Symfony 7.4. None can
-                # merge into a combination above, so each adds a run of its own.
-                include:
-                    -
-                        php: "8.2"
-                        symfony: "^6.4"
-                        sylius: "~2.2.0"
-                        database: "postgres:17"
-                        node: "22.x"
-                    -
-                        php: "8.4"
-                        symfony: "^7.4"
-                        sylius: "~2.2.0"
-                        database: "postgres:17"
-                        node: "22.x"
-                    -
-                        php: "8.5"
-                        symfony: "^7.4"
-                        sylius: "~2.2.0"
-                        database: "postgres:17"
-                        node: "22.x"
+                # The oldest PHP the plugin supports and a current one.
+                php: ["8.2", "8.4"]
 
         env:
             APP_ENV: test
+            # Overrides the value committed in tests/TestApplication/.env.test, which points at a
+            # developer's own MySQL. A real environment variable wins over a dotenv file.
+            DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/subscription_plugin_test?serverVersion=16&charset=utf8"
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_PASSWORD: postgres
+                ports: ["5432:5432"]
+                options: >-
+                    --health-cmd "pg_isready -U postgres"
+                    --health-interval 5s
+                    --health-timeout 3s
+                    --health-retries 10
 
         steps:
-            -
-                uses: actions/checkout@v7
+            - uses: actions/checkout@v5
 
-            -
-                name: Build Sylius Test Application
-                uses: SyliusLabs/BuildTestAppAction@v4
-                with:
-                    e2e_js: "yes"
-                    cache_key: "${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('**/composer.json') }}"
-                    cache_restore_key: "${{ runner.os }}-php-${{ matrix.php }}-symfony-${{ matrix.symfony }}-composer-"
-                    database: "${{ matrix.database }}"
-                    node_version: "${{ matrix.node }}"
-                    php_version: "${{ matrix.php }}"
-                    sylius_version: "${{ matrix.sylius }}"
-                    symfony_version: "${{ matrix.symfony }}"
+            - name: Set up PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "${{ matrix.php }}"
+                  extensions: intl, gd, opcache, pdo_pgsql, pgsql
+                  tools: composer:v2
+                  coverage: none
 
-            -
-                name: Validate container
-                run: vendor/bin/console lint:container
+            - name: Set up Node
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "22.x"
 
-            # On the database the action has just migrated, before any test leaves subscriptions in it.
-            -
-                name: Take the plugin's migrations down and up again
-                run: composer migrations-roundtrip
+            - name: Enable Yarn
+              run: corepack enable
 
-            # The action gives MariaDB a serverVersion without "mariadb", so Doctrine takes it for MySQL,
-            # which the migrations above have just been run as. A store names MariaDB, as Doctrine asks,
-            # and the tests run the way such a store does.
-            -
-                name: Name MariaDB in the database URL
-                if: startsWith(matrix.database, 'mariadb:')
-                run: echo "DATABASE_URL=mysql://sylius:sylius@127.0.0.1/sylius?serverVersion=mariadb-${MATRIX_DATABASE#mariadb:}.0" >> "$GITHUB_ENV"
+            - name: Cache Composer
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cache/composer/files
+                  key: "${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}"
+                  restore-keys: "${{ runner.os }}-php-${{ matrix.php }}-composer-"
+
+            - name: Install dependencies
+              run: composer install --no-interaction --no-progress --prefer-dist
+
+            # Strict, and without --no-check-publish: this package is published, so the checks
+            # that only matter for publishing are exactly the ones that matter.
+            - name: Validate composer.json
+              run: composer validate --ansi --strict
+
+            - name: Check for known vulnerabilities
+              run: composer audit --abandoned=ignore
+
+            - name: Prepare the database
+              run: |
+                  vendor/bin/console doctrine:database:create --if-not-exists
+                  vendor/bin/console doctrine:migrations:migrate --no-interaction
+
+            # Without this no page renders: Sylius's layouts ask Encore for entries that only exist
+            # once the test application has been built.
+            - name: Build the front end
+              run: composer frontend-clear
+
+            - name: Run ECS
+              run: vendor/bin/ecs check --no-progress-bar
+
+            - name: Lint the container
+              run: vendor/bin/console lint:container
+
+            - name: Run PHPStan
+              run: vendor/bin/phpstan analyse --no-progress
+
+            - name: Run PHPUnit
+              run: vendor/bin/phpunit --colors=always
+
+            - name: Run Behat
+              run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="~@javascript&&~@mink:chromedriver"
+
+            - name: Upload Behat logs
+              uses: actions/upload-artifact@v7
+              if: failure()
+              with:
+                  name: "behat-logs-php${{ matrix.php }}"
+                  path: etc/build/
+                  if-no-files-found: ignore
+
+    # The schema on the other engine Sylius supports. The jobs above build their database with the
+    # plugin's migrations on PostgreSQL and run the whole suite; this one builds it on MySQL, takes
+    # the plugin's migrations down and up again, and runs the tests that compare the tables the
+    # migrations built with the ones the mapping describes. One set of migrations serves every
+    # engine — Doctrine derives each engine's statements when it runs — and this job is what proves
+    # it.
+    schema-on-mysql:
+        runs-on: ubuntu-24.04
+
+        name: "Migrations on MySQL"
+
+        env:
+            APP_ENV: test
+            DATABASE_URL: "mysql://root:root@127.0.0.1:3306/subscription_plugin_test?serverVersion=8.4&charset=utf8mb4"
+
+        services:
+            mysql:
+                image: mysql:8.4
                 env:
-                    MATRIX_DATABASE: ${{ matrix.database }}
+                    MYSQL_ROOT_PASSWORD: root
+                ports: ["3306:3306"]
+                options: >-
+                    --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot"
+                    --health-interval 5s
+                    --health-timeout 3s
+                    --health-retries 20
 
-            -
-                name: Run PHPUnit
-                run: vendor/bin/phpunit --colors=always
+        steps:
+            - uses: actions/checkout@v5
 
-            -
-                name: Run Behat without JavaScript
-                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags="~@javascript&&~@mink:chromedriver"
+            - name: Set up PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.4"
+                  extensions: intl, gd, opcache, pdo_mysql
+                  tools: composer:v2
+                  coverage: none
 
-            # A browser scenario that fails is run once more, as Sylius's PluginSkeleton does. If it then
-            # passes, the job stays green but the run carries a warning for each scenario that failed,
-            # with its title and at its line; if it fails again, the job fails. A scenario broken by a
-            # hook, which Behat lists without its title, gets a warning pointing to the log instead.
-            # GitHub shows ten warnings a step, so past ten the last one names the rest.
-            -
-                name: Run Behat with JavaScript
-                run: |
-                    set -o pipefail
-                    mkdir -p etc/build
-                    behat() { vendor/bin/behat --colors --strict --no-interaction -f progress --tags="@javascript,@mink:chromedriver" "$@"; }
-                    if behat | tee etc/build/behat-javascript.log; then
-                        exit 0
-                    fi
-                    log=$(sed 's/\x1b\[[0-9;]*m//g' etc/build/behat-javascript.log)
-                    # Each failed step in Behat's summary is headed "001 Scenario: <title> # <file>:<line>";
-                    # the line of the step follows it, indented, and is left out.
-                    mapfile -t failed < <(sed -nE 's/^[0-9]{3,} (.*[^ ]) +# ([^ ]+\.feature:[0-9]+)$/\2 \1/p' <<< "$log" | awk '!seen[$1]++')
-                    behat --rerun
-                    # A failed hook is listed on its own, under "Failed hooks", without its scenario's title.
-                    limit=10
-                    if [ ${#failed[@]} -eq 0 ] || grep -q '^--- Failed hooks:' <<< "$log"; then
-                        echo "::warning title=Browser scenarios passed only on a second try::See the log of the step Run Behat with JavaScript."
-                        limit=9
-                    fi
-                    # Escaped as GitHub's own toolkit does: "%" in a message, and ":" and "," too in a property.
-                    rest=()
-                    for i in "${!failed[@]}"; do
-                        location=${failed[$i]%% *}
-                        name=${failed[$i]#* }
-                        name=${name//%/%25}
-                        if [ ${#failed[@]} -gt "$limit" ] && [ "$i" -ge $((limit - 1)) ]; then
-                            rest+=("$name (${location//%/%25})")
-                            continue
-                        fi
-                        file=${location%:*}
-                        file=${file//%/%25}
-                        file=${file//:/%3A}
-                        file=${file//,/%2C}
-                        echo "::warning file=$file,line=${location##*:},title=Browser scenario passed only on a second try::$name"
-                    done
-                    if [ ${#rest[@]} -gt 0 ]; then
-                        echo "::warning title=Browser scenarios passed only on a second try::$(printf '%s; ' "${rest[@]}" | sed 's/; $//')"
-                    fi
+            - name: Cache Composer
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cache/composer/files
+                  key: "${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.json') }}"
+                  restore-keys: "${{ runner.os }}-php-8.4-composer-"
 
-            # What made a page answer 500 is only in the application's log: print it here, and keep the
-            # log with Behat's pages and screenshots.
-            -
-                name: Show the application's errors
-                if: failure()
-                run: |
-                    mkdir -p etc/build
-                    cp var/log/test.log etc/build/ 2>/dev/null || true
-                    grep -h "CRITICAL" var/log/test.log || echo "No critical error in var/log/test.log."
+            - name: Install dependencies
+              run: composer install --no-interaction --no-progress --prefer-dist
 
-            # An artifact's name may not contain ":", which the database does, nor "^", which the
-            # Symfony version does.
-            -
-                name: Name the Behat logs
-                id: behat-logs
-                if: failure()
-                run: echo "name=behat-logs-php-${MATRIX_PHP}-symfony-${MATRIX_SYMFONY#^}-${MATRIX_DATABASE/:/-}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
-                env:
-                    MATRIX_PHP: ${{ matrix.php }}
-                    MATRIX_SYMFONY: ${{ matrix.symfony }}
-                    MATRIX_DATABASE: ${{ matrix.database }}
+            # Before anything asks the server a question: MySQL refuses a connection to a database
+            # that does not exist yet, where PostgreSQL would only have refused the query.
+            - name: Create the database
+              run: vendor/bin/console doctrine:database:create --if-not-exists
 
-            -
-                name: Upload Behat logs
-                uses: actions/upload-artifact@v7
-                if: failure()
-                with:
-                    name: ${{ steps.behat-logs.outputs.name }}
-                    path: etc/build/
-                    if-no-files-found: ignore
-                    compression-level: 6
-                    overwrite: true
+            - name: Which platform DBAL picked
+              run: |
+                  vendor/bin/console dbal:run-sql "SELECT VERSION()"
+                  php -r 'require "vendor/autoload.php"; $_SERVER["APP_ENV"] = $_ENV["APP_ENV"] = "test"; require "vendor/sylius/test-application/config/bootstrap.php"; $kernel = new Sylius\TestApplication\Kernel("test", false); $kernel->boot(); echo get_class($kernel->getContainer()->get("doctrine.dbal.default_connection")->getDatabasePlatform()), PHP_EOL;'
+
+            # Nothing of the plugin's may be skipped on this engine.
+            - name: Build the schema with the migrations
+              run: |
+                  set -o pipefail
+                  vendor/bin/console doctrine:migrations:migrate --no-interaction | tee migrate.log
+                  ! grep -i 'JpmMartin' migrate.log | grep -qi skipped
+
+            - name: Take the plugin's migrations down and up again
+              run: composer migrations-roundtrip
+
+            - name: The tables the migrations built are the ones the mapping describes
+              run: vendor/bin/phpunit tests/Integration/Migrations --colors=always

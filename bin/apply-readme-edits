@@ -1,0 +1,136 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Applies the installation steps of the README that are file edits rather than commands, to a
+ * Sylius Standard store, for .github/workflows/install.yaml.
+ *
+ * The two YAML files of steps 3 and 4 are whole files, named on their first line, so they are
+ * written as the README shows them: extracted. The bundle line of step 2 and the order item of
+ * step 5 are fragments, and there is no honest way to turn a fragment into a file, so they are
+ * placed the way the README's prose tells a reader to: mirrored. That half is weaker: change the
+ * shape of one of those blocks and this script must change with it. It fails loudly whenever the
+ * README or the store stops looking the way it expects.
+ *
+ * Usage:
+ *   bin/apply-readme-edits <path to README.md> <path to the store>
+ */
+[, $readmePath, $storePath] = $argv + [null, null, null];
+
+if (!is_string($readmePath) || !is_string($storePath)) {
+    fwrite(\STDERR, "Usage: apply-readme-edits <README.md> <store directory>\n");
+
+    exit(1);
+}
+
+$readme = readOrFail($readmePath);
+$from = strpos($readme, "\n## Installation\n");
+$to = strpos($readme, "\n## Configuration reference\n");
+if (false === $from || false === $to) {
+    fail('The README no longer has both an "Installation" and a "Configuration reference" heading, so there is no way to tell where the install steps end.');
+}
+
+// The steps are a numbered list, so their fences are indented; a block's lines lose that indentation.
+preg_match_all('/^([ \t]*)```(\w*)\n(.*?)^\1```/sm', substr($readme, $from, $to - $from), $matches, \PREG_SET_ORDER);
+
+/** @var array<string, list<string>> $blocks */
+$blocks = [];
+foreach ($matches as [, $indent, $language, $body]) {
+    $lines = array_map(
+        static fn (string $line): string => str_starts_with($line, $indent) ? substr($line, strlen($indent)) : ltrim($line),
+        explode("\n", rtrim($body, "\n")),
+    );
+    $blocks[strtolower($language)][] = implode("\n", $lines) . "\n";
+}
+
+// ── Step 2: register the bundle ── mirrored ─────────────────────────────────────────────────────
+// A fragment: one line among a `// ...`. Inserted before the closing bracket.
+$bundleLine = trim(firstLineContaining($blocks['php'] ?? [], 'JpmMartinSyliusSubscriptionPlugin::class'));
+$bundlesPath = $storePath . '/config/bundles.php';
+$bundles = readOrFail($bundlesPath);
+if (!str_contains($bundles, 'JpmMartinSyliusSubscriptionPlugin')) {
+    $bundles = rtrim(rtrim(rtrim($bundles), ';'));
+    if (!str_ends_with($bundles, ']')) {
+        fail('config/bundles.php does not end in a closing bracket, so there is nowhere obvious to add the bundle.');
+    }
+    file_put_contents($bundlesPath, rtrim(substr($bundles, 0, -1)) . "\n    " . $bundleLine . "\n];\n");
+    report('registered the bundle');
+}
+
+// ── Steps 3 and 4: the configuration and the routes ── extracted ────────────────────────────────
+// Whole files, each named by its first line, a comment the file keeps.
+$written = [];
+foreach ($blocks['yaml'] ?? [] as $body) {
+    $first = (string) strtok($body, "\n");
+    foreach (['config/packages/jpm_martin_sylius_subscription.yaml', 'config/routes/jpm_martin_sylius_subscription.yaml'] as $path) {
+        if (str_contains($first, $path)) {
+            file_put_contents($storePath . '/' . $path, $body);
+            $written[] = $path;
+            report('wrote ' . $path);
+        }
+    }
+}
+if (2 !== count(array_unique($written))) {
+    fail('The install section no longer shows both YAML files, each named on its first line.');
+}
+
+// ── Step 5: the order item ── mirrored ──────────────────────────────────────────────────────────
+// The README shows the class and its imports, for a store's own order item. Sylius Standard's is
+// App\Entity\Order\OrderItem, mapped with attributes: the file is rewritten as that namespace and
+// the ORM import, which the README leaves to the store, followed by the README's block.
+$orderItemBlock = null;
+foreach ($blocks['php'] ?? [] as $body) {
+    if (str_contains($body, 'SubscriptionPlanAwareTrait')) {
+        $orderItemBlock = $body;
+    }
+}
+if (null === $orderItemBlock || !str_contains($orderItemBlock, 'class OrderItem extends BaseOrderItem implements SubscriptionPlanAwareInterface')) {
+    fail('The install section no longer shows the order item as a class OrderItem implementing SubscriptionPlanAwareInterface.');
+}
+$orderItemPath = $storePath . '/src/Entity/Order/OrderItem.php';
+$orderItem = readOrFail($orderItemPath);
+if (!str_contains($orderItem, 'namespace App\Entity\Order;') || !str_contains($orderItem, 'class OrderItem extends BaseOrderItem')) {
+    fail('src/Entity/Order/OrderItem.php is not the one Sylius Standard ships, so there is no telling where the README\'s lines go.');
+}
+file_put_contents(
+    $orderItemPath,
+    "<?php\n\ndeclare(strict_types=1);\n\nnamespace App\\Entity\\Order;\n\nuse Doctrine\\ORM\\Mapping as ORM;\n" . $orderItemBlock,
+);
+report('made the order item carry the plan');
+
+/** @param list<string> $bodies */
+function firstLineContaining(array $bodies, string $needle): string
+{
+    foreach ($bodies as $body) {
+        foreach (explode("\n", $body) as $line) {
+            if (str_contains($line, $needle)) {
+                return rtrim($line);
+            }
+        }
+    }
+
+    fail(sprintf('No block in the README\'s install section contains "%s" any more.', $needle));
+}
+
+function readOrFail(string $path): string
+{
+    if (!is_readable($path)) {
+        fail(sprintf('Cannot read %s.', $path));
+    }
+
+    return (string) file_get_contents($path);
+}
+
+function report(string $what): void
+{
+    fwrite(\STDOUT, '  ' . $what . "\n");
+}
+
+function fail(string $why): never
+{
+    fwrite(\STDERR, "\n" . $why . "\n");
+
+    exit(1);
+}

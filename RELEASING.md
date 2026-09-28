@@ -52,12 +52,15 @@ finds out what to do, and by the time they read it the upgrade has already faile
 
 ## Cutting a release
 
-1. The CI run of `main` passes entirely: every database and every PHP and Symfony combination, with
-   the migrations' round trip and Behat with and without JavaScript.
+1. Both workflows pass on `main`: Build, on PHP 8.2 and 8.4 and with the migrations on MySQL, and
+   Install, on a store installed from the README (`gh workflow run install.yaml --ref main` when no
+   change since the last run started it).
 2. Move the `## [Unreleased]` section of `CHANGELOG.md` under the new version heading with today's
    date, and open a fresh empty `## [Unreleased]`. Update the link definitions at the foot of the
    file.
-3. Commit that as `docs: release X.Y.Z`, push it, and wait for its CI run to pass.
+3. Commit that as `docs: release X.Y.Z` and push it. A push that only changes Markdown files does not
+   start the CI, so start it by hand on that commit — `gh workflow run build.yaml --ref main` — and
+   wait for the run to pass.
 4. Tag it — `git tag -a vX.Y.Z -m "X.Y.Z"` — and push the tag.
 5. Create the GitHub release of the tag, with that version's section of the changelog.
 6. Packagist publishes from the tag. There is nothing to upload.

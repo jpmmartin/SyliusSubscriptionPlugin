@@ -1,0 +1,205 @@
+# Installs this plugin into a store that has never seen it, by running the commands the README
+# publishes and making the file edits it shows, and checks that the store works afterwards.
+name: Install
+
+on:
+    release:
+        types: [published]
+    push:
+        branches: [main]
+        # Only the things that can break an installation.
+        paths:
+            - 'README.md'
+            - 'composer.json'
+            - 'config/config.yaml'
+            - 'config/routes/**'
+            - 'src/Migrations/**'
+            - 'src/Entity/SubscriptionPlanAware*'
+            - 'bin/extract-readme-commands'
+            - 'bin/apply-readme-edits'
+            - '.github/workflows/install.yaml'
+    pull_request:
+        paths:
+            - 'README.md'
+            - 'composer.json'
+            - 'config/config.yaml'
+            - 'config/routes/**'
+            - 'src/Migrations/**'
+            - 'src/Entity/SubscriptionPlanAware*'
+            - 'bin/extract-readme-commands'
+            - 'bin/apply-readme-edits'
+            - '.github/workflows/install.yaml'
+    workflow_dispatch: ~
+
+permissions:
+    contents: read
+
+jobs:
+    install:
+        name: "A store that has never seen this plugin, installed from the README"
+        runs-on: ubuntu-24.04
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_PASSWORD: postgres
+                ports: ['5432:5432']
+                options: >-
+                    --health-cmd "pg_isready -U postgres"
+                    --health-interval 5s
+                    --health-timeout 3s
+                    --health-retries 10
+
+        env:
+            APP_ENV: dev
+            DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/store?serverVersion=16&charset=utf8
+
+        steps:
+            - name: Check out the plugin
+              uses: actions/checkout@v5
+              with:
+                  path: plugin
+
+            # 8.4 because Sylius Standard 2.2 asks for 8.3 or later; whether the plugin works on 8.2
+            # is build.yaml's question.
+            - name: Set up PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: intl, gd, opcache, pdo_pgsql, pgsql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Set up Node
+              uses: actions/setup-node@v5
+              with:
+                  node-version: '22.x'
+
+            - name: Enable Yarn
+              run: corepack enable
+
+            - name: Cache Composer
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cache/composer/files
+                  key: "${{ runner.os }}-install-composer-${{ hashFiles('plugin/composer.json') }}"
+                  restore-keys: "${{ runner.os }}-install-composer-"
+
+            # Everything below runs against this, and it is thrown away with the runner. It is not
+            # the plugin's own test application, which arrives pre-wired and so proves nothing about
+            # installing.
+            - name: Create a throwaway store
+              run: composer create-project sylius/sylius-standard store --no-interaction --no-scripts
+
+            # Copied into vendor/, not symlinked, because a copy is what Packagist gives a store.
+            - name: Point it at the plugin under test
+              working-directory: store
+              run: |
+                  composer config repositories.plugin '{"type": "path", "url": "../plugin", "options": {"symlink": false}}'
+                  composer config minimum-stability dev
+
+            # The README does not say to do these, and should not: a store already has a database and
+            # its own front end built. A runner has neither.
+            - name: Give the store a database and its front end
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  bin/console doctrine:database:create --if-not-exists
+                  bin/console doctrine:migrations:migrate --no-interaction
+                  yarn install
+                  yarn build
+
+            # The commands come out of the README: a workflow carrying its own copy would prove the
+            # plugin installs and say nothing about whether the documentation is right.
+            - name: Read the install commands out of the README
+              run: |
+                  php plugin/bin/extract-readme-commands \
+                      --readme=plugin/README.md \
+                      --until="## Configuration reference" \
+                      | tee commands.txt
+                  test -s commands.txt
+
+            # The YAML files are extracted whole; the bundle line and the order item are fragments,
+            # mirrored by the script, and that half is weaker: see bin/apply-readme-edits.
+            - name: Apply the file edits the README shows
+              working-directory: store
+              run: php ../plugin/bin/apply-readme-edits ../plugin/README.md .
+
+            - name: Run the README's own commands, in the order it gives them
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  # Each command gets /dev/null as its input: otherwise the first one that reads stdin,
+                  # as composer and bin/console do, swallows the rest of the file.
+                  while IFS= read -r command <&3; do
+                      echo "::group::$command"
+                      eval "$command" < /dev/null
+                      echo '::endgroup::'
+                  done 3< ../commands.txt
+
+            - name: The bundle registered
+              working-directory: store
+              run: |
+                  bin/console debug:config jpm_martin_sylius_subscription > /dev/null \
+                      || { echo 'The plugin is not registered. Step 2 — register the bundle.'; exit 1; }
+
+            - name: The routes were imported
+              working-directory: store
+              run: |
+                  bin/console debug:router | grep -q 'jpm_martin_sylius_subscription_admin_subscription_index' \
+                      || { echo 'The admin routes are missing. Step 4 — import the routes.'; exit 1; }
+                  bin/console debug:router | grep -q 'jpm_martin_sylius_subscription_shop_account_subscription_index' \
+                      || { echo 'The shop routes are missing. Step 4 — import the routes.'; exit 1; }
+
+            - name: The migrations created the plugin's tables and columns
+              working-directory: store
+              run: |
+                  # Counted exactly: a grep for the number would match it anywhere in the table the
+                  # console draws.
+                  tables=$(bin/console dbal:run-sql \
+                      "SELECT count(*) AS n FROM information_schema.tables WHERE table_name LIKE 'jpm_martin_sylius_subscription%'" \
+                      | grep -oE '[0-9]+' | tail -1)
+                  test "$tables" = '11' \
+                      || { echo "Expected 11 plugin tables, found ${tables:-none}. Step 6 — run the migrations."; exit 1; }
+                  columns=$(bin/console dbal:run-sql \
+                      "SELECT count(*) AS n FROM information_schema.columns WHERE table_name = 'sylius_order_item' AND column_name IN ('subscription_plan_id', 'subscription_frequency_id', 'subscription_trial_days')" \
+                      | grep -oE '[0-9]+' | tail -1)
+                  test "$columns" = '3' \
+                      || { echo "Expected the 3 columns of sylius_order_item, found ${columns:-none}. Steps 5 and 6."; exit 1; }
+                  bin/console doctrine:schema:validate --skip-sync > /dev/null \
+                      || { echo 'The mapping is not valid. Step 5 — the order item.'; exit 1; }
+
+            # Everything above proves the parts exist. Nothing proves a page renders: the product page,
+            # which the plugin adds to, and the account's subscriptions, which ask for a sign-in.
+            - name: Give the store something to show
+              working-directory: store
+              run: bin/console sylius:fixtures:load default --no-interaction
+
+            - name: The shop's pages answer
+              working-directory: store
+              run: |
+                  cat > public/router.php <<'PHP'
+                  <?php
+                  // PHP's built-in server hands static files back itself and everything else to Symfony.
+                  if (is_file(__DIR__ . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH))) {
+                      return false;
+                  }
+                  require __DIR__ . '/index.php';
+                  PHP
+                  # variables_order=EGPCS, because PHP's built-in server hands the environment to
+                  # getenv() only: without the E, the job's DATABASE_URL is invisible to the page and
+                  # the store's .env wins.
+                  php -S 127.0.0.1:8000 -d variables_order=EGPCS -t public public/router.php > server.log 2>&1 &
+                  for i in $(seq 1 30); do curl -s -o /dev/null http://127.0.0.1:8000/ && break; sleep 1; done
+                  status=$(curl -s -o homepage.html -w '%{http_code}' http://127.0.0.1:8000/en_US/)
+                  test "$status" = '200' \
+                      || { echo "The shop's homepage answered $status."; tail -40 server.log; exit 1; }
+                  product=$(grep -oE 'href="/en_US/products/[^"]+"' homepage.html | head -1 | cut -d'"' -f2)
+                  test -n "$product" || { echo 'The homepage links to no product.'; exit 1; }
+                  status=$(curl -s -o product.html -w '%{http_code}' "http://127.0.0.1:8000$product")
+                  test "$status" = '200' \
+                      || { echo "The product page $product answered $status."; tail -40 server.log; exit 1; }
+                  status=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/en_US/account/subscriptions/)
+                  test "$status" = '302' \
+                      || { echo "The account's subscriptions answered $status, not a redirection to sign in."; tail -40 server.log; exit 1; }

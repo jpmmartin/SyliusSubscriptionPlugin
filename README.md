@@ -81,7 +81,8 @@ with all of them, charged without the customer present, with retries when a char
 
 - Sylius `^2.2`, on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4.
 - One of the databases Sylius tests its plugins against: MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4, or
-  PostgreSQL 15, 16 or 17. Every one of them is checked on each change; see
+  PostgreSQL 15, 16 or 17. Up to 1.0.0, every one of them was checked on each change; since then, the
+  tests run on PostgreSQL 16 and the migrations on MySQL 8.4, see
   [Continuous integration](#continuous-integration). On MySQL and MariaDB, codes are compared without
   regard to case, as Sylius's own are: `MONTHLY` and `monthly` are the same code there. On MariaDB,
   name it in `serverVersion`, as Doctrine asks (`?serverVersion=mariadb-11.4.2`): given a bare number,
@@ -110,13 +111,18 @@ with all of them, charged without the customer present, with retries when a char
 2. Register the bundle in `config/bundles.php`, if Symfony Flex did not:
 
     ```php
-    JpmMartin\SyliusSubscriptionPlugin\JpmMartinSyliusSubscriptionPlugin::class => ['all' => true],
+    // config/bundles.php
+    return [
+        // ...
+        JpmMartin\SyliusSubscriptionPlugin\JpmMartinSyliusSubscriptionPlugin::class => ['all' => true],
+    ];
     ```
 
 3. Import its configuration and name the payment methods that may charge renewals, in
    `config/packages/jpm_martin_sylius_subscription.yaml`:
 
     ```yaml
+    # config/packages/jpm_martin_sylius_subscription.yaml
     imports:
         - { resource: "@JpmMartinSyliusSubscriptionPlugin/config/config.yaml" }
 
@@ -129,6 +135,7 @@ with all of them, charged without the customer present, with retries when a char
    prefix, exactly as Sylius's shop routes are imported, so the account's access control covers them:
 
     ```yaml
+    # config/routes/jpm_martin_sylius_subscription.yaml
     jpm_martin_sylius_subscription_admin:
         resource: "@JpmMartinSyliusSubscriptionPlugin/config/routes/admin.yaml"
         prefix: /%sylius_admin.path_name%
@@ -160,7 +167,8 @@ with all of them, charged without the customer present, with retries when a char
 
 6. Run the migrations. The plugin registers its own migrations namespace; its migrations, written with
    Doctrine's schema API rather than one platform's SQL, create its tables and the
-   `subscription_plan_id` and `subscription_frequency_id` columns of `sylius_order_item`:
+   `subscription_plan_id`, `subscription_frequency_id` and `subscription_trial_days` columns of
+   `sylius_order_item`:
 
     ```bash
     bin/console doctrine:migrations:migrate -n
@@ -1065,22 +1073,22 @@ other's date.
 
 ### Continuous integration
 
-`.github/workflows/build.yaml` runs on every push and pull request:
+Two workflows:
 
-- once, `composer validate --strict`, ECS and PHPStan;
-- for each database above with PHP 8.3 and Symfony 7.4, and on PostgreSQL 17 with PHP 8.2 and
-  Symfony 6.4, and with PHP 8.4 and 8.5 and Symfony 7.4 (ten runs, every supported database, PHP and
-  Symfony at least once): the container lint, the migrations' round trip, PHPUnit, and Behat without
-  and with JavaScript.
+- `.github/workflows/build.yaml`, on every push to `main` and every pull request that changes more than
+  Markdown files. On PHP 8.2 and 8.4 with PostgreSQL 16: `composer validate --strict`,
+  `composer audit`, ECS, the container lint, PHPStan, PHPUnit and Behat without JavaScript. On MySQL
+  8.4: the plugin's migrations built, taken down and up again, and compared with the mapping.
+- `.github/workflows/install.yaml`, when a release is published and on every change that can break an
+  installation. A Sylius Standard store is created from scratch, the plugin is installed into it with
+  the commands of [Installation](#installation), read out of this README, and the file edits it shows,
+  and the store is checked: the bundle, the routes, the plugin's tables and columns, and the shop's
+  pages. The YAML files are taken whole from the README; the bundle line and the order item are
+  fragments, placed by `bin/apply-readme-edits`, which has to change when their blocks do.
 
-The test application is built by Sylius's own action, as in Sylius's PluginSkeleton, which migrates
-MariaDB as if it were MySQL; the tests then run with MariaDB named in `DATABASE_URL`, as a store
-configures it. A failing combination does not stop the others, and the Behat logs and screenshots of
-a failed run are kept as an artifact. A browser scenario that fails is run once more: if it then
-passes, the run stays green but carries a warning for each scenario that failed, with its title and
-at its line in the feature file; if it fails again, the job fails. A scenario broken by a hook, which
-Behat lists without its title, adds a warning pointing to the step's log. GitHub shows ten warnings a
-step, so past that the last warning names the rest, each with its file and line.
+The `@javascript` scenarios, MariaDB, the other versions of MySQL and PostgreSQL, PHP 8.3 and 8.5, and
+Symfony 6.4 are not checked on each change: run them locally, as above. Up to 1.0.0, each change was
+checked on all of them.
 
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with
