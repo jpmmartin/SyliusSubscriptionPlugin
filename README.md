@@ -79,10 +79,12 @@ with all of them, charged without the customer present, with retries when a char
 
 ## Requirements
 
-- Sylius `^2.2`, on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4.
+- Sylius 2.2, on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4, or Sylius 2.3, on the PHP and Symfony it
+  supports: 8.3 or later, and Symfony 6.4, 7.4 or 8.0.
 - One of the databases Sylius tests its plugins against: MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4, or
-  PostgreSQL 15, 16 or 17. Up to 1.0.0, every one of them was checked on each change; since then, the
-  tests run on PostgreSQL 16 and the migrations on MySQL 8.4, see
+  PostgreSQL 15, 16 or 17; MariaDB with Sylius 2.2 only, see [Known limitations](#known-limitations).
+  Up to 1.0.0, every one of them was checked on each change with Sylius 2.2; since then, the tests run
+  on PostgreSQL 16 and the migrations on MySQL 8.4, with Sylius 2.2 and 2.3, see
   [Continuous integration](#continuous-integration). On MySQL and MariaDB, codes are compared without
   regard to case, as Sylius's own are: `MONTHLY` and `monthly` are the same code there. On MariaDB,
   name it in `serverVersion`, as Doctrine asks (`?serverVersion=mariadb-11.4.2`): given a bare number,
@@ -1013,6 +1015,10 @@ logged. Only a handler of yours that throws, run synchronously, stops it, as abo
 - The shop API does not take free trials yet: it would ask the payment of 0 to be captured, not
   authorized, so the gateway would not keep the card. Completing a cart with a free trial through it is
   refused with a message; the cart itself shows the trial as the shop does.
+- MariaDB with Sylius 2.3 is not supported, and the cause is below the plugin. Sylius 2.3 runs DBAL 4,
+  which no longer takes MariaDB for MySQL: Sylius's own migrations, written for MySQL, skip a database
+  whose `serverVersion` names MariaDB, so its tables are never created; and one that does not name it
+  is misread by DBAL 4 when it compares schemas. With Sylius 2.2, MariaDB works as described above.
 - An introductory price is offered to every new subscription, including one from a customer who
   cancelled another after its introductory cycles. To keep a first-order discount for first-time
   customers, use a Sylius promotion with the "Nth order" rule instead.
@@ -1076,9 +1082,10 @@ other's date.
 Two workflows:
 
 - `.github/workflows/build.yaml`, on every push to `main` and every pull request that changes more than
-  Markdown files. On PHP 8.2 and 8.4 with PostgreSQL 16: `composer validate --strict`,
-  `composer audit`, ECS, the container lint, PHPStan, PHPUnit and Behat without JavaScript. On MySQL
-  8.4: the plugin's migrations built, taken down and up again, and compared with the mapping.
+  Markdown files. With PostgreSQL 16, on PHP 8.2 with Sylius 2.2 and on PHP 8.4 with Sylius 2.3:
+  `composer validate --strict`, `composer audit`, ECS, the container lint, PHPStan, PHPUnit and Behat
+  without JavaScript. On MySQL 8.4, with Sylius 2.2 and 2.3, so with DBAL 3 and 4: the plugin's
+  migrations built, taken down and up again, and compared with the mapping.
 - `.github/workflows/install.yaml`, when a release is published and on every change that can break an
   installation. A Sylius Standard store is created from scratch, the plugin is installed into it with
   the commands of [Installation](#installation), read out of this README, and the file edits it shows,
@@ -1088,7 +1095,8 @@ Two workflows:
 
 The `@javascript` scenarios, MariaDB, the other versions of MySQL and PostgreSQL, PHP 8.3 and 8.5, and
 Symfony 6.4 are not checked on each change: run them locally, as above. Up to 1.0.0, each change was
-checked on all of them.
+checked on all of them, with Sylius 2.2. Sylius Standard, which the install workflow creates, is on
+Sylius 2.2 until it moves to 2.3.
 
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with

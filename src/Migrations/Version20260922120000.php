@@ -41,6 +41,12 @@ final class Version20260922120000 extends AbstractMigration
         $this->createConsentTable($schema);
     }
 
+    /** The order items point at the plans this migration drops. */
+    public function preDown(Schema $schema): void
+    {
+        $this->dropForeignKeyFirst($schema->getTable('sylius_order_item'), 'subscription_plan_id');
+    }
+
     public function down(Schema $schema): void
     {
         $schema->dropTable('jpm_martin_sylius_subscription_consent');
@@ -65,6 +71,22 @@ final class Version20260922120000 extends AbstractMigration
     }
 
     /** A plan hangs off its variant and goes with it. */
+    /**
+     * Drops the foreign key before anything else, and takes it out of the schema this migration starts
+     * from, so the diff does not drop it a second time. Left to the diff, DBAL 4 drops the tables of a
+     * migration before it alters the others, which MySQL and MariaDB refuse while a foreign key still
+     * points at a dropped table; DBAL 3 ordered it the other way.
+     */
+    private function dropForeignKeyFirst(Table $table, string $column): void
+    {
+        foreach ($table->getForeignKeys() as $foreignKey) {
+            if ($foreignKey->getLocalColumns() === [$column]) {
+                $this->addSql($this->platform->getDropForeignKeySQL($foreignKey->getName(), $table->getName()));
+                $table->removeForeignKey($foreignKey->getName());
+            }
+        }
+    }
+
     private function createPlanTable(Schema $schema): void
     {
         $table = $this->createTable($schema, 'jpm_martin_sylius_subscription_plan');

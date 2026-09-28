@@ -2,7 +2,7 @@
 # import pulls in every suite Sylius itself ships, so any core feature can be run against
 # the test application with this plugin registered.
 imports:
-    - vendor/sylius/sylius/src/Sylius/Behat/Resources/config/suites.yml
+    - tests/Behat/Resources/sylius_suites.php
     - tests/Behat/Resources/suites.yml
 
 default:

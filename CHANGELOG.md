@@ -12,8 +12,8 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 The first release.
 
-For Sylius 2.2 on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4, on MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4,
-or PostgreSQL 15 to 17.
+For Sylius 2.2, on PHP 8.2 to 8.5 and Symfony 6.4 or 7.4, on MySQL 8.0 or 8.4, MariaDB 10.11 or 11.4,
+or PostgreSQL 15 to 17; and for Sylius 2.3, on MySQL or PostgreSQL.
 
 ### Added
 
@@ -77,6 +77,8 @@ Stated here as well as in the README, because they decide whether this release f
   first-time customers only, use a Sylius promotion with the "Nth order" rule.
 - **Changing the frequency is limited**: not while the open cycle's order awaits payment, and only to
   intervals every item can move to.
+- **MariaDB with Sylius 2.3 is not supported.** Sylius 2.3's own migrations do not create its tables on
+  a MariaDB that DBAL 4 recognises, and DBAL 4 misreads one it does not.
 
 [Unreleased]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/compare/v1.0.0...main
 [1.0.0]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/releases/tag/v1.0.0

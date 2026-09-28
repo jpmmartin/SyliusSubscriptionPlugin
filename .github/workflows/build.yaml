@@ -16,13 +16,18 @@ jobs:
     tests:
         runs-on: ubuntu-24.04
 
-        name: "PHP ${{ matrix.php }}"
+        name: "PHP ${{ matrix.php }}, Sylius ${{ matrix.sylius }}"
 
         strategy:
             fail-fast: false
             matrix:
-                # The oldest PHP the plugin supports and a current one.
-                php: ["8.2", "8.4"]
+                # Each Sylius the plugin supports, the oldest on the oldest PHP the plugin supports. Named
+                # rather than left to Composer, so a new Sylius does not change what is checked unseen.
+                include:
+                    - php: "8.2"
+                      sylius: "~2.2.0"
+                    - php: "8.4"
+                      sylius: "~2.3.0"
 
         env:
             APP_ENV: test
@@ -65,16 +70,19 @@ jobs:
               uses: actions/cache@v5
               with:
                   path: ~/.cache/composer/files
-                  key: "${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}"
-                  restore-keys: "${{ runner.os }}-php-${{ matrix.php }}-composer-"
-
-            - name: Install dependencies
-              run: composer install --no-interaction --no-progress --prefer-dist
+                  key: "${{ runner.os }}-php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-composer-${{ hashFiles('composer.json') }}"
+                  restore-keys: "${{ runner.os }}-php-${{ matrix.php }}-sylius-${{ matrix.sylius }}-composer-"
 
             # Strict, and without --no-check-publish: this package is published, so the checks
-            # that only matter for publishing are exactly the ones that matter.
+            # that only matter for publishing are exactly the ones that matter. Before the next step
+            # narrows Sylius's constraint in this checkout.
             - name: Validate composer.json
               run: composer validate --ansi --strict
+
+            - name: Install dependencies
+              run: |
+                  composer require "sylius/sylius:${{ matrix.sylius }}" --no-update --no-scripts --no-interaction
+                  composer install --no-interaction --no-progress --prefer-dist
 
             - name: Check for known vulnerabilities
               run: composer audit --abandoned=ignore
@@ -108,7 +116,7 @@ jobs:
               uses: actions/upload-artifact@v7
               if: failure()
               with:
-                  name: "behat-logs-php${{ matrix.php }}"
+                  name: "behat-logs-php${{ matrix.php }}-sylius-${{ matrix.sylius }}"
                   path: etc/build/
                   if-no-files-found: ignore
 
@@ -117,11 +125,17 @@ jobs:
     # the plugin's migrations down and up again, and runs the tests that compare the tables the
     # migrations built with the ones the mapping describes. One set of migrations serves every
     # engine — Doctrine derives each engine's statements when it runs — and this job is what proves
-    # it.
+    # it, with each Sylius: 2.2 runs DBAL 3 and 2.3 DBAL 4, which orders a migration's statements
+    # differently.
     schema-on-mysql:
         runs-on: ubuntu-24.04
 
-        name: "Migrations on MySQL"
+        name: "Migrations on MySQL, Sylius ${{ matrix.sylius }}"
+
+        strategy:
+            fail-fast: false
+            matrix:
+                sylius: ["~2.2.0", "~2.3.0"]
 
         env:
             APP_ENV: test
@@ -154,11 +168,13 @@ jobs:
               uses: actions/cache@v5
               with:
                   path: ~/.cache/composer/files
-                  key: "${{ runner.os }}-php-8.4-composer-${{ hashFiles('composer.json') }}"
-                  restore-keys: "${{ runner.os }}-php-8.4-composer-"
+                  key: "${{ runner.os }}-php-8.4-sylius-${{ matrix.sylius }}-composer-${{ hashFiles('composer.json') }}"
+                  restore-keys: "${{ runner.os }}-php-8.4-sylius-${{ matrix.sylius }}-composer-"
 
             - name: Install dependencies
-              run: composer install --no-interaction --no-progress --prefer-dist
+              run: |
+                  composer require "sylius/sylius:${{ matrix.sylius }}" --no-update --no-scripts --no-interaction
+                  composer install --no-interaction --no-progress --prefer-dist
 
             # Before anything asks the server a question: MySQL refuses a connection to a database
             # that does not exist yet, where PostgreSQL would only have refused the query.

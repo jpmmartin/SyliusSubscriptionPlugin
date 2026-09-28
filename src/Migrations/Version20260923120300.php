@@ -67,6 +67,13 @@ final class Version20260923120300 extends AbstractMigration
         $orderItem->addForeignKeyConstraint('jpm_martin_sylius_subscription_frequency', ['subscription_frequency_id'], ['id']);
     }
 
+    /** The order items and the subscription items point at the frequencies this migration drops. */
+    public function preDown(Schema $schema): void
+    {
+        $this->dropForeignKeyFirst($schema->getTable('sylius_order_item'), 'subscription_frequency_id');
+        $this->dropForeignKeyFirst($schema->getTable('jpm_martin_sylius_subscription_item'), 'frequency_id');
+    }
+
     public function down(Schema $schema): void
     {
         $this->dropReference($schema->getTable('sylius_order_item'), 'subscription_frequency_id');
@@ -76,6 +83,22 @@ final class Version20260923120300 extends AbstractMigration
         $schema->dropTable('jpm_martin_sylius_subscription_repeatable_variant');
         $schema->dropTable('jpm_martin_sylius_subscription_frequency_channels');
         $schema->dropTable('jpm_martin_sylius_subscription_frequency');
+    }
+
+    /**
+     * Drops the foreign key before anything else, and takes it out of the schema this migration starts
+     * from, so the diff does not drop it a second time. Left to the diff, DBAL 4 drops the tables of a
+     * migration before it alters the others, which MySQL and MariaDB refuse while a foreign key still
+     * points at a dropped table; DBAL 3 ordered it the other way.
+     */
+    private function dropForeignKeyFirst(Table $table, string $column): void
+    {
+        foreach ($table->getForeignKeys() as $foreignKey) {
+            if ($foreignKey->getLocalColumns() === [$column]) {
+                $this->addSql($this->platform->getDropForeignKeySQL($foreignKey->getName(), $table->getName()));
+                $table->removeForeignKey($foreignKey->getName());
+            }
+        }
     }
 
     private function dropReference(Table $table, string $column): void
