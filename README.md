@@ -69,6 +69,8 @@ with all of them, charged without the customer present, with retries when a char
   or a variant from today's catalogue. A decrease applies at once; an increase is announced with a
   configurable notice, and can be made to need the customer's acceptance. See
   [Price updates](#price-updates).
+- **Shop API**: besides the cart's operations, the signed-in customer's subscriptions with everything
+  their account shows, and a PATCH for each action it offers. See [Shop API](#shop-api).
 - **Committed cycles**: a read-only query of what the active subscriptions of a variant will renew
   within a horizon, for planning stock.
 - **Events, no emails**: the plugin tells no customer anything. It publishes an event of its own at every
@@ -970,73 +972,6 @@ The plugin itself never stops a transition to publish its event: one of a subscr
 renewal order that is not stored yet, which no flow of the plugin makes, publishes nothing and is
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
-## Upgrading
-
-From a version without prepaid deliveries, `doctrine:migrations:migrate` gives every plan and store
-frequency one delivery per charge, no subscription any delivery paid for ahead, and every cycle a
-charge: nothing changes. A subscription's calendar now follows its delivery interval, which was always
-its billing interval. The account's cancel route has a controller of its own, which waits for the
-deliveries paid for. Going back down is refused while a cycle delivers without a charge.
-
-From a version without minimum commitments, `doctrine:migrations:migrate` adds them to plans, store
-frequencies and items, with none set: no customer is kept from cancelling. The account's routes gain
-`_subscription_actor: customer`. Going back down frees the subscriptions still committed.
-
-From a version without free trials, `doctrine:migrations:migrate` adds the days of free trial of plans,
-store frequencies, order lines and subscriptions, with none set. `trial_payment_methods` is new, and
-empty: no free trial is given until you list the methods whose gateway keeps the card. Sylius's
-services that drop the payments of an order of 0, skip its payment step and choose a payment request's
-action are decorated, and only act otherwise on an order with a free trial. Going back down drops the
-free trial of the subscriptions still pending: activate them first.
-
-From a version without introductory prices, `doctrine:migrations:migrate` adds them to plans, store
-frequencies and items, with none set, and one introductory cycle on each plan and frequency for when
-one is. Going back down drops the introductory prices of the items still on theirs, which then renew
-at their frozen price.
-
-From a version without price updates, `doctrine:migrations:migrate` adds the pending price of each item
-and the acceptance of each subscription, all empty: nothing changes until an administrator updates
-prices. Going back down drops the increases still pending: wait until they apply, or tell the
-customers.
-
-From a version without customers recovering a suspended subscription, `doctrine:migrations:migrate`
-adds whether each subscription was suspended for unpaid renewals. Nothing says why a subscription
-already suspended was, so none counts as suspended for unpaid renewals: its customer cannot recover
-it until it is suspended that way again, and an administrator still can reactivate it.
-`SubscriptionSuspended` gains `forUnpaidRenewals`, false by default, so existing handlers keep working.
-
-From a version without customer payments of declined renewals, nothing needs migrating: a charge
-attempt gains the `customer` type. Sylius's order payment page now offers, on a renewal order, only the
-methods the plugin can charge; every other order is as before. `customer_payment_wait_minutes` is new,
-with a default.
-
-From a version without item changes, `doctrine:migrations:migrate` adds when each item was removed, with
-no item removed before. Going back down is refused while any item is removed, since that version would
-renew it again.
-
-From a version without the subscription's own addresses, `doctrine:migrations:migrate` adds them,
-empty: every subscription keeps renewing to its last order's addresses until they are changed. Going
-back down deletes the addresses the subscriptions had of their own.
-
-From a version without pausing, `doctrine:migrations:migrate` adds whether each cycle was skipped, with
-no cycle skipped before. Subscriptions gain the `paused` state: a store that shows the states in its
-own templates or translations has one more to add. Before going back to a version without it, resume
-or cancel the paused subscriptions, since that version's graph does not know the state.
-
-From a version that charged each missed date, one per run of the command, the default is now to skip
-them; see "Missed dates". Set `missed_cycles: charge` to keep charging them. Nothing needs migrating.
-
-From a version without store frequencies, `doctrine:migrations:migrate` adds their tables and columns;
-nothing else changes, and every existing subscription keeps its plans.
-
-From a version with one subscription per order line:
-
-- `doctrine:migrations:migrate` turns every existing subscription into a subscription of one item, with
-  the cycles it had paid counted as the item's. Going back down works while no subscription has more
-  than one item.
-- `on_failure` is gone, because a failed cycle no longer suspends or cancels a subscription by itself;
-  the configuration refuses it with a message. Use `suspend_after_failed_cycles` instead.
-
 ## Known limitations
 
 - Renewal orders are placed from code, and Sylius sends its order confirmation email only from the
@@ -1150,6 +1085,14 @@ step, so past that the last warning names the rest, each with its file and line.
 The tests charge renewals through a scripted gateway in the test application
 (`tests/TestApplication/src/Payment`), with payment requests handled synchronously and encrypted with
 a key kept for the tests only.
+
+## Versioning and changes
+
+Released under [Semantic Versioning](https://semver.org/spec/v2.0.0.html): a caret constraint on
+this package is safe, and anything that would break an existing store arrives only in a major
+release with a written migration note. What changed in each release is in
+[CHANGELOG.md](CHANGELOG.md); how a release is cut, and what counts as breaking, in
+[RELEASING.md](RELEASING.md).
 
 ## License
 

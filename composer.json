@@ -5,9 +5,13 @@
     "keywords": [
         "sylius",
         "sylius-plugin",
-        "test-appication"
+        "subscription"
     ],
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/jpmmartin/SyliusSubscriptionPlugin/issues",
+        "source": "https://github.com/jpmmartin/SyliusSubscriptionPlugin"
+    },
     "require": {
         "php": "^8.2",
         "sylius/sylius": "^2.2"
@@ -55,7 +59,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.0-dev"
+            "dev-main": "1.1-dev"
         },
         "symfony": {
             "require": "^7.4"
@@ -73,14 +77,6 @@
         }
     },
     "scripts": {
-        "post-root-package-install": [
-            "@php bin/validate-directory.php"
-        ],
-        "post-create-project-cmd": [
-            "@php bin/rename-plugin.php",
-            "@test-app-init",
-            "@php bin/show-success.php"
-        ],
         "database-reset": [
             "vendor/bin/console doctrine:database:drop --force --if-exists",
             "vendor/bin/console doctrine:database:create",
