@@ -81,6 +81,11 @@ jpm_martin_sylius_subscription:
         commitment_offer: '{1}Minimum commitment: you can cancel once your first order is paid|]1,Inf[Minimum commitment: you can cancel once you have paid %count% orders'
         minimum_commitment: Minimum commitment
         commitment_left: '{1}1 more paid renewal before you can cancel or pause it|]1,Inf[%count% more paid renewals before you can cancel or pause it'
+        prepaid_offer: 'Each charge pays for %count% deliveries: %price%'
+        deliveries_per_charge: Deliveries per charge
+        prepaid_deliveries: Prepaid deliveries
+        prepaid_deliveries_left: '{1}1 delivery paid for, on %date%|]1,Inf[%count% deliveries paid for, the last on %date%'
+        cancelled_after_prepaid_deliveries: 'Cancelled after its last delivery paid for, on %date%'
         accept_new_price: Accept the new price
         accept_new_price_and_resume: Accept the new price and resume
         price_increase_help:
@@ -157,6 +162,8 @@ jpm_martin_sylius_subscription:
             discount_percentage: Subscriber discount (%)
             max_cycles: Maximum cycles
             max_cycles_help: Leave empty to renew until the customer cancels.
+            deliveries_per_charge: Deliveries per charge
+            deliveries_per_charge_help: 'Above 1, each charge pays for that many deliveries at once, and the deliveries between charges ship without a charge, their shipping included. Not with an introductory offer.'
             commitment_cycles: Minimum commitment (cycles)
             commitment_cycles_help: "Cycles a subscriber pays, the first order included, before they can cancel or pause the subscription or remove this product; skipped renewals do not count. Leave empty for none. Whether your customers' law allows it is yours to check."
             introductory_price: Introductory offer

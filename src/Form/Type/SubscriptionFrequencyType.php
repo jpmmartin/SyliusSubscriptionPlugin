@@ -48,6 +48,12 @@ final class SubscriptionFrequencyType extends AbstractResourceType
                 'required' => false,
                 'attr' => ['min' => 1],
             ])
+            ->add('deliveriesPerCharge', IntegerType::class, [
+                'label' => 'jpm_martin_sylius_subscription.form.subscription_plan.deliveries_per_charge',
+                'help' => 'jpm_martin_sylius_subscription.form.subscription_plan.deliveries_per_charge_help',
+                'empty_data' => '1',
+                'attr' => ['min' => 1],
+            ])
             ->add('commitmentCycles', IntegerType::class, [
                 'label' => 'jpm_martin_sylius_subscription.form.subscription_plan.commitment_cycles',
                 'help' => 'jpm_martin_sylius_subscription.form.subscription_plan.commitment_cycles_help',

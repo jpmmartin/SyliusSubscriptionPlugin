@@ -43,6 +43,7 @@
         <field name="version" column="version" type="integer" version="true" />
         <field name="manualRetry" column="manual_retry" type="boolean" />
         <field name="skipped" column="skipped" type="boolean" />
+        <field name="charging" column="charging" type="boolean" />
 
         <field name="createdAt" column="created_at" type="datetime">
             <gedmo:timestampable on="create" />

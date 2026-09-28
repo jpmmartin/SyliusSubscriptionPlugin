@@ -111,4 +111,9 @@ interface SubscriptionCycleInterface extends ResourceInterface, TimestampableInt
     public function isSkipped(): bool;
 
     public function setSkipped(bool $skipped): void;
+
+    /** Whether its order is charged; a prepaid delivery's is not, since the charge of its block paid for it. */
+    public function isCharging(): bool;
+
+    public function setCharging(bool $charging): void;
 }

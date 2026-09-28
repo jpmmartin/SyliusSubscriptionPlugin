@@ -146,6 +146,22 @@ interface SubscriptionInterface extends ResourceInterface, TimestampableInterfac
 
     public function setTrialDays(?int $trialDays): void;
 
+    /**
+     * Deliveries each charge pays for: its billing interval over its delivery interval, 1 unless it is
+     * prepaid. Its calendar follows the delivery interval.
+     */
+    public function getDeliveriesPerCharge(): int;
+
+    /** Deliveries already paid for and not placed yet: while above 0, the next cycle delivers without a charge. */
+    public function getPrepaidDeliveriesLeft(): int;
+
+    public function setPrepaidDeliveriesLeft(int $prepaidDeliveriesLeft): void;
+
+    /** Whether its customer cancelled it while deliveries were paid for: it is cancelled once they are placed. */
+    public function cancelsAfterPrepaidDeliveries(): bool;
+
+    public function setCancelsAfterPrepaidDeliveries(bool $cancelsAfterPrepaidDeliveries): void;
+
     /** When its customer accepted the price increase pending on its items; null until then, and again when another is announced. */
     public function getPriceIncreaseAcceptedAt(): ?\DateTimeImmutable;
 

@@ -288,6 +288,12 @@ final class ManagingMySubscriptionsContext implements Context
         Assert::false($this->showPage->canApply('pause'));
     }
 
+    #[Then('/^it should say "([^"]+)" about its prepaid deliveries$/')]
+    public function itShouldSayAboutItsPrepaidDeliveries(string $text): void
+    {
+        Assert::same($this->showPage->getDetail('prepaid-deliveries'), $text);
+    }
+
     #[Then('/^it should say "([^"]+)" about its minimum commitment$/')]
     public function itShouldSayAboutItsMinimumCommitment(string $text): void
     {

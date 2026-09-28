@@ -17,9 +17,10 @@ final class SubscriptionCalendar implements SubscriptionCalendarInterface
         Assert::notNull($anchorAt, 'A subscription has no schedule until it is activated.');
         $intervals = $number - $subscription->getScheduleAnchorCycle();
         Assert::greaterThanEq($intervals, 0, 'The cycles before the schedule anchor keep the dates they were given.');
-        $count = $intervals * $subscription->getBillingIntervalCount();
+        // Every cycle delivers: a prepaid subscription charges only the first of each block, on the same dates.
+        $count = $intervals * $subscription->getDeliveryIntervalCount();
 
-        return match ($subscription->getBillingIntervalUnit()) {
+        return match ($subscription->getDeliveryIntervalUnit()) {
             SubscriptionIntervalUnit::Day => $anchorAt->add(new \DateInterval(\sprintf('P%dD', $count))),
             SubscriptionIntervalUnit::Week => $anchorAt->add(new \DateInterval(\sprintf('P%dD', 7 * $count))),
             SubscriptionIntervalUnit::Month => self::addMonths($anchorAt, $count),

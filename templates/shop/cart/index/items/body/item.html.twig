@@ -39,6 +39,12 @@
         </div>
     {% endif %}
 
+    {% if (terms.deliveriesPerCharge ?? 1) > 1 %}
+        <div class="small text-body-secondary mt-1" {{ sylius_test_html_attribute('cart-item-prepaid') }}>
+            {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': terms.deliveriesPerCharge, '%price%': money.convertAndFormat(item.unitPrice) }) }}
+        </div>
+    {% endif %}
+
     {% if (terms.commitmentCycles ?? null) is not null %}
         <div class="small text-body-secondary mt-1" {{ sylius_test_html_attribute('cart-item-commitment') }}>
             {{ 'jpm_martin_sylius_subscription.ui.commitment_offer'|trans({ '%count%': terms.commitmentCycles }) }}

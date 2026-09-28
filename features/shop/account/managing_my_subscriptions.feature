@@ -280,6 +280,16 @@ Feature: Managing my subscriptions
         Then I should not be able to pay and reactivate it, because "It cannot be recovered now: none of its products can be sold."
 
     @ui
+    Scenario: Seeing the deliveries my subscription has paid for
+        Given the store has a product "Honey" priced at "$10.00"
+        And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month
+        And the "HONEY_MONTHLY" subscription plan charges 3 deliveries at a time
+        And I subscribed to "Honey" on the "HONEY_MONTHLY" plan
+        When I view my subscription to "Honey"
+        Then this subscription should have 1 "Honey" at "$10.00"
+        And it should say "2 deliveries paid for, the last on Mar 1, 2027" about its prepaid deliveries
+
+    @ui
     Scenario: Not being able to cancel a subscription within its minimum commitment
         Given the store has a product "Honey" priced at "$10.00"
         And the "Honey" variant offers a "HONEY_MONTHLY" subscription plan renewing every 1 month

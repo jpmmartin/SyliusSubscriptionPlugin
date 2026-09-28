@@ -5,6 +5,7 @@ jpm_martin_sylius_subscription:
         frequency_not_offered: "Esta frecuencia no se ofrece para tu carrito."
     subscription:
         cancelled: La suscripción se ha cancelado.
+        cancels_after_prepaid_deliveries: La suscripción se cancelará cuando se envíen las entregas que ya has pagado. No se cobrará nada más.
         frequency_changed: Se ha cambiado la frecuencia de la suscripción.
         address_changed: "Se han cambiado las direcciones de la suscripción."
         items_changed: "Se han cambiado los artículos de la suscripción."

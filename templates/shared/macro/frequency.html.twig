@@ -6,5 +6,5 @@
 {# How often a subscription renews. #}
 {%- macro frequency(subscription) -%}
     {%- from _self import every -%}
-    {{ every(subscription.billingIntervalCount, subscription.billingIntervalUnit) }}
+    {{ every(subscription.deliveryIntervalCount, subscription.deliveryIntervalUnit) }}
 {%- endmacro -%}

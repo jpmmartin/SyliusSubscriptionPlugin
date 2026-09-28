@@ -66,7 +66,7 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
             $item->setIntroductoryPrice(null, null);
         }
 
-        $subscription->setBillingIntervalCount($interval->count);
+        $subscription->setBillingIntervalCount($interval->count * $offer['targets'][0][1]->getDeliveriesPerCharge());
         $subscription->setBillingIntervalUnit($interval->unit);
         $subscription->setDeliveryIntervalCount($interval->count);
         $subscription->setDeliveryIntervalUnit($interval->unit);
@@ -90,12 +90,14 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         if (
             SubscriptionInterface::STATE_ACTIVE !== $subscription->getState() ||
             null === $openCycle ||
-            !\in_array($openCycle->getState(), self::UNCHARGED_OPEN_CYCLE_STATES, true)
+            !\in_array($openCycle->getState(), self::UNCHARGED_OPEN_CYCLE_STATES, true) ||
+            // Deliveries already paid for keep their block: the next charge can change it.
+            0 < $subscription->getPrepaidDeliveriesLeft()
         ) {
             return [];
         }
 
-        $current = new SubscriptionInterval($subscription->getBillingIntervalCount(), $subscription->getBillingIntervalUnit());
+        $current = new SubscriptionInterval($subscription->getDeliveryIntervalCount(), $subscription->getDeliveryIntervalUnit());
         $storeFrequencies = null;
         $offers = null;
         foreach ($subscription->getItems() as $item) {
@@ -130,6 +132,12 @@ final class SubscriptionFrequencyChanger implements SubscriptionFrequencyChanger
         }
 
         $offers ??= [];
+        // One charge pays for one block: every item must move to terms of the same deliveries per charge.
+        foreach ($offers as $key => $offer) {
+            if (1 < \count(array_unique(array_map(static fn (array $target): int => $target[1]->getDeliveriesPerCharge(), $offer['targets'])))) {
+                unset($offers[$key]);
+            }
+        }
         uasort($offers, static fn (array $a, array $b): int => self::lengthInDays($a['interval']) <=> self::lengthInDays($b['interval']));
 
         return $offers;

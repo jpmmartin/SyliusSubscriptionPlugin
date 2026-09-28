@@ -65,6 +65,12 @@ final class ManagingSubscriptionPlansContext implements Context
         $this->createPage->setIntroductoryPrice('first_cycles', (int) $percentage, (int) $cycles);
     }
 
+    #[When('/^I make it charge (\d+) deliveries at a time$/')]
+    public function iMakeItChargeDeliveriesAtATime(string $deliveries): void
+    {
+        $this->createPage->chargeDeliveriesAtATime((int) $deliveries);
+    }
+
     #[When('/^I give it a free trial of (\d+) days$/')]
     public function iGiveItAFreeTrial(string $days): void
     {
@@ -131,6 +137,14 @@ final class ManagingSubscriptionPlansContext implements Context
         $this->openVariant($variant);
 
         Assert::same($this->subscriptionPlansPage->getPlanIntroductoryPrice($code), $introductoryPrice);
+    }
+
+    #[Then('/^the "([^"]+)" subscription plan of the ("[^"]+" variant) should charge (\d+) deliveries at a time$/')]
+    public function theSubscriptionPlanOfShouldChargeDeliveriesAtATime(string $code, ProductVariantInterface $variant, string $deliveries): void
+    {
+        $this->openVariant($variant);
+
+        Assert::same($this->subscriptionPlansPage->getPlanDeliveriesPerCharge($code), $deliveries);
     }
 
     #[Then('/^the "([^"]+)" subscription plan of the ("[^"]+" variant) should have no introductory price$/')]

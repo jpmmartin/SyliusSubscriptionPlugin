@@ -172,6 +172,24 @@
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.management.prepaid_deliveries" class="JpmMartin\SyliusSubscriptionPlugin\Management\PrepaidDeliveries">
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.scheduler" />
+            <argument type="service" id="jpm_martin_sylius_subscription.schedule.calendar" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.controller.cancel_subscription"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\CancelSubscriptionAction"
+                 public="true"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription" />
+            <argument type="service" id="sylius.context.customer" />
+            <argument type="service" id="sylius_abstraction.state_machine" />
+            <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="router" />
+            <tag name="controller.service_arguments" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.controller.skip_subscription_renewal"
                  class="JpmMartin\SyliusSubscriptionPlugin\Controller\SkipSubscriptionRenewalAction"
                  public="true"
@@ -230,6 +248,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.management.recovery" />
             <argument type="service" id="jpm_martin_sylius_subscription.pricing.pending_price_applier" />
             <argument type="service" id="JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface" />
+            <argument type="service" id="jpm_martin_sylius_subscription.management.prepaid_deliveries" />
             <tag name="twig.extension" />
         </service>
 

@@ -46,6 +46,11 @@ final class SubscriptionRenewalSkipper implements SubscriptionRenewalSkipperInte
             return null;
         }
 
+        // Skipping a prepaid block's charge would skip its deliveries too: pausing is for that.
+        if ($openCycle->isCharging() && 1 < $subscription->getDeliveriesPerCharge()) {
+            return null;
+        }
+
         if (null !== $this->maxConsecutiveSkips && $this->skipsInARowBefore($openCycle) >= $this->maxConsecutiveSkips) {
             return null;
         }

@@ -58,8 +58,9 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
 
         $openCycle = $this->scheduler->findOpenCycle($subscription);
 
-        // Neither state has an order yet: one awaiting payment keeps the items it was placed with.
-        return null !== $openCycle && \in_array($openCycle->getState(), self::UNCHARGED_OPEN_CYCLE_STATES, true);
+        // Neither state has an order yet: one awaiting payment keeps the items it was placed with. Deliveries
+        // already paid for keep what their block paid for: the next charge can change it.
+        return null !== $openCycle && \in_array($openCycle->getState(), self::UNCHARGED_OPEN_CYCLE_STATES, true) && 0 === $subscription->getPrepaidDeliveriesLeft();
     }
 
     public function editableItems(SubscriptionInterface $subscription): array
@@ -105,7 +106,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
                 $this->frequencyFor($candidate, $channel, $interval) :
                 $this->planFor($candidate, $interval);
             $maxCycles = $terms?->getMaxCycles();
-            if (null === $terms || (null !== $maxCycles && $item->getPaidCycles() >= $maxCycles)) {
+            if (null === $terms || (null !== $maxCycles && $item->getPaidCycles() >= $maxCycles) || $terms->getDeliveriesPerCharge() !== $subscription->getDeliveriesPerCharge()) {
                 continue;
             }
 
@@ -157,7 +158,8 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
 
         $offers = [];
         foreach ($candidates as [$variant, $terms]) {
-            if (\in_array($variant, $taken, true)) {
+            // One charge pays for one block: an item is only added on terms of the subscription's.
+            if (\in_array($variant, $taken, true) || $terms->getDeliveriesPerCharge() !== $subscription->getDeliveriesPerCharge()) {
                 continue;
             }
 
@@ -346,7 +348,7 @@ final class SubscriptionItemEditor implements SubscriptionItemEditorInterface
 
     private static function intervalOf(SubscriptionInterface $subscription): SubscriptionInterval
     {
-        return new SubscriptionInterval($subscription->getBillingIntervalCount(), $subscription->getBillingIntervalUnit());
+        return new SubscriptionInterval($subscription->getDeliveryIntervalCount(), $subscription->getDeliveryIntervalUnit());
     }
 
     /**

@@ -6,6 +6,7 @@
 {% set subscription = hookable_metadata.context.subscription %}
 {% set open_cycle = jpm_martin_sylius_subscription_open_cycle(subscription) %}
 {% set remaining_commitment = jpm_martin_sylius_subscription_remaining_commitment(subscription) %}
+{% set last_prepaid_delivery = jpm_martin_sylius_subscription_last_prepaid_delivery(subscription) %}
 
 <div class="mb-4">
     <div class="row mb-1">
@@ -20,6 +21,18 @@
         <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.price_per_renewal'|trans }}</div>
         <div class="col" {{ sylius_test_html_attribute('subscription-price') }}>{{ format(subscription.renewalTotal, subscription.currencyCode) }}</div>
     </div>
+    {% if last_prepaid_delivery is not null %}
+        <div class="row mb-1">
+            <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.prepaid_deliveries'|trans }}</div>
+            <div class="col" {{ sylius_test_html_attribute('subscription-prepaid-deliveries') }}>
+                {% if subscription.cancelsAfterPrepaidDeliveries %}
+                    {{ 'jpm_martin_sylius_subscription.ui.cancelled_after_prepaid_deliveries'|trans({ '%date%': last_prepaid_delivery|format_date }) }}
+                {% else %}
+                    {{ 'jpm_martin_sylius_subscription.ui.prepaid_deliveries_left'|trans({ '%count%': subscription.prepaidDeliveriesLeft, '%date%': last_prepaid_delivery|format_date }) }}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
     {% if remaining_commitment > 0 %}
         <div class="row mb-1">
             <div class="col-12 col-sm-4">{{ 'jpm_martin_sylius_subscription.ui.minimum_commitment'|trans }}</div>

@@ -81,6 +81,11 @@ jpm_martin_sylius_subscription:
         commitment_offer: '{1}Compromiso mínimo: puedes cancelar cuando hayas pagado tu primer pedido|]1,Inf[Compromiso mínimo: puedes cancelar cuando hayas pagado %count% pedidos'
         minimum_commitment: Compromiso mínimo
         commitment_left: '{1}1 renovación pagada más antes de poder cancelarla o pausarla|]1,Inf[%count% renovaciones pagadas más antes de poder cancelarla o pausarla'
+        prepaid_offer: 'Cada cobro paga %count% entregas: %price%'
+        deliveries_per_charge: Entregas por cobro
+        prepaid_deliveries: Entregas prepagadas
+        prepaid_deliveries_left: '{1}1 entrega pagada, el %date%|]1,Inf[%count% entregas pagadas, la última el %date%'
+        cancelled_after_prepaid_deliveries: 'Se cancela tras su última entrega pagada, el %date%'
         accept_new_price: Aceptar el precio nuevo
         accept_new_price_and_resume: Aceptar el precio nuevo y reanudar
         price_increase_help:
@@ -157,6 +162,8 @@ jpm_martin_sylius_subscription:
             discount_percentage: Descuento de suscriptor (%)
             max_cycles: Máximo de ciclos
             max_cycles_help: Déjalo vacío para renovar hasta que el cliente cancele.
+            deliveries_per_charge: Entregas por cobro
+            deliveries_per_charge_help: 'Por encima de 1, cada cobro paga esas entregas de una vez, y las entregas entre cobros se envían sin cobrar, envío incluido. No se combina con una oferta de entrada.'
             commitment_cycles: Compromiso mínimo (ciclos)
             commitment_cycles_help: 'Ciclos que paga el suscriptor, el primer pedido incluido, antes de poder cancelar o pausar la suscripción o quitar este producto; las renovaciones saltadas no cuentan. Déjalo vacío para no pedir ninguno. Comprobar que la ley de tus clientes lo permite es cosa tuya.'
             introductory_price: Oferta de entrada

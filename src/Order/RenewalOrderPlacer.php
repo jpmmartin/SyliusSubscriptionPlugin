@@ -49,6 +49,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         private readonly VariantAvailabilityChecker $availabilityChecker,
         private readonly StateMachineInterface $stateMachine,
         private readonly ObjectManager $orderManager,
+        private readonly PrepaidDeliveryOrders $prepaidDeliveryOrders,
     ) {
     }
 
@@ -66,6 +67,9 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         Assert::notNull($lastOrder, 'A subscription renews in the locale, and until they are changed with the addresses, of its last order.');
 
         $order = $this->orderFactory->createNew();
+        if (!$cycle->isCharging()) {
+            $this->prepaidDeliveryOrders->add($order);
+        }
         $order->setChannel($subscription->getChannel());
         $order->setCustomer($subscription->getCustomer());
         $order->setCurrencyCode($subscription->getCurrencyCode());
@@ -76,7 +80,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
         foreach ($taken as $item) {
             $line = $this->orderItemFactory->createNew();
             $line->setVariant($item->getProductVariant());
-            $line->setUnitPrice($item->getUnitPriceForCycle());
+            $line->setUnitPrice(self::unitPriceIn($cycle, $item));
             $line->setImmutable(true);
             $this->quantityModifier->modify($line, $item->getQuantity());
             $order->addItem($line);
@@ -135,7 +139,7 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
             Assert::isInstanceOf($cycleItem, SubscriptionCycleItemInterface::class);
             $cycleItem->setSubscriptionItem($item);
             $cycleItem->setQuantity($item->getQuantity());
-            $cycleItem->setUnitPrice($item->getUnitPriceForCycle());
+            $cycleItem->setUnitPrice(self::unitPriceIn($cycle, $item));
             $cycleItem->setSkippedReason($skippedReason);
             $cycle->addItem($cycleItem);
 
@@ -162,5 +166,15 @@ final class RenewalOrderPlacer implements RenewalOrderPlacerInterface
     private function applyCheckout(OrderInterface $order, string $transition): void
     {
         $this->stateMachine->apply($order, OrderCheckoutTransitions::GRAPH, $transition);
+    }
+
+    /** What the cycle charges for one of the item: the whole block when it charges a prepaid one, nothing when it delivers one. */
+    private static function unitPriceIn(SubscriptionCycleInterface $cycle, SubscriptionItemInterface $item): int
+    {
+        if (!$cycle->isCharging()) {
+            return 0;
+        }
+
+        return $item->getUnitPriceForCycle() * ($cycle->getSubscription()?->getDeliveriesPerCharge() ?? 1);
     }
 }

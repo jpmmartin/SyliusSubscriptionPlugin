@@ -2,8 +2,9 @@
     Only present when the selected variant has enabled plans; otherwise the variant is bought once
     and nothing is rendered. Each plan with an introductory price says it below its choice: that
     price, how many orders it lasts, and the price after; one with a free trial the customer can still
-    have, how many days it lasts and the price after; one with a minimum commitment, how many orders
-    are paid before cancelling.
+    have, how many days it lasts and the price after; one charged by blocks, how many deliveries each
+    charge pays for and what it costs; one with a minimum commitment, how many orders are paid before
+    cancelling.
 #}
 {% import '@SyliusShop/shared/macro/money.html.twig' as money %}
 
@@ -23,6 +24,12 @@
             {% set plan = plans[choice_field.vars.value] ?? null %}
             {% set offer = plan is null ? null : jpm_martin_sylius_subscription_introductory_offer(plan.productVariant, plan, sylius.channel) %}
             {% set trial = plan is null ? null : jpm_martin_sylius_subscription_trial_offer(plan.productVariant, plan, sylius.channel) %}
+            {% set prepaid = plan is null ? null : jpm_martin_sylius_subscription_prepaid_offer(plan.productVariant, plan, sylius.channel) %}
+            {% if prepaid is not null %}
+                <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('prepaid', plan.code) }}>
+                    {{ 'jpm_martin_sylius_subscription.ui.prepaid_offer'|trans({ '%count%': prepaid.deliveries, '%price%': money.convertAndFormat(prepaid.price) }) }}
+                </div>
+            {% endif %}
             {% if plan is not null and plan.commitmentCycles is not null %}
                 <div class="form-text ms-4 mt-0 mb-2" {{ sylius_test_html_attribute('commitment', plan.code) }}>
                     {{ 'jpm_martin_sylius_subscription.ui.commitment_offer'|trans({ '%count%': plan.commitmentCycles }) }}

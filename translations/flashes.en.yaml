@@ -5,6 +5,7 @@ jpm_martin_sylius_subscription:
         frequency_not_offered: "This frequency is not offered for your cart."
     subscription:
         cancelled: The subscription has been cancelled.
+        cancels_after_prepaid_deliveries: The subscription will be cancelled once the deliveries you have paid for are sent. Nothing more will be charged.
         frequency_changed: The subscription frequency has been changed.
         address_changed: "The subscription's addresses have been changed."
         items_changed: "The subscription's items have been changed."

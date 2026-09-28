@@ -8,6 +8,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleFailureHandler;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Gate\GateDecision;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionCalendarInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Gate\ScriptedCycleGate;
@@ -70,7 +71,9 @@ final class FailingCyclesTest extends LifecycleTestCase
         $stateMachine = self::getContainer()->get('sylius_abstraction.state_machine');
         /** @var SubscriptionSchedulerInterface $scheduler */
         $scheduler = self::getContainer()->get('jpm_martin_sylius_subscription.schedule.scheduler');
-        $failureHandler = new CycleFailureHandler($stateMachine, $scheduler, null);
+        /** @var SubscriptionCalendarInterface $calendar */
+        $calendar = self::getContainer()->get('jpm_martin_sylius_subscription.schedule.calendar');
+        $failureHandler = new CycleFailureHandler($stateMachine, $scheduler, $calendar, null);
 
         $subscription = $this->subscription();
         for ($failure = 1; $failure <= 5; ++$failure) {

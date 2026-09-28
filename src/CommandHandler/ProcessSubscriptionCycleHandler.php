@@ -7,6 +7,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\CommandHandler;
 use JpmMartin\SyliusSubscriptionPlugin\Command\ProcessSubscriptionCycle;
 use JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleChargerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Cycle\CycleFailureHandlerInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Cycle\CyclePayer;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttemptInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
@@ -52,6 +53,7 @@ final class ProcessSubscriptionCycleHandler
         private readonly SubscriptionSchedulerInterface $scheduler,
         private readonly CustomerPaymentInProgressChecker $customerPaymentInProgressChecker,
         private readonly PendingPriceApplier $pendingPriceApplier,
+        private readonly CyclePayer $cyclePayer,
     ) {
     }
 
@@ -133,6 +135,14 @@ final class ProcessSubscriptionCycleHandler
         }
 
         $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_PLACE_ORDER);
+
+        // A prepaid delivery: the charge of its block paid for it.
+        if (!$cycle->isCharging()) {
+            $this->cyclePayer->pay($cycle);
+
+            return;
+        }
+
         $this->cycleCharger->charge($cycle);
     }
 }

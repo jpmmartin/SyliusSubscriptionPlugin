@@ -47,4 +47,11 @@ interface SubscriptionTermsInterface
      * cancel or pause its subscription or remove it; null commits to nothing. Never above the maximum.
      */
     public function getCommitmentCycles(): ?int;
+
+    /**
+     * Deliveries each charge pays for, 1 by default. Above 1, a subscription on these terms is prepaid:
+     * its first cycle of each block charges them all, and the others are delivered without a charge.
+     * Never together with an introductory price or a free trial.
+     */
+    public function getDeliveriesPerCharge(): int;
 }

@@ -57,6 +57,12 @@ final class SubscribingToProductsContext implements Context
         Assert::same($this->productPage->getIntroductoryPrice($planCode), $introductoryPrice);
     }
 
+    #[Then('/^the "([^"]+)" plan should explain "([^"]+)"$/')]
+    public function thePlanShouldExplain(string $planCode, string $prepaid): void
+    {
+        Assert::same($this->productPage->getPrepaid($planCode), $prepaid);
+    }
+
     #[Then('/^the "([^"]+)" plan should warn "([^"]+)"$/')]
     public function thePlanShouldWarn(string $planCode, string $commitment): void
     {

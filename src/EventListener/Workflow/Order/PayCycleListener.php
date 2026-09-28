@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow\Order;
 
+use JpmMartin\SyliusSubscriptionPlugin\Cycle\CyclePayer;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
-use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
-use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
-use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Workflow\Event\CompletedEvent;
 use Webmozart\Assert\Assert;
@@ -23,8 +21,7 @@ final class PayCycleListener
     /** @param SubscriptionCycleRepositoryInterface<SubscriptionCycleInterface> $cycleRepository */
     public function __construct(
         private readonly SubscriptionCycleRepositoryInterface $cycleRepository,
-        private readonly StateMachineInterface $stateMachine,
-        private readonly SubscriptionSchedulerInterface $scheduler,
+        private readonly CyclePayer $cyclePayer,
     ) {
     }
 
@@ -34,23 +31,10 @@ final class PayCycleListener
         Assert::isInstanceOf($order, OrderInterface::class);
 
         $cycle = $this->cycleRepository->findOneByOrder($order);
-        if (null === $cycle || !$this->stateMachine->can($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_PAY)) {
+        if (null === $cycle || !$this->cyclePayer->canPay($cycle)) {
             return;
         }
 
-        $this->stateMachine->apply($cycle, SubscriptionCycleTransitions::GRAPH, SubscriptionCycleTransitions::TRANSITION_PAY);
-        $cycle->setNextAttemptAt(null);
-
-        foreach ($cycle->getItems() as $cycleItem) {
-            $item = $cycleItem->getSubscriptionItem();
-            if ($cycleItem->isIncluded() && null !== $item) {
-                $item->setPaidCycles($item->getPaidCycles() + 1);
-            }
-        }
-
-        $subscription = $cycle->getSubscription();
-        Assert::notNull($subscription);
-        $subscription->setConsecutiveFailedCycles(0);
-        $this->scheduler->scheduleNext($subscription);
+        $this->cyclePayer->pay($cycle);
     }
 }

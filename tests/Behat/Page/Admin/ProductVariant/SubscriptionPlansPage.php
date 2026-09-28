@@ -89,6 +89,11 @@ final class SubscriptionPlansPage extends SymfonyPage
         return $this->getPlanCell($code, 'subscription-plan-discount')->getText();
     }
 
+    public function getPlanDeliveriesPerCharge(string $code): string
+    {
+        return $this->getPlanCell($code, 'subscription-plan-deliveries-per-charge')->getText();
+    }
+
     public function getPlanIntroductoryPrice(string $code): string
     {
         return $this->getPlanCell($code, 'subscription-plan-introductory-price')->getText();

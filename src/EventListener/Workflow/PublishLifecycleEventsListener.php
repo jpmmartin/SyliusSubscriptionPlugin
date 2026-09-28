@@ -7,6 +7,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\EventListener\Workflow;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Event\EventPublisher;
+use JpmMartin\SyliusSubscriptionPlugin\Event\PrepaidDeliveryPlaced;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalCancelled;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalFailed;
 use JpmMartin\SyliusSubscriptionPlugin\Event\RenewalHeld;
@@ -93,7 +94,9 @@ final class PublishLifecycleEventsListener
         $published = match ($transition) {
             SubscriptionCycleTransitions::TRANSITION_HOLD => new RenewalHeld($subscriptionId, $cycleId, $number, $cycle->getHoldUntil(), $cycle->getHoldReason()),
             SubscriptionCycleTransitions::TRANSITION_PLACE_ORDER => new RenewalOrderPlaced($subscriptionId, $cycleId, $number, (int) $orderId),
-            SubscriptionCycleTransitions::TRANSITION_PAY => new RenewalPaid($subscriptionId, $cycleId, $number, (int) $orderId),
+            SubscriptionCycleTransitions::TRANSITION_PAY => $cycle->isCharging()
+                ? new RenewalPaid($subscriptionId, $cycleId, $number, (int) $orderId)
+                : new PrepaidDeliveryPlaced($subscriptionId, $cycleId, $number, (int) $orderId, (int) $cycle->getSubscription()?->getPrepaidDeliveriesLeft()),
             SubscriptionCycleTransitions::TRANSITION_FAIL => new RenewalFailed($subscriptionId, $cycleId, $number, $orderId, $cycle->getCancellationReason()),
             SubscriptionCycleTransitions::TRANSITION_RETRY => new RenewalRetried($subscriptionId, $cycleId, $number),
             // A skipped renewal is announced by the skipper, once the next date is known.

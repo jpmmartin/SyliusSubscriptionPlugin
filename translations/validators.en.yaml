@@ -20,11 +20,15 @@ jpm_martin_sylius_subscription:
             range: The subscriber discount must be between 0 and 100.
         max_cycles:
             positive: The maximum number of cycles must be at least 1.
+            whole_blocks: 'The maximum of cycles must be a whole number of blocks: a multiple of the deliveries per charge.'
         introductory_discount_percentage:
             range: The introductory discount must be between 0 and 100.
             not_blank: Please enter the introductory discount.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        deliveries_per_charge:
+            positive: Each charge must pay for at least 1 delivery.
+            not_with_introductory_offer: Prepaid deliveries cannot be combined with an introductory price or a free trial.
         commitment_cycles:
             positive: The minimum commitment must be at least 1 cycle.
             above_max_cycles: The minimum commitment cannot be longer than the maximum of cycles.
@@ -45,10 +49,14 @@ jpm_martin_sylius_subscription:
             range: The subscriber discount must be between 0 and 100.
         max_cycles:
             positive: The maximum number of cycles must be at least 1.
+            whole_blocks: 'The maximum of cycles must be a whole number of blocks: a multiple of the deliveries per charge.'
         introductory_discount_percentage:
             range: The introductory discount must be between 0 and 100.
         introductory_cycles:
             positive: The introductory price must last at least 1 cycle.
+        deliveries_per_charge:
+            positive: Each charge must pay for at least 1 delivery.
+            not_with_introductory_offer: Prepaid deliveries cannot be combined with an introductory price or a free trial.
         commitment_cycles:
             positive: The minimum commitment must be at least 1 cycle.
             above_max_cycles: The minimum commitment cannot be longer than the maximum of cycles.

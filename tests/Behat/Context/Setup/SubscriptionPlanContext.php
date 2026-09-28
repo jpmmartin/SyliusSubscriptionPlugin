@@ -68,6 +68,14 @@ final class SubscriptionPlanContext implements Context
         $this->subscriptionPlanRepository->add($plan);
     }
 
+    #[Given('/^the "([^"]+)" subscription plan charges (\d+) deliveries at a time$/')]
+    public function theSubscriptionPlanChargesDeliveriesAtATime(string $code, string $deliveries): void
+    {
+        $plan = $this->plan($code);
+        $plan->setDeliveriesPerCharge((int) $deliveries);
+        $this->subscriptionPlanRepository->add($plan);
+    }
+
     #[Given('/^the "([^"]+)" subscription plan is disabled$/')]
     public function theSubscriptionPlanIsDisabled(string $code): void
     {

@@ -63,6 +63,12 @@
                 <option name="message">jpm_martin_sylius_subscription.subscription_plan.max_cycles.positive</option>
                 <option name="groups">jpm_martin_sylius_subscription</option>
             </constraint>
+            <!-- Each charge pays for a whole block: a last block cut short would charge deliveries never made. -->
+            <constraint name="Expression">
+                <option name="expression">value === null or this.getDeliveriesPerCharge() &lt; 1 or value % this.getDeliveriesPerCharge() === 0</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.max_cycles.whole_blocks</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
         </property>
 
         <property name="introductoryDiscountPercentage">
@@ -78,6 +84,20 @@
             <constraint name="GreaterThanOrEqual">
                 <option name="value">1</option>
                 <option name="message">jpm_martin_sylius_subscription.subscription_plan.introductory_cycles.positive</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+        </property>
+
+        <property name="deliveriesPerCharge">
+            <constraint name="GreaterThanOrEqual">
+                <option name="value">1</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.deliveries_per_charge.positive</option>
+                <option name="groups">jpm_martin_sylius_subscription</option>
+            </constraint>
+            <!-- A prepaid block is one way to price, an introductory price or a free trial another. -->
+            <constraint name="Expression">
+                <option name="expression">value &lt;= 1 or (this.getIntroductoryDiscountPercentage() === null and this.getTrialDays() === null)</option>
+                <option name="message">jpm_martin_sylius_subscription.subscription_plan.deliveries_per_charge.not_with_introductory_offer</option>
                 <option name="groups">jpm_martin_sylius_subscription</option>
             </constraint>
         </property>

@@ -35,6 +35,8 @@ class SubscriptionPlan implements SubscriptionPlanInterface
 
     protected ?int $commitmentCycles = null;
 
+    protected int $deliveriesPerCharge = 1;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -148,5 +150,15 @@ class SubscriptionPlan implements SubscriptionPlanInterface
     public function setCommitmentCycles(?int $commitmentCycles): void
     {
         $this->commitmentCycles = $commitmentCycles;
+    }
+
+    public function getDeliveriesPerCharge(): int
+    {
+        return $this->deliveriesPerCharge;
+    }
+
+    public function setDeliveriesPerCharge(int $deliveriesPerCharge): void
+    {
+        $this->deliveriesPerCharge = $deliveriesPerCharge;
     }
 }

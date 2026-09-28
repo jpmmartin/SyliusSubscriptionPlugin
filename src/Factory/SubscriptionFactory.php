@@ -28,7 +28,8 @@ use Webmozart\Assert\Assert;
  * A line on terms with an introductory price carries that price instead. Its item then freezes the
  * normal price, worked out as the cart does, and keeps the introductory one with the cycles it lasts.
  * A line given a free trial costs nothing: its item freezes the normal price too, and the subscription,
- * whose lines all had the same trial, keeps its days.
+ * whose lines all had the same trial, keeps its days. A prepaid line costs its block of deliveries: its
+ * item freezes the price of one, and the subscription is billed that many intervals at a time.
  */
 final class SubscriptionFactory implements SubscriptionFactoryInterface
 {
@@ -75,15 +76,17 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
             $terms = $item->getTerms();
             Assert::notNull($terms);
             if ($subscription->getItems()->isEmpty()) {
-                $subscription->setBillingIntervalCount($terms->getIntervalCount());
+                // A prepaid block is charged once for its deliveries: billed that many intervals at a time.
+                $subscription->setBillingIntervalCount($terms->getIntervalCount() * $terms->getDeliveriesPerCharge());
                 $subscription->setBillingIntervalUnit($terms->getIntervalUnit());
                 $subscription->setDeliveryIntervalCount($terms->getIntervalCount());
                 $subscription->setDeliveryIntervalUnit($terms->getIntervalUnit());
             }
             Assert::true(
-                $terms->getIntervalCount() === $subscription->getBillingIntervalCount() && $terms->getIntervalUnit() === $subscription->getBillingIntervalUnit(),
+                $terms->getIntervalCount() === $subscription->getDeliveryIntervalCount() && $terms->getIntervalUnit() === $subscription->getDeliveryIntervalUnit(),
                 'The items of a subscription share its interval.',
             );
+            Assert::same($terms->getDeliveriesPerCharge(), $subscription->getDeliveriesPerCharge(), 'The items of a subscription share its deliveries per charge.');
             Assert::isInstanceOf($orderItem, SubscriptionPlanAwareInterface::class);
             if ($subscription->getItems()->isEmpty()) {
                 $subscription->setTrialDays($orderItem->getSubscriptionTrialDays());
@@ -122,13 +125,14 @@ final class SubscriptionFactory implements SubscriptionFactoryInterface
         $item->setProductVariant($variant);
         $item->setQuantity($orderItem->getQuantity());
         $hasTrial = null !== $orderItem->getSubscriptionTrialDays();
-        if (null === $terms->getIntroductoryDiscountPercentage() && !$hasTrial) {
+        // A prepaid line costs its whole block; the item freezes the price of one delivery.
+        if (null === $terms->getIntroductoryDiscountPercentage() && !$hasTrial && 1 === $terms->getDeliveriesPerCharge()) {
             $item->setUnitPrice($orderItem->getUnitPrice());
         } else {
             Assert::notNull($channel);
             $price = $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]);
             $item->setUnitPrice(SubscriptionPlanPriceProcessor::applyDiscount($price, $terms->getDiscountPercentage()));
-            if (!$hasTrial) {
+            if (!$hasTrial && null !== $terms->getIntroductoryDiscountPercentage()) {
                 $item->setIntroductoryPrice($orderItem->getUnitPrice(), $terms->getIntroductoryCycles());
             }
         }

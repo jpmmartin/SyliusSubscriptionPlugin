@@ -13,6 +13,9 @@ with all of them, charged without the customer present, with retries when a char
 - **Introductory prices**: a plan or a store frequency can take a discount of its own off the first
   order, or the first cycles, of each new subscription, before the subscriber price applies. See
   [Introductory prices](#introductory-prices).
+- **Prepaid deliveries**: a plan or a store frequency can charge a block of deliveries at once, three
+  months paid in advance with one delivery a month for instance; the deliveries between charges are
+  placed as orders of nothing. See [Prepaid deliveries](#prepaid-deliveries).
 - **Minimum commitment**: a plan or a store frequency can commit its subscribers to a number of paid
   cycles before they can cancel or pause, as a better price's counterpart. See
   [Minimum commitment](#minimum-commitment).
@@ -311,7 +314,9 @@ The skip is a service, `SubscriptionRenewalSkipperInterface`: replace it to let 
 another way.
 
 A subscription within a minimum commitment cannot be paused by its customer, only skipped; see
-[Minimum commitment](#minimum-commitment).
+[Minimum commitment](#minimum-commitment). A prepaid delivery can be skipped and stays paid for; the
+charge of a prepaid block cannot, since it would skip its deliveries too: pause instead. See
+[Prepaid deliveries](#prepaid-deliveries).
 
 ## Changing the address
 
@@ -570,6 +575,40 @@ and the next two renewals.
   `renewal_notice_days: null`, keep a notice of your own if you tell customers the introductory price
   ends. See [Events](#events).
 
+## Prepaid deliveries
+
+A plan, on the variant's Subscription tab, or a store frequency can charge its deliveries by blocks:
+"Deliveries per charge" above 1, which an introductory offer cannot go with. A monthly plan at $18.00
+a delivery charging 3 deliveries at a time charges $54.00 every three months and delivers every month.
+
+- **The charge of a block** is the first cycle of each block. Its order carries each item at its frozen
+  price times the deliveries of the block, and is charged as any renewal, with its retries. The initial
+  order charges the first block. The product page, under each plan, and the cart line say it: "Each
+  charge pays for 3 deliveries: $54.00". Each item freezes the price of one delivery, which is what a
+  price update reprices.
+- **The deliveries** are the other cycles of the block. Each places its order on its date, with its lines
+  at 0 and no shipping charge, and closes without a charge: Sylius completes an order of nothing as paid,
+  with its shipment ready to be prepared and sent like any other. It goes through the gates like any
+  renewal, counts as a paid cycle for the maximum of cycles and the minimum commitment, is not announced
+  with `RenewalUpcoming` and publishes `PrepaidDeliveryPlaced` instead of `RenewalPaid`.
+- **Shipping** is charged once per block, with its charge: the deliveries ship for free. A store that
+  wants to charge the shipping of every delivery puts it in the plan's price. The same goes for taxes,
+  worked out on the block's order: check with your accountant how you invoice prepaid deliveries.
+- **The maximum of cycles** of such terms must be a whole number of blocks, so no charge pays for
+  deliveries that will not be made.
+- **A block that cannot be charged** is not delivered: its charge fails as any renewal, and the next
+  cycle is the charge of the following block, on its date. A block paid late, by an administrator's
+  retry or by its customer recovering the subscription, is delivered from the cycle scheduled meanwhile.
+- **Pausing** keeps the deliveries paid for: resuming delivers them first, then comes the next charge.
+- **Cancelling:** a customer who cancels with deliveries paid for still receives them on their dates
+  and is charged nothing more; the subscription is cancelled after the last one, and the account says
+  when. An administrator cancels at once: refunding what was not delivered is up to the store.
+- **Changing the frequency or the items** is not offered while deliveries are paid for: the next charge
+  can change them. An item added or moved to other terms keeps the subscription's deliveries per charge.
+
+`PrepaidDeliveryPlaced` carries `cycleId`, `cycleNumber`, `orderId` and `deliveriesLeft`, the deliveries
+still paid for after this one; see [Events](#events).
+
 ## Minimum commitment
 
 A plan, on the variant's Subscription tab, or a store frequency can have a minimum commitment: the
@@ -801,6 +840,7 @@ subscription; listen to that interface to receive them all.
 | `RenewalOrderPlaced` | the cycle places its renewal order | `cycleId`, `cycleNumber`, `orderId` |
 | `RenewalChargeDeclined` | a charge is declined or not attempted, and will be retried | `cycleId`, `cycleNumber`, `orderId`, `nextAttemptAt`, `reason`, `code` |
 | `RenewalPaid` | the renewal order is paid | `cycleId`, `cycleNumber`, `orderId` |
+| `PrepaidDeliveryPlaced` | a prepaid delivery places its order, without a charge; published instead of `RenewalPaid` | `cycleId`, `cycleNumber`, `orderId`, `deliveriesLeft` |
 | `RenewalFailed` | the cycle fails: retries run out, a gate rejects it, its hold expires or nothing could be renewed | `cycleId`, `cycleNumber`, `orderId` (null without an order), `reason` |
 | `RenewalRetried` | an administrator retries a failed cycle, or its customer starts recovering a suspended subscription; `RenewalPaid` or `RenewalFailed` follows with its new order | `cycleId`, `cycleNumber` |
 | `RenewalSkipped` | the next renewal is skipped, by the customer or an administrator; published instead of `RenewalCancelled` | `cycleId`, `cycleNumber`, `scheduledAt`, `nextScheduledAt` |
@@ -886,6 +926,12 @@ renewal order that is not stored yet, which no flow of the plugin makes, publish
 logged. Only a handler of yours that throws, run synchronously, stops it, as above.
 
 ## Upgrading
+
+From a version without prepaid deliveries, `doctrine:migrations:migrate` gives every plan and store
+frequency one delivery per charge, no subscription any delivery paid for ahead, and every cycle a
+charge: nothing changes. A subscription's calendar now follows its delivery interval, which was always
+its billing interval. The account's cancel route has a controller of its own, which waits for the
+deliveries paid for. Going back down is refused while a cycle delivers without a charge.
 
 From a version without minimum commitments, `doctrine:migrations:migrate` adds them to plans, store
 frequencies and items, with none set: no customer is kept from cancelling. The account's routes gain

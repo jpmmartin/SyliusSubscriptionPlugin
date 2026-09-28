@@ -63,6 +63,35 @@ final class SubscriptionPlanValidationTest extends LifecycleTestCase
         self::assertSame([], $this->violationsOf($plan));
     }
 
+    public function testItsDeliveriesPerChargeAreOneAtLeastAndNeverCombinedWithAnIntroductoryOffer(): void
+    {
+        $plan = $this->coffeeMonthly;
+        self::assertSame(1, $plan->getDeliveriesPerCharge());
+        $plan->setDeliveriesPerCharge(0);
+        self::assertSame(['deliveriesPerCharge' => 'jpm_martin_sylius_subscription.subscription_plan.deliveries_per_charge.positive'], $this->violationsOf($plan));
+
+        $plan->setDeliveriesPerCharge(3);
+        self::assertSame([], $this->violationsOf($plan));
+
+        $plan->setTrialDays(14);
+        self::assertSame(['deliveriesPerCharge' => 'jpm_martin_sylius_subscription.subscription_plan.deliveries_per_charge.not_with_introductory_offer'], $this->violationsOf($plan));
+
+        $plan->setTrialDays(null);
+        $plan->setIntroductoryDiscountPercentage(50);
+        self::assertSame(['deliveriesPerCharge' => 'jpm_martin_sylius_subscription.subscription_plan.deliveries_per_charge.not_with_introductory_offer'], $this->violationsOf($plan));
+    }
+
+    public function testItsMaximumOfCyclesIsAWholeNumberOfBlocks(): void
+    {
+        $plan = $this->coffeeMonthly;
+        $plan->setDeliveriesPerCharge(3);
+        $plan->setMaxCycles(4);
+        self::assertSame(['maxCycles' => 'jpm_martin_sylius_subscription.subscription_plan.max_cycles.whole_blocks'], $this->violationsOf($plan));
+
+        $plan->setMaxCycles(6);
+        self::assertSame([], $this->violationsOf($plan));
+    }
+
     /** @return array<string, string> the message template of each violation, by property */
     private function violationsOf(SubscriptionPlanInterface $plan): array
     {

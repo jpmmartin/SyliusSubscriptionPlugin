@@ -48,6 +48,9 @@
         <field name="suspendedForUnpaidRenewals" column="suspended_for_unpaid_renewals" type="boolean" />
         <!-- The free trial it started with, in days: its second cycle is due when it ends. -->
         <field name="trialDays" column="trial_days" type="integer" nullable="true" />
+        <!-- A prepaid block: the deliveries paid for and still to place, and a cancellation that waits for them. -->
+        <field name="prepaidDeliveriesLeft" column="prepaid_deliveries_left" type="integer" />
+        <field name="cancelsAfterPrepaidDeliveries" column="cancels_after_prepaid_deliveries" type="boolean" />
         <!-- When its customer accepted the price increase pending on its items; cleared when another is announced. -->
         <field name="priceIncreaseAcceptedAt" column="price_increase_accepted_at" type="datetime_immutable" nullable="true" />
 

@@ -61,6 +61,10 @@ class Subscription implements SubscriptionInterface
 
     protected ?int $trialDays = null;
 
+    protected int $prepaidDeliveriesLeft = 0;
+
+    protected bool $cancelsAfterPrepaidDeliveries = false;
+
     protected ?\DateTimeImmutable $priceIncreaseAcceptedAt = null;
 
     /** @var Collection<int, SubscriptionItemInterface> */
@@ -283,6 +287,39 @@ class Subscription implements SubscriptionInterface
     public function getTrialDays(): ?int
     {
         return $this->trialDays;
+    }
+
+    public function getDeliveriesPerCharge(): int
+    {
+        if (
+            $this->billingIntervalUnit !== $this->deliveryIntervalUnit ||
+            0 >= $this->deliveryIntervalCount ||
+            0 !== $this->billingIntervalCount % $this->deliveryIntervalCount
+        ) {
+            return 1;
+        }
+
+        return max(1, intdiv($this->billingIntervalCount, $this->deliveryIntervalCount));
+    }
+
+    public function getPrepaidDeliveriesLeft(): int
+    {
+        return $this->prepaidDeliveriesLeft;
+    }
+
+    public function setPrepaidDeliveriesLeft(int $prepaidDeliveriesLeft): void
+    {
+        $this->prepaidDeliveriesLeft = $prepaidDeliveriesLeft;
+    }
+
+    public function cancelsAfterPrepaidDeliveries(): bool
+    {
+        return $this->cancelsAfterPrepaidDeliveries;
+    }
+
+    public function setCancelsAfterPrepaidDeliveries(bool $cancelsAfterPrepaidDeliveries): void
+    {
+        $this->cancelsAfterPrepaidDeliveries = $cancelsAfterPrepaidDeliveries;
     }
 
     public function setTrialDays(?int $trialDays): void

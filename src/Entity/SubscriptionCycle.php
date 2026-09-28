@@ -41,6 +41,8 @@ class SubscriptionCycle implements SubscriptionCycleInterface
 
     protected bool $skipped = false;
 
+    protected bool $charging = true;
+
     /** @var Collection<int, SubscriptionChargeAttemptInterface> */
     protected Collection $attempts;
 
@@ -227,5 +229,15 @@ class SubscriptionCycle implements SubscriptionCycleInterface
     public function setSkipped(bool $skipped): void
     {
         $this->skipped = $skipped;
+    }
+
+    public function isCharging(): bool
+    {
+        return $this->charging;
+    }
+
+    public function setCharging(bool $charging): void
+    {
+        $this->charging = $charging;
     }
 }

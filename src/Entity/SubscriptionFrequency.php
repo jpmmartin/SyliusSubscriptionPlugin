@@ -35,6 +35,8 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
 
     protected ?int $commitmentCycles = null;
 
+    protected int $deliveriesPerCharge = 1;
+
     /** @var Collection<array-key, ChannelInterface> */
     protected Collection $channels;
 
@@ -146,6 +148,16 @@ class SubscriptionFrequency implements SubscriptionFrequencyInterface
     public function setCommitmentCycles(?int $commitmentCycles): void
     {
         $this->commitmentCycles = $commitmentCycles;
+    }
+
+    public function getDeliveriesPerCharge(): int
+    {
+        return $this->deliveriesPerCharge;
+    }
+
+    public function setDeliveriesPerCharge(int $deliveriesPerCharge): void
+    {
+        $this->deliveriesPerCharge = $deliveriesPerCharge;
     }
 
     public function getChannels(): Collection

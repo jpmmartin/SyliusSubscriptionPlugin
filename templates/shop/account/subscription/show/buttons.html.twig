@@ -77,7 +77,7 @@
             </form>
         {% endif %}
     {% endfor %}
-    {% if sylius_sm_can(subscription, 'jpm_martin_sylius_subscription', 'cancel') %}
+    {% if sylius_sm_can(subscription, 'jpm_martin_sylius_subscription', 'cancel') and not subscription.cancelsAfterPrepaidDeliveries %}
         <form method="post" action="{{ path('jpm_martin_sylius_subscription_shop_account_subscription_cancel', { id: subscription.id }) }}">
             <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token(subscription.id) }}">

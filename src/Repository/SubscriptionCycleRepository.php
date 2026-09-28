@@ -52,6 +52,9 @@ class SubscriptionCycleRepository extends EntityRepository implements Subscripti
             ->andWhere('o.scheduledAt > :now')
             ->andWhere('o.scheduledAt <= :until')
             ->andWhere('o.renewalNoticeAt IS NULL')
+            // A prepaid delivery charges nothing: only the charges are announced.
+            ->andWhere('o.charging = :charging')
+            ->setParameter('charging', true)
             ->setParameter('active', SubscriptionInterface::STATE_ACTIVE)
             ->setParameter('scheduled', SubscriptionCycleInterface::STATE_SCHEDULED)
             ->setParameter('now', $now)

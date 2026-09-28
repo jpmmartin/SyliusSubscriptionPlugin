@@ -17,7 +17,8 @@ use Webmozart\Assert\Assert;
  * Prices a subscription line at the variant's channel price less the discount of its terms: its plan,
  * or the frequency its cart is repeated with. Terms with an introductory price take their introductory
  * discount instead, since the initial order is the first cycle. A line given a free trial costs nothing,
- * and keeps the days of it for the subscription it starts.
+ * and keeps the days of it for the subscription it starts. A prepaid line costs its whole block of
+ * deliveries: the price of one times how many each charge pays for.
  *
  * Runs right after Sylius's own price recalculation (priority 50) and before shipments, promotions
  * and taxes, so everything that follows sees the subscriber price, as it would any unit price. The
@@ -69,7 +70,8 @@ final class SubscriptionPlanPriceProcessor implements OrderProcessorInterface
 
             $price = $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]);
 
-            $item->setUnitPrice(self::applyDiscount($price, $terms->getIntroductoryDiscountPercentage() ?? $terms->getDiscountPercentage()));
+            // A prepaid line pays for its whole block of deliveries.
+            $item->setUnitPrice(self::applyDiscount($price, $terms->getIntroductoryDiscountPercentage() ?? $terms->getDiscountPercentage()) * $terms->getDeliveriesPerCharge());
         }
     }
 

@@ -45,7 +45,8 @@ final class CreateSubscriptionsListener
             $terms = $orderItem->getSubscriptionTerms();
             Assert::notNull($terms);
             // Lines given a free trial start a subscription of their own, whose calendar starts when it ends.
-            $key = $terms->getIntervalCount() . ' ' . $terms->getIntervalUnit()->value . ' ' . ($orderItem->getSubscriptionTrialDays() ?? '-');
+            // So do lines prepaid by blocks of another size, since each subscription charges one block.
+            $key = $terms->getIntervalCount() . ' ' . $terms->getIntervalUnit()->value . ' ' . ($orderItem->getSubscriptionTrialDays() ?? '-') . ' ' . $terms->getDeliveriesPerCharge();
             $linesByInterval[$key][] = $orderItem;
         }
 

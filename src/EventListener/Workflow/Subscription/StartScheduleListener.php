@@ -43,6 +43,8 @@ final class StartScheduleListener
         $subscription->setActivatedAt($now);
         $subscription->setScheduleAnchorAt(null === $trialDays ? $now : $now->add(new \DateInterval(\sprintf('P%dD', $trialDays))));
         $subscription->setScheduleAnchorCycle(null === $trialDays ? 1 : 2);
+        // The initial order charged the first block: its other deliveries come without a charge.
+        $subscription->setPrepaidDeliveriesLeft($subscription->getDeliveriesPerCharge() - 1);
         $subscription->setConsecutiveFailedCycles(0);
 
         $first = $this->cycleFactory->createNew();
@@ -62,7 +64,7 @@ final class StartScheduleListener
             $cycleItem->setSubscriptionItem($item);
             $cycleItem->setQuantity($item->getQuantity());
             // Before the cycle counts as paid, so an introductory price is the one of the initial order.
-            $cycleItem->setUnitPrice(null === $trialDays ? $item->getUnitPriceForCycle() : 0);
+            $cycleItem->setUnitPrice(null === $trialDays ? $item->getUnitPriceForCycle() * $subscription->getDeliveriesPerCharge() : 0);
             $first->addItem($cycleItem);
 
             $item->setPaidCycles($item->getPaidCycles() + 1);

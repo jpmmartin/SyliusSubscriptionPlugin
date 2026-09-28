@@ -37,6 +37,11 @@ final class PendingPriceApplier
         Assert::notNull($subscription);
         Assert::notNull($scheduledAt);
 
+        // A prepaid delivery was paid for at its block's price: an increase waits for the next charge.
+        if (!$cycle->isCharging()) {
+            return true;
+        }
+
         $due = [];
         foreach ($subscription->getItems() as $item) {
             $from = $item->getPendingPriceFrom();

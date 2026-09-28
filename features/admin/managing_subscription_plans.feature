@@ -57,6 +57,18 @@ Feature: Managing the subscription plans of a variant
         And the "COFFEE_MONTHLY" subscription plan of the "Coffee" variant should have an introductory price of "14 days free"
 
     @ui
+    Scenario: Adding a plan charged by blocks of deliveries
+        When I want to add a subscription plan to the "Coffee" variant
+        And I specify its code as "COFFEE_MONTHLY"
+        And I name it "Monthly"
+        And I set it to renew every 1 month
+        And I set its subscriber discount to 10 percent
+        And I make it charge 3 deliveries at a time
+        And I add it
+        Then I should be notified that it has been successfully created
+        And the "COFFEE_MONTHLY" subscription plan of the "Coffee" variant should charge 3 deliveries at a time
+
+    @ui
     Scenario: Trying to add an introductory price without its discount
         When I want to add a subscription plan to the "Coffee" variant
         And I specify its code as "COFFEE_MONTHLY"

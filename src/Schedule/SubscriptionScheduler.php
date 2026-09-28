@@ -68,6 +68,13 @@ final class SubscriptionScheduler implements SubscriptionSchedulerInterface
             return;
         }
 
+        // Its customer cancelled it while deliveries were paid for: once they are placed, it ends.
+        if ($subscription->cancelsAfterPrepaidDeliveries() && 0 === $subscription->getPrepaidDeliveriesLeft()) {
+            $this->stateMachine->apply($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_CANCEL);
+
+            return;
+        }
+
         $number = 1;
         foreach ($subscription->getCycles() as $cycle) {
             $number = max($number, $cycle->getNumber() + 1);
@@ -78,6 +85,8 @@ final class SubscriptionScheduler implements SubscriptionSchedulerInterface
         $next = $this->cycleFactory->createNew();
         Assert::isInstanceOf($next, SubscriptionCycleInterface::class);
         $next->setNumber($number);
+        // While deliveries are paid for ahead, the next cycle delivers one; then it charges the next block.
+        $next->setCharging(0 === $subscription->getPrepaidDeliveriesLeft());
         $scheduledAt = $this->calendar->dateOfCycle($subscription, $number);
         $next->setScheduledAt($scheduledAt);
         $subscription->addCycle($next);

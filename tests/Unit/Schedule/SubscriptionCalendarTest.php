@@ -121,8 +121,8 @@ final class SubscriptionCalendarTest extends TestCase
     public function testASubscriptionThatWasNeverActivatedHasNoSchedule(): void
     {
         $subscription = new Subscription();
-        $subscription->setBillingIntervalCount(1);
-        $subscription->setBillingIntervalUnit(SubscriptionIntervalUnit::Month);
+        $subscription->setDeliveryIntervalCount(1);
+        $subscription->setDeliveryIntervalUnit(SubscriptionIntervalUnit::Month);
 
         $this->expectException(\InvalidArgumentException::class);
 
@@ -132,8 +132,8 @@ final class SubscriptionCalendarTest extends TestCase
     private function subscription(string $anchorAt, int $intervalCount, SubscriptionIntervalUnit $unit): Subscription
     {
         $subscription = new Subscription();
-        $subscription->setBillingIntervalCount($intervalCount);
-        $subscription->setBillingIntervalUnit($unit);
+        $subscription->setDeliveryIntervalCount($intervalCount);
+        $subscription->setDeliveryIntervalUnit($unit);
         $subscription->setScheduleAnchorAt(new \DateTimeImmutable($anchorAt));
         $subscription->setScheduleAnchorCycle(1);
 

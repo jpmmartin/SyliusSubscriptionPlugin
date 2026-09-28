@@ -38,6 +38,11 @@ trait FormElementsTrait
         }
     }
 
+    public function chargeDeliveriesAtATime(int $deliveries): void
+    {
+        $this->getElement('deliveries_per_charge')->setValue((string) $deliveries);
+    }
+
     public function giveAFreeTrial(int $days): void
     {
         $this->getElement('introductory_price')->selectOption('free_trial');
@@ -58,6 +63,7 @@ trait FormElementsTrait
             'introductory_discount_percentage' => '#jpm_martin_sylius_subscription_subscription_plan_introductoryDiscountPercentage',
             'introductory_cycles' => '#jpm_martin_sylius_subscription_subscription_plan_introductoryCycles',
             'trial_days' => '#jpm_martin_sylius_subscription_subscription_plan_trialDays',
+            'deliveries_per_charge' => '#jpm_martin_sylius_subscription_subscription_plan_deliveriesPerCharge',
             'enabled' => '#jpm_martin_sylius_subscription_subscription_plan_enabled',
         ];
     }

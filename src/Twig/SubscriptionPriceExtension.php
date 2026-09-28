@@ -30,6 +30,7 @@ final class SubscriptionPriceExtension extends AbstractExtension
         return [
             new TwigFunction('jpm_martin_sylius_subscription_introductory_offer', $this->getIntroductoryOffer(...)),
             new TwigFunction('jpm_martin_sylius_subscription_trial_offer', $this->getTrialOffer(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_prepaid_offer', $this->getPrepaidOffer(...)),
             new TwigFunction('jpm_martin_sylius_subscription_trials_offered', fn (): bool => [] !== $this->trialOffer->trialPaymentMethodCodes()),
         ];
     }
@@ -76,6 +77,28 @@ final class SubscriptionPriceExtension extends AbstractExtension
                 $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]),
                 $terms->getDiscountPercentage(),
             ),
+        ];
+    }
+
+    /**
+     * How many deliveries each charge of the variant on the terms pays for, and what it charges, in the
+     * channel's base currency; null when each charge pays for one.
+     *
+     * @return array{deliveries: int, price: int}|null
+     */
+    public function getPrepaidOffer(ProductVariantInterface $variant, SubscriptionTermsInterface $terms, ChannelInterface $channel): ?array
+    {
+        $deliveries = $terms->getDeliveriesPerCharge();
+        if (1 >= $deliveries) {
+            return null;
+        }
+
+        return [
+            'deliveries' => $deliveries,
+            'price' => SubscriptionPlanPriceProcessor::applyDiscount(
+                $this->productVariantPricesCalculator->calculate($variant, ['channel' => $channel]),
+                $terms->getDiscountPercentage(),
+            ) * $deliveries,
         ];
     }
 }

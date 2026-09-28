@@ -27,6 +27,13 @@ Feature: Seeing the subscription plans of a product
         And the "COFFEE_QUARTERLY" plan should read "$15.00 for your first order, then $17.00"
 
     @ui
+    Scenario: Seeing the deliveries each charge of a plan pays for
+        Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
+        And the "COFFEE_MONTHLY" subscription plan charges 3 deliveries at a time
+        When I view product "Coffee" in the store
+        Then the "COFFEE_MONTHLY" plan should explain "Each charge pays for 3 deliveries: $54.00"
+
+    @ui
     Scenario: Seeing the minimum commitment of a plan
         Given the "Coffee" variant offers a "COFFEE_MONTHLY" subscription plan renewing every 1 month with a 10% discount
         And the "COFFEE_MONTHLY" subscription plan has a minimum commitment of 6 cycles

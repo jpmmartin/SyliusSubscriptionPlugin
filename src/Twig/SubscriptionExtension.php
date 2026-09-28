@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Twig;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Management\PrepaidDeliveries;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionAddressChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCommitmentInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Management\SubscriptionCycleRetrierInterface;
@@ -37,6 +38,7 @@ final class SubscriptionExtension extends AbstractExtension
         private readonly SubscriptionRecoveryInterface $recovery,
         private readonly PendingPriceApplier $pendingPriceApplier,
         private readonly SubscriptionCommitmentInterface $commitment,
+        private readonly PrepaidDeliveries $prepaidDeliveries,
     ) {
     }
 
@@ -56,6 +58,7 @@ final class SubscriptionExtension extends AbstractExtension
             new TwigFunction('jpm_martin_sylius_subscription_price_increase_awaits_acceptance', $this->pendingPriceApplier->awaitsAcceptance(...)),
             new TwigFunction('jpm_martin_sylius_subscription_why_not_recoverable', $this->recovery->whyNot(...)),
             new TwigFunction('jpm_martin_sylius_subscription_remaining_commitment', $this->commitment->remainingCycles(...)),
+            new TwigFunction('jpm_martin_sylius_subscription_last_prepaid_delivery', $this->prepaidDeliveries->lastDeliveryAt(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_shipping_address', $this->addressesResolver->shippingAddress(...)),
             new TwigFunction('jpm_martin_sylius_subscription_renewal_billing_address', $this->addressesResolver->billingAddress(...)),
         ];

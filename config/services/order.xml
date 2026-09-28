@@ -32,5 +32,14 @@
             <argument type="service" id="jpm_martin_sylius_subscription.trial.offer" />
             <tag name="sylius.order_processor" priority="45" />
         </service>
+
+        <service id="jpm_martin_sylius_subscription.order.prepaid_delivery_orders" class="JpmMartin\SyliusSubscriptionPlugin\Order\PrepaidDeliveryOrders" />
+
+        <service id="jpm_martin_sylius_subscription.order_processing.prepaid_delivery_shipping_processor"
+                 class="JpmMartin\SyliusSubscriptionPlugin\OrderProcessing\PrepaidDeliveryShippingProcessor"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.order.prepaid_delivery_orders" />
+            <tag name="sylius.order_processor" priority="25" />
+        </service>
     </services>
 </container>

@@ -50,6 +50,12 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
         return trim($this->getElement('introductory_price', ['%code%' => $code])->getText());
     }
 
+    /** What the page says under the plan about the deliveries each charge pays for. */
+    public function getPrepaid(string $code): string
+    {
+        return trim($this->getElement('prepaid', ['%code%' => $code])->getText());
+    }
+
     /** What the page says under the plan about its minimum commitment. */
     public function getCommitment(string $code): string
     {
@@ -94,6 +100,7 @@ final class SubscriptionPlanChoicePage extends SymfonyPage
         return array_merge(parent::getDefinedElements(), [
             'add_to_cart_button' => '[data-test-button="add-to-cart-button"]',
             'commitment' => '[data-test-subscription-plans] [data-test-commitment="%code%"]',
+            'prepaid' => '[data-test-subscription-plans] [data-test-prepaid="%code%"]',
             'introductory_price' => '[data-test-subscription-plans] [data-test-introductory-price="%code%"]',
             'plan_choice' => '[data-test-subscription-plans]',
         ]);

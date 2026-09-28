@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Cycle;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttemptInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionCalendarInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionSchedulerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionCycleTransitions;
 use JpmMartin\SyliusSubscriptionPlugin\StateMachine\SubscriptionTransitions;
@@ -21,6 +22,7 @@ final class CycleFailureHandler implements CycleFailureHandlerInterface
     public function __construct(
         private readonly StateMachineInterface $stateMachine,
         private readonly SubscriptionSchedulerInterface $scheduler,
+        private readonly SubscriptionCalendarInterface $calendar,
         private readonly ?int $suspendAfterFailedCycles,
     ) {
     }
@@ -45,6 +47,13 @@ final class CycleFailureHandler implements CycleFailureHandlerInterface
         $subscription = $cycle->getSubscription();
         Assert::notNull($subscription);
         $subscription->setConsecutiveFailedCycles($subscription->getConsecutiveFailedCycles() + 1);
+
+        // A prepaid block that was not charged is not delivered: the next charge is on the date after it.
+        $deliveriesPerCharge = $subscription->getDeliveriesPerCharge();
+        if ($cycle->isCharging() && 1 < $deliveriesPerCharge) {
+            $subscription->setScheduleAnchorAt($this->calendar->dateOfCycle($subscription, $cycle->getNumber() + $deliveriesPerCharge));
+            $subscription->setScheduleAnchorCycle($cycle->getNumber() + 1);
+        }
 
         if (null !== $this->suspendAfterFailedCycles && $subscription->getConsecutiveFailedCycles() >= $this->suspendAfterFailedCycles) {
             if ($this->stateMachine->can($subscription, SubscriptionTransitions::GRAPH, SubscriptionTransitions::TRANSITION_SUSPEND)) {
