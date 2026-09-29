@@ -112,6 +112,7 @@
             <argument type="service" id="jpm_martin_sylius_subscription.manager.subscription_cycle" />
             <argument>%jpm_martin_sylius_subscription.missed_cycles%</argument>
             <argument>%jpm_martin_sylius_subscription.renewal_notice_days%</argument>
+            <argument type="service" id="jpm_martin_sylius_subscription.installation.order_item_readiness" />
             <tag name="console.command" />
         </service>
 

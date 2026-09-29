@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<container
+        xmlns="http://symfony.com/schema/dic/services"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+        <service id="jpm_martin_sylius_subscription.installation.order_item_readiness" class="JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadiness">
+            <argument>%sylius.model.order_item.class%</argument>
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface" alias="jpm_martin_sylius_subscription.installation.order_item_readiness" />
+
+        <service id="jpm_martin_sylius_subscription.twig.extension.installation" class="JpmMartin\SyliusSubscriptionPlugin\Twig\InstallationExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.installation.order_item_readiness" />
+            <tag name="twig.extension" />
+        </service>
+    </services>
+</container>

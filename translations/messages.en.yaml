@@ -2,6 +2,9 @@ jpm_martin_sylius_subscription:
     consent:
         text: I authorise the store to charge my payment method automatically for every renewal of my subscriptions, at the price and interval shown, until I cancel them from my account.
     ui:
+        installation:
+            order_item_title: No subscription is offered yet
+            order_item_notice: 'The order item class %class% does not carry the subscription plan, so no product is offered by subscription until it does. Make it implement JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface and use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareTrait, then run the migrations. See the plugin''s README, "Installation".'
         plan_or_frequency: "Plan or frequency"
         repeat_this_cart: "Repeat this cart"
         repeat_this_cart_help: "Receive the products of this cart again, with a discount, until you stop. Products you subscribed to on a plan keep their plan; those that cannot be repeated are bought once."

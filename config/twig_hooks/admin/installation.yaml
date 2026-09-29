@@ -1,0 +1,13 @@
+# Below the page's title, on the dashboard and on the subscriptions list: the installation step the store
+# has still to make, while it has. Nothing is shown once it is made.
+sylius_twig_hooks:
+    hooks:
+        'sylius_admin.dashboard.index.content':
+            subscription_installation_notice:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/installation/order_item_notice.html.twig'
+                priority: 150
+
+        'sylius_admin.subscription.index.content':
+            subscription_installation_notice:
+                template: '@JpmMartinSyliusSubscriptionPlugin/admin/installation/order_item_notice.html.twig'
+                priority: 150

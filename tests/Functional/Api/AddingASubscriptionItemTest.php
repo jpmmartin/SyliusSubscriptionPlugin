@@ -20,10 +20,13 @@ use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Installation\WithholdsSubscriptions;
 
 /** POST /api/v2/shop/orders/{tokenValue}/subscription-items, next to Sylius's own /items. */
 final class AddingASubscriptionItemTest extends WebTestCase
 {
+    use WithholdsSubscriptions;
+
     private const NOT_OFFERED = 'This subscription plan is not offered for this product variant.';
 
     private KernelBrowser $client;
@@ -70,6 +73,29 @@ final class AddingASubscriptionItemTest extends WebTestCase
         self::assertInstanceOf(SubscriptionPlanAwareInterface::class, $item);
         self::assertSame('COFFEE_MONTHLY', $item->getSubscriptionPlan()?->getCode());
         self::assertSame(1800, $item->getUnitPrice());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreSubscriptions();
+
+        parent::tearDown();
+    }
+
+    public function testNoPlanIsAcceptedUntilTheStoresOrderItemCarriesIt(): void
+    {
+        $token = $this->pickUpACart();
+        $this->withholdSubscriptions();
+
+        $this->post(\sprintf('/api/v2/shop/orders/%s/subscription-items', $token), [
+            'productVariant' => $this->coffee->getCode(),
+            'subscriptionPlan' => 'COFFEE_MONTHLY',
+            'quantity' => 1,
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertContains(self::NOT_OFFERED, $this->violationMessages());
+        self::assertCount(0, $this->getCart($token)->getItems());
     }
 
     public function testAPlanOfAnotherVariantIsRefused(): void

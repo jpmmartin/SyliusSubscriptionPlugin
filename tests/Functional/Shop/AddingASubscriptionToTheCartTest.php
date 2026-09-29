@@ -20,6 +20,7 @@ use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Installation\WithholdsSubscriptions;
 
 /**
  * Adding to the cart from the product page is an action of Sylius's add-to-cart live component.
@@ -33,6 +34,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class AddingASubscriptionToTheCartTest extends WebTestCase
 {
+    use WithholdsSubscriptions;
+
     private const LOCALE = 'en_US';
 
     private const COMPONENT = 'sylius_shop:product:add_to_cart_form';
@@ -67,6 +70,32 @@ final class AddingASubscriptionToTheCartTest extends WebTestCase
         $this->product = $product;
 
         $this->addPlan('COFFEE_MONTHLY', 10);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreSubscriptions();
+
+        parent::tearDown();
+    }
+
+    public function testNoPlanIsOfferedUntilTheStoresOrderItemCarriesIt(): void
+    {
+        $this->withholdSubscriptions();
+
+        $this->client->request('GET', \sprintf('/%s/products/%s', self::LOCALE, $this->product->getSlug()));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-test-subscription-plans]');
+
+        $this->addToCart(null);
+        self::assertLessThan(400, $this->client->getResponse()->getStatusCode());
+        $item = $this->getOnlyCartItem();
+        self::assertInstanceOf(SubscriptionPlanAwareInterface::class, $item);
+        self::assertNull($item->getSubscriptionPlan(), 'The product is still sold once.');
+
+        $this->restoreSubscriptions();
+        $this->client->request('GET', \sprintf('/%s/products/%s', self::LOCALE, $this->product->getSlug()));
+        self::assertSelectorExists('[data-test-subscription-plans]');
     }
 
     public function testSubscribingToAProductFromItsPage(): void
@@ -131,7 +160,8 @@ final class AddingASubscriptionToTheCartTest extends WebTestCase
         self::assertSame([], $this->getCarts());
     }
 
-    private function addToCart(string $planCode): void
+    /** @param string|null $planCode null when the page offers no plan at all */
+    private function addToCart(?string $planCode): void
     {
         $crawler = $this->client->request('GET', \sprintf('/%s/products/%s', self::LOCALE, $this->product->getSlug()));
         self::assertResponseIsSuccessful();
@@ -141,10 +171,10 @@ final class AddingASubscriptionToTheCartTest extends WebTestCase
 
         /** @var array<string, mixed> $props */
         $props = json_decode((string) $component->attr('data-live-props-value'), true, 512, \JSON_THROW_ON_ERROR);
-        $updated = [
-            self::FORM . '.cartItem.quantity' => '1',
-            self::FORM . '.cartItem.subscriptionPlan' => $planCode,
-        ];
+        $updated = [self::FORM . '.cartItem.quantity' => '1'];
+        if (null !== $planCode) {
+            $updated[self::FORM . '.cartItem.subscriptionPlan'] = $planCode;
+        }
 
         $this->client->request('POST', $component->attr('data-live-url-value') . '/addToCart', [
             'data' => json_encode(['props' => $props, 'updated' => $updated, 'validatedFields' => array_keys($updated)], \JSON_THROW_ON_ERROR),

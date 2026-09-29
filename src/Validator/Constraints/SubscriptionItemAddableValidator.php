@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints;
 
 use JpmMartin\SyliusSubscriptionPlugin\Command\AddSubscriptionItemToCart;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -27,6 +28,7 @@ final class SubscriptionItemAddableValidator extends ConstraintValidator
         private readonly ProductVariantRepositoryInterface $productVariantRepository,
         private readonly RepositoryInterface $subscriptionPlanRepository,
         private readonly OrderRepositoryInterface $orderRepository,
+        private readonly OrderItemReadinessInterface $orderItemReadiness,
     ) {
     }
 
@@ -50,7 +52,9 @@ final class SubscriptionItemAddableValidator extends ConstraintValidator
 
         $plan = $this->subscriptionPlanRepository->findOneBy(['code' => $value->subscriptionPlanCode]);
 
+        // Until the store's order item can hold the plan, no plan is offered.
         if (
+            !$this->orderItemReadiness->isReady() ||
             !$plan instanceof SubscriptionPlanInterface ||
             !$plan->isEnabled() ||
             $plan->getProductVariant()?->getId() !== $variant->getId()

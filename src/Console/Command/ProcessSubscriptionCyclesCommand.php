@@ -8,6 +8,9 @@ use Doctrine\Persistence\ObjectManager;
 use JpmMartin\SyliusSubscriptionPlugin\Command\NotifyUpcomingRenewal;
 use JpmMartin\SyliusSubscriptionPlugin\Command\ProcessSubscriptionCycle;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionCycleInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareTrait;
+use JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionCycleRepositoryInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Schedule\SubscriptionCalendarInterface;
 use Psr\Clock\ClockInterface;
@@ -42,6 +45,7 @@ final class ProcessSubscriptionCyclesCommand extends Command
         private readonly ObjectManager $entityManager,
         private readonly string $missedCycles,
         private readonly ?int $renewalNoticeDays = null,
+        private readonly ?OrderItemReadinessInterface $orderItemReadiness = null,
     ) {
         parent::__construct();
     }
@@ -49,6 +53,14 @@ final class ProcessSubscriptionCyclesCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        if (null !== $this->orderItemReadiness && !$this->orderItemReadiness->isReady()) {
+            $io->warning(\sprintf(
+                'The order item class %s does not carry the subscription plan, so no product is offered by subscription until it does. Make it implement %s and use %s, then run the migrations. See the plugin\'s README, "Installation".',
+                $this->orderItemReadiness->orderItemClass(),
+                SubscriptionPlanAwareInterface::class,
+                SubscriptionPlanAwareTrait::class,
+            ));
+        }
 
         $now = $this->clock->now();
         $due = $this->cycleRepository->findDue($now);

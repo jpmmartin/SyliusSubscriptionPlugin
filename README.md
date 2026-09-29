@@ -104,6 +104,9 @@ with all of them, charged without the customer present, with retries when a char
 
 ## Installation
 
+A Symfony Flex recipe that takes steps 2 to 4 for you, and prints the rest, is being proposed to
+`symfony/recipes-contrib`; it is in [`recipe/`](recipe/). Until it is served there, take every step below.
+
 1. Require the plugin:
 
     ```bash
@@ -129,7 +132,7 @@ with all of them, charged without the customer present, with retries when a char
         - { resource: "@JpmMartinSyliusSubscriptionPlugin/config/config.yaml" }
 
     jpm_martin_sylius_subscription:
-        payment_methods: ['card_on_file'] # payment method codes; nobody can subscribe until you name one
+        payment_methods: [] # the codes of the payment methods that charge renewals; nobody can subscribe until you name one
     ```
 
 4. Import its routes in `config/routes/jpm_martin_sylius_subscription.yaml`. The admin routes go under
@@ -165,7 +168,9 @@ with all of them, charged without the customer present, with retries when a char
     }
     ```
 
-    The application refuses to boot, with a message saying so, until the configured order item does this.
+    Until it does, the plugin offers no product by subscription, refuses a plan or a frequency asked
+    for through the API as not offered, and the admin's dashboard and subscriptions list say what is
+    left: no line chosen as a subscription can become a one-off purchase instead.
 
 6. Run the migrations. The plugin registers its own migrations namespace; its migrations, written with
    Doctrine's schema API rather than one platform's SQL, create its tables and the
@@ -177,7 +182,7 @@ with all of them, charged without the customer present, with retries when a char
     ```
 
 7. Process the due cycles on a schedule, with cron or Symfony Scheduler, as often as you want renewals
-   to be charged:
+   to be charged. While step 5 is left, the command says so:
 
     ```bash
     bin/console jpm-martin:subscription:process-cycles
@@ -185,6 +190,11 @@ with all of them, charged without the customer present, with retries when a char
 
     The command dispatches one `ProcessSubscriptionCycle` message per due cycle on `sylius.command_bus`,
     so you may route that message to an asynchronous transport.
+
+To take the plugin out, undo step 5 first: your order item would name the plugin's trait and interface,
+which are gone once it is removed, and the container would not compile. Taking the plugin's migrations
+down beforehand removes its tables and columns; `composer remove` then takes back the bundle and the two
+files.
 
 ## Configuration reference
 
@@ -1091,7 +1101,11 @@ Two workflows:
   the commands of [Installation](#installation), read out of this README, and the file edits it shows,
   and the store is checked: the bundle, the routes, the plugin's tables and columns, and the shop's
   pages. The YAML files are taken whole from the README; the bundle line and the order item are
-  fragments, placed by `bin/apply-readme-edits`, which has to change when their blocks do.
+  fragments, placed by `bin/apply-readme-edits`, which has to change when their blocks do. A second
+  job installs through the Flex recipe in `recipe/`, compiled and linted as `symfony/recipes-contrib`
+  does: `composer require` has to end well while the store's order item is still Sylius Standard's,
+  with the cycles command saying what is left, and the same checks follow once it is adapted; at the
+  end, `composer remove` has to take back what the recipe did.
 
 The `@javascript` scenarios, MariaDB, the other versions of MySQL and PostgreSQL, PHP 8.3 and 8.5, and
 Symfony 6.4 are not checked on each change: run them locally, as above. Up to 1.0.0, each change was

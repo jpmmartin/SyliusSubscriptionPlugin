@@ -7,6 +7,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Event\EventCollector;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Event\PublishThenFailHandler;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Gate\ScriptedCycleGate;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Installation\SwitchableOrderItemReadiness;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedGateway;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestCommandProvider;
 use Tests\JpmMartin\SyliusSubscriptionPlugin\Payment\ScriptedPaymentRequestHandler;
@@ -50,6 +51,16 @@ return function (ContainerConfigurator $container) {
         $services
             ->set('jpm_martin_sylius_subscription.test.card_update_provider', TestCardUpdateProvider::class)
                 ->autoconfigure()
+        ;
+
+        // A store whose order item carries the plan, unless a test says it does not yet, through a file.
+        $services
+            ->set('jpm_martin_sylius_subscription.test.order_item_readiness', SwitchableOrderItemReadiness::class)
+                ->decorate('jpm_martin_sylius_subscription.installation.order_item_readiness')
+                ->args([
+                    service('.inner'),
+                    '%kernel.project_dir%/var/order_item_not_ready.txt',
+                ])
         ;
 
         // The configured price increase acceptance, unless a scenario asks for it through a file.

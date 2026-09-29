@@ -111,6 +111,7 @@
                  class="JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop\SubscriptionFrequencyCollectionProvider"
         >
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <argument type="service" id="jpm_martin_sylius_subscription.installation.order_item_readiness" />
             <tag name="api_platform.state_provider" />
         </service>
 
@@ -181,6 +182,7 @@
             <argument type="service" id="sylius.repository.product_variant" />
             <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
             <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="jpm_martin_sylius_subscription.installation.order_item_readiness" />
             <tag name="validator.constraint_validator" />
         </service>
     </services>

@@ -1,5 +1,6 @@
-# Installs this plugin into a store that has never seen it, by running the commands the README
-# publishes and making the file edits it shows, and checks that the store works afterwards.
+# Installs this plugin into a store that has never seen it, two ways: by running the commands the README
+# publishes and making the file edits it shows, and through the Flex recipe in recipe/. Both end in the
+# same checks of a working store.
 name: Install
 
 on:
@@ -17,6 +18,7 @@ on:
             - 'src/Entity/SubscriptionPlanAware*'
             - 'bin/extract-readme-commands'
             - 'bin/apply-readme-edits'
+            - 'recipe/**'
             - '.github/workflows/install.yaml'
     pull_request:
         paths:
@@ -28,16 +30,33 @@ on:
             - 'src/Entity/SubscriptionPlanAware*'
             - 'bin/extract-readme-commands'
             - 'bin/apply-readme-edits'
+            - 'recipe/**'
             - '.github/workflows/install.yaml'
-    workflow_dispatch: ~
+    workflow_dispatch:
+        inputs:
+            recipe_source:
+                description: "Where the recipe job takes the recipe from"
+                type: choice
+                default: local
+                options:
+                    # recipe/ here, compiled and served by the runner: what a change to the recipe must pass.
+                    - local
+                    # symfony/recipes-contrib, through the store's own endpoints: what a store gets, once
+                    # the recipe is merged there.
+                    - contrib
 
 permissions:
     contents: read
 
 jobs:
     install:
-        name: "A store that has never seen this plugin, installed from the README"
+        name: "A store that has never seen this plugin, installed from the ${{ matrix.path }}"
         runs-on: ubuntu-24.04
+
+        strategy:
+            fail-fast: false
+            matrix:
+                path: [readme, recipe]
 
         services:
             postgres:
@@ -54,6 +73,9 @@ jobs:
         env:
             APP_ENV: dev
             DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/store?serverVersion=16&charset=utf8
+            # local on every automatic run: a push cannot wait for contrib to catch up with the recipe it
+            # changes. contrib is chosen by hand.
+            RECIPE_SOURCE: ${{ inputs.recipe_source || 'local' }}
 
         steps:
             - name: Check out the plugin
@@ -109,10 +131,15 @@ jobs:
                   bin/console doctrine:migrations:migrate --no-interaction
                   yarn install
                   yarn build
+                  # Kept to take the plugin out at the end: the store's order item as Sylius Standard ships it.
+                  cp src/Entity/Order/OrderItem.php ../OrderItem.php.orig
+
+            # ── The README path ──────────────────────────────────────────────────────────────────────
 
             # The commands come out of the README: a workflow carrying its own copy would prove the
             # plugin installs and say nothing about whether the documentation is right.
             - name: Read the install commands out of the README
+              if: matrix.path == 'readme'
               run: |
                   php plugin/bin/extract-readme-commands \
                       --readme=plugin/README.md \
@@ -123,10 +150,12 @@ jobs:
             # The YAML files are extracted whole; the bundle line and the order item are fragments,
             # mirrored by the script, and that half is weaker: see bin/apply-readme-edits.
             - name: Apply the file edits the README shows
+              if: matrix.path == 'readme'
               working-directory: store
               run: php ../plugin/bin/apply-readme-edits ../plugin/README.md .
 
             - name: Run the README's own commands, in the order it gives them
+              if: matrix.path == 'readme'
               working-directory: store
               run: |
                   set -euo pipefail
@@ -137,6 +166,89 @@ jobs:
                       eval "$command" < /dev/null
                       echo '::endgroup::'
                   done 3< ../commands.txt
+
+            # ── The recipe path ──────────────────────────────────────────────────────────────────────
+
+            # Compiled the way symfony/recipes-contrib compiles its recipes, with the same tool, after the
+            # two lints its bot runs on a pull request.
+            - name: Check out the recipes checker
+              if: matrix.path == 'recipe' && env.RECIPE_SOURCE == 'local'
+              uses: actions/checkout@v5
+              with:
+                  repository: symfony-tools/recipes-checker
+                  path: recipes-checker
+
+            - name: Compile the recipe into a Flex endpoint
+              if: matrix.path == 'recipe' && env.RECIPE_SOURCE == 'local'
+              run: |
+                  set -euo pipefail
+                  (cd recipes-checker && composer install --no-interaction --no-progress --prefer-dist)
+                  # The generator writes into the output directory but does not create it.
+                  mkdir -p recipes-tree endpoint && cp -r plugin/recipe/jpmmartin recipes-tree/
+                  cd recipes-tree
+                  git init -q && git add -A && git -c user.email=ci@example.invalid -c user.name=ci commit -q -m 'recipe'
+                  git ls-tree HEAD */*/* | php ../recipes-checker/run lint:manifests
+                  find . -name '*.yaml' | php ../recipes-checker/run lint:yaml
+                  git ls-tree HEAD */*/* | php ../recipes-checker/run generate:flex-endpoint jpmmartin/SyliusSubscriptionPlugin main flex/main ../endpoint/
+                  grep -q '"jpmmartin/sylius-subscription-plugin"' ../endpoint/index.json
+
+            # Where the recipe comes from is asserted, not assumed: Flex's line names the repository it
+            # read. The store's order item is left as Sylius Standard ships it, so the require must end
+            # well without the step no recipe can take.
+            - name: Require the package and let the recipe do the files
+              if: matrix.path == 'recipe'
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  if [ "$RECIPE_SOURCE" = 'local' ]; then
+                      # Composer refuses a plain-http endpoint unless told otherwise; this store is thrown
+                      # away with the runner.
+                      (php -S 127.0.0.1:8765 -t ../endpoint > ../endpoint.log 2>&1 &)
+                      for i in $(seq 1 10); do curl -sf -o /dev/null http://127.0.0.1:8765/index.json && break; sleep 1; done
+                      composer config secure-http false
+                      composer config extra.symfony.endpoint --json '["http://127.0.0.1:8765/index.json", "flex://defaults"]'
+                      from='github.com/jpmmartin/SyliusSubscriptionPlugin:main'
+                  else
+                      from='github.com/symfony/recipes-contrib:main'
+                  fi
+                  composer require jpmmartin/sylius-subscription-plugin --no-interaction --no-progress 2>&1 | tee require.log
+                  grep -q "Configuring jpmmartin/sylius-subscription-plugin (>=1.1): From $from" require.log \
+                      || { echo "Flex did not apply the recipe from $from."; exit 1; }
+                  grep -q 'Four steps no recipe can take' require.log \
+                      || { echo 'The post-install instructions were not printed.'; exit 1; }
+                  composer recipes jpmmartin/sylius-subscription-plugin | grep -q 'up to date' \
+                      || { echo 'The recipe is not recorded as installed in symfony.lock.'; exit 1; }
+                  for file in config/packages/jpm_martin_sylius_subscription.yaml config/routes/jpm_martin_sylius_subscription.yaml; do
+                      cmp "$file" "../plugin/recipe/jpmmartin/sylius-subscription-plugin/1.1/$file" \
+                          || { echo "$file is not the recipe's."; exit 1; }
+                  done
+
+            # The store boots without the step, and says what is left.
+            - name: Before the order item carries the plan, subscriptions are withheld
+              if: matrix.path == 'recipe'
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  bin/console doctrine:migrations:migrate --no-interaction
+                  # The warning is wrapped to the terminal's width: read it as one line.
+                  bin/console jpm-martin:subscription:process-cycles | tee cycles.log
+                  tr -s ' \n' ' ' < cycles.log | grep -q 'does not carry the subscription plan' \
+                      || { echo 'The cycles command did not say the order item is left to adapt.'; exit 1; }
+
+            # The step the recipe printed first, as the README shows it; the YAML files it also writes are
+            # the recipe's, byte for byte.
+            - name: Do what the recipe said is left
+              if: matrix.path == 'recipe'
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  php ../plugin/bin/apply-readme-edits ../plugin/README.md .
+                  bin/console cache:clear
+                  bin/console jpm-martin:subscription:process-cycles | tee cycles.log
+                  ! tr -s ' \n' ' ' < cycles.log | grep -q 'does not carry the subscription plan' \
+                      || { echo 'The cycles command still says the order item is left to adapt.'; exit 1; }
+
+            # ── The same store, either way ───────────────────────────────────────────────────────────
 
             - name: The bundle registered
               working-directory: store
@@ -203,3 +315,19 @@ jobs:
                   status=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/en_US/account/subscriptions/)
                   test "$status" = '302' \
                       || { echo "The account's subscriptions answered $status, not a redirection to sign in."; tail -40 server.log; exit 1; }
+
+            # ── The recipe path, undone ──────────────────────────────────────────────────────────────
+
+            # The store's own order item names the plugin's classes, so it goes back first, as the README
+            # says; then Flex unconfigures what it configured.
+            - name: Removing the package removes what the recipe added
+              if: matrix.path == 'recipe'
+              working-directory: store
+              run: |
+                  set -euo pipefail
+                  cp ../OrderItem.php.orig src/Entity/Order/OrderItem.php
+                  composer remove jpmmartin/sylius-subscription-plugin --no-interaction --no-progress
+                  ! grep -q 'JpmMartinSyliusSubscriptionPlugin' config/bundles.php \
+                      || { echo 'The bundle line survived composer remove.'; exit 1; }
+                  test ! -e config/packages/jpm_martin_sylius_subscription.yaml && test ! -e config/routes/jpm_martin_sylius_subscription.yaml \
+                      || { echo 'A copied file survived composer remove.'; exit 1; }

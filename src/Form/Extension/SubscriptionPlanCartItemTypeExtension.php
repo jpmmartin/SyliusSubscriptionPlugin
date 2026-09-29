@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JpmMartin\SyliusSubscriptionPlugin\Form\Extension;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface;
 use Sylius\Bundle\OrderBundle\Form\Type\CartItemType;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -36,6 +37,7 @@ final class SubscriptionPlanCartItemTypeExtension extends AbstractTypeExtension
     public function __construct(
         private readonly RepositoryInterface $subscriptionPlanRepository,
         private readonly string $subscriptionPlanClass,
+        private readonly OrderItemReadinessInterface $orderItemReadiness,
     ) {
     }
 
@@ -109,7 +111,8 @@ final class SubscriptionPlanCartItemTypeExtension extends AbstractTypeExtension
     /** @return list<SubscriptionPlanInterface> */
     private function getEnabledPlans(?ProductVariantInterface $variant): array
     {
-        if (null === $variant || null === $variant->getId()) {
+        // Until the store's order item can hold the plan, a chosen plan would be lost on the line.
+        if (null === $variant || null === $variant->getId() || !$this->orderItemReadiness->isReady()) {
             return [];
         }
 

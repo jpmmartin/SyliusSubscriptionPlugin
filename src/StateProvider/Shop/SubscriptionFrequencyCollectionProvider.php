@@ -7,6 +7,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\StateProvider\Shop;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionFrequencyRepositoryInterface;
 use Sylius\Bundle\ApiBundle\Serializer\ContextKeys;
 use Sylius\Component\Channel\Model\ChannelInterface;
@@ -20,15 +21,17 @@ use Sylius\Component\Channel\Model\ChannelInterface;
 final class SubscriptionFrequencyCollectionProvider implements ProviderInterface
 {
     /** @param SubscriptionFrequencyRepositoryInterface<SubscriptionFrequencyInterface> $frequencyRepository */
-    public function __construct(private readonly SubscriptionFrequencyRepositoryInterface $frequencyRepository)
-    {
+    public function __construct(
+        private readonly SubscriptionFrequencyRepositoryInterface $frequencyRepository,
+        private readonly OrderItemReadinessInterface $orderItemReadiness,
+    ) {
     }
 
     /** @return list<SubscriptionFrequencyInterface> */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): array
     {
         $channel = $context[ContextKeys::CHANNEL] ?? null;
-        if (!$channel instanceof ChannelInterface) {
+        if (!$channel instanceof ChannelInterface || !$this->orderItemReadiness->isReady()) {
             return [];
         }
 

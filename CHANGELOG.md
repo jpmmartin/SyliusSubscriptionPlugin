@@ -8,6 +8,20 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 ## [Unreleased]
 
+### Added
+
+- A Symfony Flex recipe, in `recipe/`: on a store with Flex, `composer require` registers the bundle,
+  writes the plugin's configuration and routes, and prints the steps no recipe can take.
+
+### Changed
+
+- Until the store's order item carries the plan, the plugin no longer stops the application from
+  booting. It offers no product by subscription, refuses a plan or a frequency asked for through the
+  API as not offered, the admin's dashboard and subscriptions list say what is left, and the cycles
+  command warns. No line chosen as a subscription can become a one-off purchase meanwhile.
+- The configuration the README shows names no payment method: `payment_methods: []`, as the recipe
+  writes it.
+
 ## [1.0.0] - 2026-09-28
 
 The first release.

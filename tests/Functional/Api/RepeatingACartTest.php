@@ -23,6 +23,7 @@ use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Tests\JpmMartin\SyliusSubscriptionPlugin\Installation\WithholdsSubscriptions;
 
 /**
  * "Repeat this cart" through the shop API: GET /api/v2/shop/subscription-frequencies and
@@ -31,6 +32,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class RepeatingACartTest extends WebTestCase
 {
+    use WithholdsSubscriptions;
+
     private const NOT_OFFERED = 'This subscription frequency is not offered for this cart.';
 
     private KernelBrowser $client;
@@ -165,6 +168,48 @@ final class RepeatingACartTest extends WebTestCase
             self::assertContains(self::NOT_OFFERED, $this->violationMessages(), $code);
         }
         self::assertNull($this->cartRepeater()->getFrequency($this->getCart($token)));
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreSubscriptions();
+
+        parent::tearDown();
+    }
+
+    public function testNoFrequencyIsOfferedUntilTheStoresOrderItemCarriesIt(): void
+    {
+        $token = $this->pickUpACart();
+        $this->addOneOff($token, $this->tea);
+        $this->withholdSubscriptions();
+
+        $this->client->request('GET', '/api/v2/shop/subscription-frequencies', [], [], ['HTTP_ACCEPT' => 'application/ld+json']);
+        self::assertResponseIsSuccessful();
+        /** @var array{'hydra:member'?: list<mixed>, member?: list<mixed>} $response */
+        $response = $this->responseJson();
+        self::assertSame([], $response['hydra:member'] ?? $response['member'] ?? null);
+
+        $this->patchFrequency($token, 'MONTHLY');
+        self::assertResponseStatusCodeSame(422);
+        self::assertContains(self::NOT_OFFERED, $this->violationMessages());
+
+        $cart = $this->getCart($token);
+        self::assertSame([], $this->cartRepeater()->getOfferedFrequencies($cart), 'Neither does the cart page.');
+        /** @var RepositoryInterface<SubscriptionFrequencyInterface> $frequencies */
+        $frequencies = self::getContainer()->get('jpm_martin_sylius_subscription.repository.subscription_frequency');
+        $monthly = $frequencies->findOneBy(['code' => 'MONTHLY']);
+        self::assertInstanceOf(SubscriptionFrequencyInterface::class, $monthly);
+
+        try {
+            $this->cartRepeater()->repeat($cart, $monthly);
+            self::fail('The cart page, which repeats through the same service, would have repeated it.');
+        } catch (\InvalidArgumentException) {
+        }
+        self::assertNull($this->cartRepeater()->getFrequency($cart));
+
+        $this->restoreSubscriptions();
+        $this->patchFrequency($token, 'MONTHLY');
+        self::assertResponseIsSuccessful();
     }
 
     public function testTheCartTellsThePlanOfALine(): void

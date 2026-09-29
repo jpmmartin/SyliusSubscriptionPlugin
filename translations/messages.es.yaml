@@ -2,6 +2,9 @@ jpm_martin_sylius_subscription:
     consent:
         text: Autorizo a la tienda a cobrar automáticamente en mi método de pago cada renovación de mis suscripciones, al precio y con el intervalo indicados, hasta que las cancele desde mi cuenta.
     ui:
+        installation:
+            order_item_title: Todavía no se ofrece ninguna suscripción
+            order_item_notice: 'La clase de línea de pedido %class% no guarda el plan de suscripción, así que no se ofrece ningún producto por suscripción hasta que lo haga. Haz que implemente JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface y use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareTrait, y ejecuta las migraciones. Consulta «Installation» en el README del plugin.'
         plan_or_frequency: "Plan o frecuencia"
         repeat_this_cart: "Repetir este carrito"
         repeat_this_cart_help: "Recibe de nuevo los productos de este carrito, con descuento, hasta que lo dejes. Los productos a los que te suscribiste con un plan conservan su plan; los que no se pueden repetir se compran una vez."

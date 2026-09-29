@@ -1,0 +1,7 @@
+{# While the store's order item cannot hold a plan, no subscription is offered: say why, and what to do. #}
+{% if not jpm_martin_sylius_subscription_order_item_ready() %}
+    <div class="alert alert-warning" role="alert" {{ sylius_test_html_attribute('subscription-installation-notice') }}>
+        <h4 class="alert-title">{{ 'jpm_martin_sylius_subscription.ui.installation.order_item_title'|trans }}</h4>
+        <div>{{ 'jpm_martin_sylius_subscription.ui.installation.order_item_notice'|trans({ '%class%': jpm_martin_sylius_subscription_order_item_class() }) }}</div>
+    </div>
+{% endif %}

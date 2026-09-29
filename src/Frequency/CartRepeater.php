@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\CartFrequencyInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Installation\OrderItemReadinessInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Repository\SubscriptionFrequencyRepositoryInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -26,6 +27,7 @@ final class CartRepeater implements CartRepeaterInterface
         private readonly SubscriptionFrequencyRepositoryInterface $frequencyRepository,
         private readonly RepeatableVariantsInterface $repeatableVariants,
         private readonly string $cartFrequencyClass,
+        private readonly OrderItemReadinessInterface $orderItemReadiness,
     ) {
     }
 
@@ -61,15 +63,19 @@ final class CartRepeater implements CartRepeaterInterface
     public function getOfferedFrequencies(OrderInterface $cart): array
     {
         $channel = $cart->getChannel();
+        // Until the store's order item can hold the frequency, a repeated line would renew as nothing.
+        if (null === $channel || !$this->orderItemReadiness->isReady()) {
+            return [];
+        }
 
-        return null === $channel ? [] : $this->frequencyRepository->findEnabledByChannel($channel);
+        return $this->frequencyRepository->findEnabledByChannel($channel);
     }
 
     public function isOffered(OrderInterface $cart, SubscriptionFrequencyInterface $frequency): bool
     {
         $channel = $cart->getChannel();
 
-        return null !== $channel && $frequency->isEnabled() && $frequency->hasChannel($channel);
+        return null !== $channel && $this->orderItemReadiness->isReady() && $frequency->isEnabled() && $frequency->hasChannel($channel);
     }
 
     public function hasRepeatableLines(OrderInterface $cart): bool
