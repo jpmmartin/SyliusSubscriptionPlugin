@@ -8,6 +8,12 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 ## [Unreleased]
 
+### Changed
+
+- The Flex recipe is served by `symfony/recipes-contrib` since 2026-10-02: on a store with Flex, Sylius
+  Standard's included, `composer require` applies it with nothing to configure. The README's
+  installation starts there.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

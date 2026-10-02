@@ -104,8 +104,11 @@ with all of them, charged without the customer present, with retries when a char
 
 ## Installation
 
-A Symfony Flex recipe that takes steps 2 to 4 for you, and prints the rest, is being proposed to
-`symfony/recipes-contrib`; it is in [`recipe/`](recipe/). Until it is served there, take every step below.
+On a store with Symfony Flex, as Sylius Standard is, step 1 takes steps 2 to 4 for you, from the plugin's
+recipe in [`symfony/recipes-contrib`](https://github.com/symfony/recipes-contrib/tree/main/jpmmartin/sylius-subscription-plugin),
+and prints what is left: naming your payment methods in step 3, and steps 5 to 7. A store without Flex, or
+one that answered no when Composer offered the recipe, takes every step by hand; either way, the store
+ends with the same files.
 
 1. Require the plugin:
 
@@ -124,7 +127,8 @@ A Symfony Flex recipe that takes steps 2 to 4 for you, and prints the rest, is b
     ```
 
 3. Import its configuration and name the payment methods that may charge renewals, in
-   `config/packages/jpm_martin_sylius_subscription.yaml`:
+   `config/packages/jpm_martin_sylius_subscription.yaml`. The recipe writes this file, with no method
+   named:
 
     ```yaml
     # config/packages/jpm_martin_sylius_subscription.yaml
@@ -135,7 +139,7 @@ A Symfony Flex recipe that takes steps 2 to 4 for you, and prints the rest, is b
         payment_methods: [] # the codes of the payment methods that charge renewals; nobody can subscribe until you name one
     ```
 
-4. Import its routes in `config/routes/jpm_martin_sylius_subscription.yaml`. The admin routes go under
+4. Import its routes in `config/routes/jpm_martin_sylius_subscription.yaml`, which the recipe writes too. The admin routes go under
    the admin path, which puts them behind the admin firewall; the shop routes go under the locale
    prefix, exactly as Sylius's shop routes are imported, so the account's access control covers them:
 
@@ -1105,7 +1109,8 @@ Two workflows:
   job installs through the Flex recipe in `recipe/`, compiled and linted as `symfony/recipes-contrib`
   does: `composer require` has to end well while the store's order item is still Sylius Standard's,
   with the cycles command saying what is left, and the same checks follow once it is adapted; at the
-  end, `composer remove` has to take back what the recipe did.
+  end, `composer remove` has to take back what the recipe did. Started by hand with `recipe_source:
+  contrib`, it takes the recipe from `symfony/recipes-contrib` instead, as a store does.
 
 The `@javascript` scenarios, MariaDB, the other versions of MySQL and PostgreSQL, PHP 8.3 and 8.5, and
 Symfony 6.4 are not checked on each change: run them locally, as above. Up to 1.0.0, each change was
