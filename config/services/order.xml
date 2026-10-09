@@ -21,6 +21,7 @@
         >
             <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
             <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_choices" />
             <tag name="sylius.order_processor" priority="47" />
         </service>
 

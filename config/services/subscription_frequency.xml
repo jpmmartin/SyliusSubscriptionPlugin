@@ -24,6 +24,13 @@
         </service>
         <service id="JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface" alias="jpm_martin_sylius_subscription.frequency.repeatable_variants" public="true" />
 
+        <!-- Shared with the cart's frequency processor, the line changer, and "repeat this cart": see its class doc. -->
+        <service id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_choices" class="JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChoices">
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="jpm_martin_sylius_subscription.factory.cart_item_subscription_choice" />
+            <argument>%jpm_martin_sylius_subscription.model.cart_item_subscription_choice.class%</argument>
+        </service>
+
         <service id="jpm_martin_sylius_subscription.frequency.cart_repeater" class="JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeater">
             <argument type="service" id="doctrine.orm.entity_manager" />
             <argument type="service" id="jpm_martin_sylius_subscription.factory.cart_frequency" />
@@ -44,6 +51,7 @@
             <argument type="service" id="sylius.manager.order" />
             <argument type="service" id="security.csrf.token_manager" />
             <argument type="service" id="router" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_choices" />
             <tag name="controller.service_arguments" />
         </service>
 

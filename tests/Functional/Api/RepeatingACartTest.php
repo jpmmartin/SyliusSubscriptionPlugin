@@ -7,7 +7,9 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Functional\Api;
 use Doctrine\ORM\EntityManagerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionIntervalUnit;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Factory\SubscriptionPlanFactoryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChoices;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface;
 use Sylius\Behat\Context\Hook\DoctrineORMContext;
@@ -16,6 +18,7 @@ use Sylius\Behat\Context\Setup\ProductContext;
 use Sylius\Behat\Service\SharedStorageInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
@@ -156,6 +159,39 @@ final class RepeatingACartTest extends WebTestCase
         self::assertNull($this->cartRepeater()->getFrequency($this->getCart($token)));
     }
 
+    /** choose-subscription-per-cart-line: "repetir este carrito" overrides a line's own choice. */
+    public function testChoosingAFrequencyOverridesALinesOwnChoice(): void
+    {
+        $token = $this->pickUpACart();
+        $this->addOneOff($token, $this->tea);
+        $this->chooseOnLine($token, 'EVERY_TWO_WEEKS');
+
+        $this->patchFrequency($token, 'MONTHLY');
+
+        self::assertResponseIsSuccessful();
+        $item = $this->onlyItemOfTheResponse();
+        self::assertSame('MONTHLY', $item['subscriptionFrequency']);
+    }
+
+    /** choose-subscription-per-cart-line: "dejar de repetir" clears a line's own choice too, not only the cart's. */
+    public function testStoppingRepeatingClearsALinesOwnChoiceToo(): void
+    {
+        $token = $this->pickUpACart();
+        $this->addOneOff($token, $this->tea);
+        $this->patchFrequency($token, 'MONTHLY');
+        $this->chooseOnLine($token, 'EVERY_TWO_WEEKS');
+
+        $this->patchFrequency($token, null);
+
+        self::assertResponseIsSuccessful();
+        $item = $this->onlyItemOfTheResponse();
+        self::assertNull($item['subscriptionFrequency']);
+        $cart = $this->getCart($token);
+        $tea = $cart->getItems()->first();
+        self::assertInstanceOf(OrderItemInterface::class, $tea);
+        self::assertFalse($this->choices()->has($tea), 'The mark itself is cleared, not only the frequency it carried.');
+    }
+
     public function testAFrequencyTheCartIsNotOfferedIsRefused(): void
     {
         $token = $this->pickUpACart();
@@ -239,6 +275,22 @@ final class RepeatingACartTest extends WebTestCase
         return $cart['tokenValue'];
     }
 
+    /** What the (not yet built) per-line changer does: marks the only line of the cart as owning its own choice. */
+    private function chooseOnLine(string $token, string $frequencyCode): void
+    {
+        $cart = $this->getCart($token);
+        $item = $cart->getItems()->first();
+        self::assertInstanceOf(OrderItemInterface::class, $item);
+        self::assertInstanceOf(SubscriptionPlanAwareInterface::class, $item);
+
+        $frequency = $this->frequencyRepository()->findOneBy(['code' => $frequencyCode]);
+        self::assertInstanceOf(SubscriptionFrequencyInterface::class, $frequency);
+
+        $this->choices()->mark($item);
+        $item->setSubscriptionFrequency($frequency);
+        $this->entityManager()->flush();
+    }
+
     private function addOneOff(string $token, ProductVariantInterface $variant): void
     {
         $this->post(\sprintf('/api/v2/shop/orders/%s/items', $token), ['productVariant' => $variant->getCode(), 'quantity' => 1]);
@@ -308,6 +360,23 @@ final class RepeatingACartTest extends WebTestCase
         $cartRepeater = self::getContainer()->get(CartRepeaterInterface::class);
 
         return $cartRepeater;
+    }
+
+    private function choices(): CartItemSubscriptionChoices
+    {
+        /** @var CartItemSubscriptionChoices $choices */
+        $choices = self::getContainer()->get('jpm_martin_sylius_subscription.frequency.cart_item_subscription_choices');
+
+        return $choices;
+    }
+
+    /** @return RepositoryInterface<SubscriptionFrequencyInterface> */
+    private function frequencyRepository(): RepositoryInterface
+    {
+        /** @var RepositoryInterface<SubscriptionFrequencyInterface> $frequencies */
+        $frequencies = self::getContainer()->get('jpm_martin_sylius_subscription.repository.subscription_frequency');
+
+        return $frequencies;
     }
 
     private function frequency(string $code, string $name, int $intervalCount, SubscriptionIntervalUnit $unit, int $discount, ChannelInterface $channel): SubscriptionFrequencyInterface
