@@ -64,8 +64,28 @@
             <tag name="controller.service_arguments" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.controller.change_cart_item_subscription_terms"
+                 class="JpmMartin\SyliusSubscriptionPlugin\Controller\ChangeCartItemSubscriptionTermsAction"
+                 public="true"
+        >
+            <argument type="service" id="sylius.context.cart" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_changer" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="sylius.manager.order" />
+            <argument type="service" id="security.csrf.token_manager" />
+            <argument type="service" id="router" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <tag name="controller.service_arguments" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.twig.extension.cart_repetition" class="JpmMartin\SyliusSubscriptionPlugin\Twig\CartRepetitionExtension">
             <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <tag name="twig.extension" />
+        </service>
+
+        <service id="jpm_martin_sylius_subscription.twig.extension.cart_item_subscription" class="JpmMartin\SyliusSubscriptionPlugin\Twig\CartItemSubscriptionExtension">
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_changer" />
             <tag name="twig.extension" />
         </service>
 

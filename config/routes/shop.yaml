@@ -162,3 +162,13 @@ jpm_martin_sylius_subscription_shop_cart_repeat:
     methods: [POST]
     defaults:
         _controller: jpm_martin_sylius_subscription.controller.repeat_cart
+
+# Changes a single line's subscription: buying it once, one of the store's frequencies, or one of its variant's
+# plans (choose-subscription-per-cart-line).
+jpm_martin_sylius_subscription_shop_cart_item_subscription_terms:
+    path: /cart/items/{id}/subscription-terms
+    methods: [POST]
+    requirements:
+        id: \d+
+    defaults:
+        _controller: jpm_martin_sylius_subscription.controller.change_cart_item_subscription_terms
