@@ -76,6 +76,37 @@ final class CreatingSubscriptionsTest extends LifecycleTestCase
         self::assertSame(2000, $this->onlyItemOf($honey)->getUnitPrice());
     }
 
+    /**
+     * choose-subscription-per-cart-line, spec "Dos frecuencias en un pedido": two lines, each repeated with a
+     * different store frequency chosen on the line itself, start one subscription each - the grouping by interval
+     * (SubscriptionLines::of() and CreateSubscriptionsListener) needed no change for this, since each line already
+     * carries its own frequency independently of the other's.
+     */
+    public function testTwoFrequenciesChosenOnDifferentLinesStartASubscriptionEach(): void
+    {
+        $monthly = $this->storeFrequency('MONTHLY', 1, SubscriptionIntervalUnit::Month, 5, $this->coffee);
+        $everyTwoWeeks = $this->storeFrequency('EVERY_TWO_WEEKS', 2, SubscriptionIntervalUnit::Week, 10, $this->tea);
+        $order = $this->cart();
+        $coffeeLine = $this->addLine($order, $this->coffee, 1, null);
+        $teaLine = $this->addLine($order, $this->tea, 1, null);
+        $this->chooseFrequencyOnLine($order, $coffeeLine, $monthly);
+        $this->chooseFrequencyOnLine($order, $teaLine, $everyTwoWeeks);
+        $this->placeWithConsent($order);
+
+        $subscriptions = $this->subscriptionsByPlan();
+        self::assertSame(['EVERY_TWO_WEEKS', 'MONTHLY'], array_keys($subscriptions));
+
+        $coffeeSubscription = $subscriptions['MONTHLY'];
+        self::assertSame(1, $coffeeSubscription->getBillingIntervalCount());
+        self::assertSame(SubscriptionIntervalUnit::Month, $coffeeSubscription->getBillingIntervalUnit());
+        self::assertSame($this->coffee->getCode(), $this->onlyItemOf($coffeeSubscription)->getProductVariant()?->getCode());
+
+        $teaSubscription = $subscriptions['EVERY_TWO_WEEKS'];
+        self::assertSame(2, $teaSubscription->getBillingIntervalCount());
+        self::assertSame(SubscriptionIntervalUnit::Week, $teaSubscription->getBillingIntervalUnit());
+        self::assertSame($this->tea->getCode(), $this->onlyItemOf($teaSubscription)->getProductVariant()?->getCode());
+    }
+
     public function testOneOffLinesStartNothingAndABatchThatShipsNothingHasNoShippingMethod(): void
     {
         $order = $this->cart();

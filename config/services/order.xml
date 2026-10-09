@@ -13,6 +13,8 @@
             <argument type="service" id=".inner" />
             <argument type="service" id="sylius.order_processing.order_processor" />
             <argument type="service" id="sylius.modifier.order_item_quantity" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.repeatable_variants" />
         </service>
 
         <!-- Before the subscriber price (45), which prices the lines it gives the cart's frequency. -->

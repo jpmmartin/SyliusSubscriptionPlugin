@@ -198,6 +198,28 @@ final class CartLineOwnChoiceTest extends KernelTestCase
         self::assertSame($this->monthly, $this->frequencyOf($coffee));
     }
 
+    /** choose-subscription-per-cart-line, spec "Añadir una variante que ya está con otra suscripción". */
+    public function testAddingTheSameVariantAgainDoesNotMergeIntoItsOneTimeLine(): void
+    {
+        $cart = $this->cartWith($tea = $this->line('Tea'));
+        $this->repeat($cart, $this->monthly);
+        $this->chooseOneTimeOnLine($tea);
+        $this->process($cart);
+        $this->entityManager->flush();
+        self::assertNull($this->frequencyOf($tea));
+
+        /** @var OrderModifierInterface $orderModifier */
+        $orderModifier = self::getContainer()->get('sylius.modifier.order');
+        $orderModifier->addToOrder($cart, $moreTea = $this->line('Tea'));
+        $this->entityManager->flush();
+
+        self::assertCount(2, $cart->getItems(), 'The new tea stays a line of its own, it is not merged into the one-time one.');
+        self::assertSame($this->monthly, $this->frequencyOf($moreTea));
+        self::assertSame(1, $moreTea->getQuantity());
+        self::assertNull($this->frequencyOf($tea));
+        self::assertSame(1, $tea->getQuantity());
+    }
+
     private function chooseOnLine(OrderItemInterface $item, SubscriptionFrequencyInterface $frequency): void
     {
         self::assertInstanceOf(SubscriptionPlanAwareInterface::class, $item);
