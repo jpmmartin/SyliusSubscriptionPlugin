@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd"
+>
+    <!-- A row per cart line whose subscription was chosen on the line itself; kept by the plugin, so the store's order item is left alone. -->
+    <mapped-superclass name="JpmMartin\SyliusSubscriptionPlugin\Entity\CartItemSubscriptionChoice" table="jpm_martin_sylius_subscription_cart_item_choice">
+        <!-- utf8mb4, as the migrations create it and as Sylius's own tables are. -->
+        <options>
+            <option name="charset">utf8mb4</option>
+            <option name="collation">utf8mb4_unicode_ci</option>
+        </options>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="IDENTITY" />
+        </id>
+
+        <one-to-one field="orderItem" target-entity="Sylius\Component\Core\Model\OrderItemInterface">
+            <join-column name="order_item_id" referenced-column-name="id" nullable="false" unique="true" on-delete="CASCADE" />
+        </one-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

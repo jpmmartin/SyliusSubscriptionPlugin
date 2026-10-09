@@ -6,6 +6,8 @@ namespace JpmMartin\SyliusSubscriptionPlugin\DependencyInjection;
 
 use JpmMartin\SyliusSubscriptionPlugin\Entity\CartFrequency;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\CartFrequencyInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\CartItemSubscriptionChoice;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\CartItemSubscriptionChoiceInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\RepeatableVariant;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\RepeatableVariantInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\Subscription;
@@ -164,6 +166,7 @@ final class Configuration implements ConfigurationInterface
         $this->addResource($resources, 'subscription_frequency', SubscriptionFrequency::class, SubscriptionFrequencyInterface::class, SubscriptionFrequencyRepository::class);
         $this->addResource($resources, 'repeatable_variant', RepeatableVariant::class, RepeatableVariantInterface::class);
         $this->addResource($resources, 'cart_frequency', CartFrequency::class, CartFrequencyInterface::class);
+        $this->addResource($resources, 'cart_item_subscription_choice', CartItemSubscriptionChoice::class, CartItemSubscriptionChoiceInterface::class);
         $this->addResource($resources, 'subscription', Subscription::class, SubscriptionInterface::class, SubscriptionRepository::class);
         $this->addResource($resources, 'subscription_item', SubscriptionItem::class, SubscriptionItemInterface::class);
         $this->addResource($resources, 'subscription_cycle', SubscriptionCycle::class, SubscriptionCycleInterface::class, SubscriptionCycleRepository::class);
