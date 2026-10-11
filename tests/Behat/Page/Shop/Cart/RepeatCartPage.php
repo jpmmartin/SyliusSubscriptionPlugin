@@ -45,9 +45,27 @@ final class RepeatCartPage extends SymfonyPage
         $this->choose('');
     }
 
+    /**
+     * The plain badge's own code attribute when the line has only this one option, as before; the dropdown's
+     * current choice otherwise (choose-subscription-per-cart-line), read back off its "Subscribe: <name>" text.
+     * That only recovers the plan's code when its name is the code, true of every plan these scenarios create
+     * (SubscriptionPlanContext sets both to the same value); a plan with a different display name would need a
+     * lookup this page object has no way to make.
+     */
     public function getPlanOf(string $productName): ?string
     {
-        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-plan]')?->getAttribute('data-test-cart-item-subscription-plan');
+        $badge = $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-plan]');
+        if (null !== $badge) {
+            return $badge->getAttribute('data-test-cart-item-subscription-plan');
+        }
+
+        if (!$this->hasSubscriptionOptions($productName)) {
+            return null;
+        }
+
+        $current = $this->getCurrentSubscriptionChoice($productName);
+
+        return str_starts_with($current, 'Subscribe: ') ? substr($current, \strlen('Subscribe: ')) : null;
     }
 
     /**
