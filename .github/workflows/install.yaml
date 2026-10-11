@@ -272,8 +272,8 @@ jobs:
                   tables=$(bin/console dbal:run-sql \
                       "SELECT count(*) AS n FROM information_schema.tables WHERE table_name LIKE 'jpm_martin_sylius_subscription%'" \
                       | grep -oE '[0-9]+' | tail -1)
-                  test "$tables" = '11' \
-                      || { echo "Expected 11 plugin tables, found ${tables:-none}. Step 6 — run the migrations."; exit 1; }
+                  test "$tables" = '12' \
+                      || { echo "Expected 12 plugin tables, found ${tables:-none}. Step 6 — run the migrations."; exit 1; }
                   columns=$(bin/console dbal:run-sql \
                       "SELECT count(*) AS n FROM information_schema.columns WHERE table_name = 'sylius_order_item' AND column_name IN ('subscription_plan_id', 'subscription_frequency_id', 'subscription_trial_days')" \
                       | grep -oE '[0-9]+' | tail -1)
