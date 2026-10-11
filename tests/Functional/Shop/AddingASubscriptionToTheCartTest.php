@@ -109,7 +109,9 @@ final class AddingASubscriptionToTheCartTest extends WebTestCase
 
         $this->client->request('GET', \sprintf('/%s/cart/', self::LOCALE));
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[data-test-cart-item-subscription-plan="COFFEE_MONTHLY"]');
+        // choose-subscription-per-cart-line: the line now also offers one-time, so its plain badge
+        // (data-test-cart-item-subscription-plan) is a dropdown instead, showing the chosen plan.
+        self::assertSelectorTextContains('[data-test-cart-item-subscription-toggle]', 'COFFEE_MONTHLY');
     }
 
     public function testBuyingOnceAProductThatAlsoOffersPlans(): void

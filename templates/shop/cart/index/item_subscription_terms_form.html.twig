@@ -1,0 +1,9 @@
+{#
+    The outside form every line's subscription dropdown submits to (choose-subscription-per-cart-line, D6): a form
+    cannot nest inside another, and the line is rendered inside Sylius's live cart form. One form for the whole
+    page; each button overrides its target with its own formaction, the way "repeat this cart" below it is a form
+    of its own too. Carries nothing but the CSRF token.
+#}
+<form id="jpm-martin-sylius-subscription-cart-item-subscription-terms" method="post" novalidate>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('jpm_martin_sylius_subscription_cart_item_subscription_terms') }}">
+</form>

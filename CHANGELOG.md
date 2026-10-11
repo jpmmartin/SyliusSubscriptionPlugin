@@ -8,11 +8,24 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 ## [Unreleased]
 
+### Added
+
+- Each cart line can choose its own subscription, independently of the cart's: buying it once, one of
+  the channel's frequencies, or one of its variant's plans. The cart page offers it as a dropdown on a
+  line that has more than one option; `PATCH /api/v2/shop/orders/{tokenValue}/items/{orderItemId}/subscription-terms`
+  is its shop API counterpart. "Repeat this cart" still overrides every line's own choice at once, as it
+  always repeated every eligible line.
+- `JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChangerInterface`, decoratable: lists
+  a line's own options and changes it to one of them.
+
 ### Changed
 
 - The Flex recipe is served by `symfony/recipes-contrib` since 2026-10-02: on a store with Flex, Sylius
   Standard's included, `composer require` applies it with nothing to configure. The README's
   installation starts there.
+- `AddSubscriptionItemToCartHandler`'s cart-ownership check moved into a service of its own,
+  `JpmMartin\SyliusSubscriptionPlugin\Cart\CartAccessInterface`, so the line-subscription handler above
+  shares it instead of repeating it.
 
 ## [1.1.0] - 2026-09-29
 

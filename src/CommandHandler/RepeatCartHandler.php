@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\CommandHandler;
 
 use JpmMartin\SyliusSubscriptionPlugin\Command\RepeatCart;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChoices;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface;
 use Sylius\Bundle\ApiBundle\Exception\UnprocessableCartException;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -23,6 +24,7 @@ final class RepeatCartHandler
         private readonly OrderRepositoryInterface $orderRepository,
         private readonly CartRepeaterInterface $cartRepeater,
         private readonly OrderProcessorInterface $orderProcessor,
+        private readonly CartItemSubscriptionChoices $choices,
     ) {
     }
 
@@ -34,9 +36,12 @@ final class RepeatCartHandler
         }
 
         if (null === $command->subscriptionFrequencyCode) {
+            $this->choices->clearForCart($cart);
             $this->cartRepeater->stopRepeating($cart);
         } else {
-            $this->cartRepeater->repeat($cart, $this->offered($cart, $command->subscriptionFrequencyCode));
+            $frequency = $this->offered($cart, $command->subscriptionFrequencyCode);
+            $this->choices->clearForCart($cart);
+            $this->cartRepeater->repeat($cart, $frequency);
         }
 
         $this->orderProcessor->process($cart);

@@ -1,6 +1,9 @@
 jpm_martin_sylius_subscription:
     cart_frequency:
         not_offered: "This subscription frequency is not offered for this cart."
+    cart_item_subscription_terms:
+        both_given: "Choose either a plan or a frequency, not both."
+        not_offered: "This subscription option is not offered for this item."
     checkout:
         account_required: Subscriptions need an account. Please sign in or create an account to place this order.
         payment_method_not_supported: 'The "%payment_method%" payment method cannot be used for subscriptions. Please choose another one.'

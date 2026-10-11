@@ -7,6 +7,7 @@ namespace Tests\JpmMartin\SyliusSubscriptionPlugin\Integration\Migrations;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\CartFrequency;
+use JpmMartin\SyliusSubscriptionPlugin\Entity\CartItemSubscriptionChoice;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\RepeatableVariant;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\Subscription;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionChargeAttempt;
@@ -91,6 +92,7 @@ final class MigrationMatchesMappingTest extends KernelTestCase
         yield 'the channels of the frequencies' => [SubscriptionFrequency::class, 'jpm_martin_sylius_subscription_frequency_channels'];
         yield 'the repeatable variants' => [RepeatableVariant::class];
         yield 'the cart frequencies' => [CartFrequency::class];
+        yield 'the cart item subscription choices' => [CartItemSubscriptionChoice::class];
         yield 'the order item and its plan and frequency columns' => [OrderItem::class];
     }
 }

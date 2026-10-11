@@ -6,6 +6,7 @@ namespace JpmMartin\SyliusSubscriptionPlugin\Controller;
 
 use Doctrine\Persistence\ObjectManager;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionFrequencyInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChoices;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Order\Context\CartContextInterface;
@@ -36,6 +37,7 @@ final class RepeatCartAction
         private readonly ObjectManager $orderManager,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly CartItemSubscriptionChoices $choices,
     ) {
     }
 
@@ -54,6 +56,7 @@ final class RepeatCartAction
 
         $code = $request->request->getString(self::FIELD);
         if ('' === $code) {
+            $this->choices->clearForCart($cart);
             $this->cartRepeater->stopRepeating($cart);
             $flash = ['success', 'jpm_martin_sylius_subscription.cart.not_repeated'];
         } else {
@@ -64,6 +67,7 @@ final class RepeatCartAction
                 return $response;
             }
 
+            $this->choices->clearForCart($cart);
             $this->cartRepeater->repeat($cart, $frequency);
             $flash = ['success', 'jpm_martin_sylius_subscription.cart.repeated'];
         }

@@ -14,6 +14,7 @@ use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionItemInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Factory\SubscriptionPlanFactoryInterface;
+use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChangerInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -316,6 +317,21 @@ abstract class LifecycleTestCase extends KernelTestCase
         /** @var CartRepeaterInterface $cartRepeater */
         $cartRepeater = self::getContainer()->get(CartRepeaterInterface::class);
         $cartRepeater->repeat($order, $frequency);
+        /** @var OrderProcessorInterface $orderProcessor */
+        $orderProcessor = self::getContainer()->get('sylius.order_processing.order_processor');
+        $orderProcessor->process($order);
+        $this->entityManager()->flush();
+    }
+
+    /** Chooses a frequency on a single line, as its own dropdown on the cart page does (choose-subscription-per-cart-line). */
+    protected function chooseFrequencyOnLine(OrderInterface $order, OrderItemInterface $item, SubscriptionFrequencyInterface $frequency): void
+    {
+        $this->entityManager()->persist($order);
+        $this->entityManager()->flush();
+
+        /** @var CartItemSubscriptionChangerInterface $changer */
+        $changer = self::getContainer()->get(CartItemSubscriptionChangerInterface::class);
+        $changer->change($item, null, $frequency);
         /** @var OrderProcessorInterface $orderProcessor */
         $orderProcessor = self::getContainer()->get('sylius.order_processing.order_processor');
         $orderProcessor->process($order);
