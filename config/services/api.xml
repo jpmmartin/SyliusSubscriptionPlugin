@@ -115,6 +115,12 @@
             <tag name="api_platform.state_provider" />
         </service>
 
+        <!-- Shared by every handler below that works on an existing cart: see its class doc. -->
+        <service id="jpm_martin_sylius_subscription.cart.access" class="JpmMartin\SyliusSubscriptionPlugin\Cart\CartAccess">
+            <argument type="service" id="Sylius\Bundle\ApiBundle\Context\UserContextInterface" on-invalid="null" />
+        </service>
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Cart\CartAccessInterface" alias="jpm_martin_sylius_subscription.cart.access" />
+
         <service id="jpm_martin_sylius_subscription.command_handler.add_subscription_item_to_cart"
                  class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\AddSubscriptionItemToCartHandler"
         >
@@ -124,7 +130,7 @@
             <argument type="service" id="sylius.modifier.order" />
             <argument type="service" id="sylius.factory.order_item" />
             <argument type="service" id="sylius.modifier.order_item_quantity" />
-            <argument type="service" id="Sylius\Bundle\ApiBundle\Context\UserContextInterface" on-invalid="null" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cart.access" />
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 
@@ -138,9 +144,28 @@
             <tag name="messenger.message_handler" bus="sylius.command_bus" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.command_handler.change_cart_item_subscription_terms"
+                 class="JpmMartin\SyliusSubscriptionPlugin\CommandHandler\ChangeCartItemSubscriptionTermsHandler"
+        >
+            <argument type="service" id="sylius.repository.order" />
+            <argument type="service" id="sylius.repository.order_item" />
+            <argument type="service" id="jpm_martin_sylius_subscription.cart.access" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_changer" />
+            <argument type="service" id="sylius.order_processing.order_processor" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_plan" />
+            <argument type="service" id="jpm_martin_sylius_subscription.repository.subscription_frequency" />
+            <tag name="messenger.message_handler" bus="sylius.command_bus" />
+        </service>
+
         <service id="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\SubscriptionFrequencyOfferedValidator">
             <argument type="service" id="sylius.repository.order" />
             <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_repeater" />
+            <tag name="validator.constraint_validator" />
+        </service>
+
+        <service id="JpmMartin\SyliusSubscriptionPlugin\Validator\Constraints\CartItemSubscriptionTermsOfferedValidator">
+            <argument type="service" id="sylius.repository.order_item" />
+            <argument type="service" id="jpm_martin_sylius_subscription.frequency.cart_item_subscription_changer" />
             <tag name="validator.constraint_validator" />
         </service>
 

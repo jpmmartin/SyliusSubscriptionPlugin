@@ -793,19 +793,37 @@ of that acceptance instead; the consent recorded on the initial order stays as t
   switch on the variant's Subscription tab, off by default, so a gift card or anything that must not
   renew stays out of repeated carts. The mark is kept in a table of the plugin; the store's variant
   class is left alone.
-- **The cart page** offers "Repeat this cart" when the channel has a frequency and the cart a one-time
-  line of a variant that can be repeated. It is a form of its own, posting to the route
+- **The cart page** offers "Repeat this cart" when the channel has a frequency and the cart a line that
+  could be repeated. It is a form of its own, posting to the route
   `jpm_martin_sylius_subscription_shop_cart_repeat`, rendered after Sylius's live cart form by the
   hookable `jpm_martin_sylius_subscription_repeat_cart` of the hook `sylius_shop.cart.index.content`
-  (priority 50): override or move it there. Each line says what it renews on, or that it is bought
-  once in a repeated cart.
-- **The choice belongs to the cart.** An order processor (priority 47, before the subscriber price at
-  45) gives the cart's frequency to each one-time line of a variant that can be repeated, and takes
-  it from every other line, whenever Sylius processes the cart. A frequency the cart can no longer
-  have, disabled or taken off its channel, stops the cart being repeated.
-- **Services**: `JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface` chooses or removes a
-  cart's frequency and tells which are offered; `JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface`
-  marks variants and tells which can be repeated.
+  (priority 50): override or move it there. It repeats every line that has not chosen something of its
+  own, as below.
+- **Each line can choose its own subscription**, independently of the cart: buying it once, one of the
+  frequencies offered to the cart, or one of its variant's enabled plans. The cart page shows this as a
+  dropdown on the line, next to Sylius's product cell, when it has more than one option; a line with
+  only one keeps the plain label it always had. Choosing one is a `POST` to
+  `jpm_martin_sylius_subscription_shop_cart_item_subscription_terms`, the route of
+  `jpm_martin_sylius_subscription.controller.change_cart_item_subscription_terms`, with the field
+  `subscription_terms`: empty to buy it once, `plan:<code>` or `frequency:<code>` otherwise - the same
+  values `jpm_martin_sylius_subscription_cart_item_subscription_options(item)` gives each option, for a
+  store with its own cart template. "Repeat this cart" overrides every line's own choice at once, the
+  way it always repeated every eligible line; choosing a frequency on a single line never changes what
+  the cart itself is set to repeat with.
+- **The choice belongs to the cart, unless a line made one of its own.** An order processor (priority 47,
+  before the subscriber price at 45) gives the cart's frequency to each line that has not chosen
+  something for itself and whose variant can be repeated, and takes it from every other line, whenever
+  Sylius processes the cart. A frequency the cart can no longer have, disabled or taken off its channel,
+  stops the cart being repeated; a line's own frequency that stops being valid falls back to buying it
+  once, on its own, without inheriting the cart's.
+- **Services**:
+  `JpmMartin\SyliusSubscriptionPlugin\Frequency\CartRepeaterInterface` chooses or removes a cart's
+  frequency and tells which are offered;
+  `JpmMartin\SyliusSubscriptionPlugin\Frequency\RepeatableVariantsInterface` marks variants and tells
+  which can be repeated;
+  `JpmMartin\SyliusSubscriptionPlugin\Frequency\CartItemSubscriptionChangerInterface`, decoratable, lists
+  a single line's own options and changes it to one of them, merging it into a matching line if one
+  already exists in the cart.
 
 ## Shop API
 
@@ -821,7 +839,13 @@ of that acceptance instead; the consent recorded on the initial order stays as t
 - `PATCH /api/v2/shop/orders/{tokenValue}/subscription-frequency` repeats the cart with one of them,
   `{"subscriptionFrequency": "MONTHLY"}`, or stops repeating it with `{"subscriptionFrequency": null}`
   (`Content-Type: application/merge-patch+json`). A frequency the channel does not offer is refused
-  with a validation error.
+  with a validation error. It overrides what any single line had chosen for itself, below.
+- `PATCH /api/v2/shop/orders/{tokenValue}/items/{orderItemId}/subscription-terms` changes a single
+  line's own subscription, independently of the cart's: `{"subscriptionPlan": "COFFEE_WEEKLY"}`,
+  `{"subscriptionFrequency": "MONTHLY"}`, or both `null` to buy it once
+  (`Content-Type: application/merge-patch+json`). Giving both a plan and a frequency, or one the line
+  does not have among its own options, is refused with a validation error. A line of a different cart
+  answers 404.
 - Every line of a shop cart, in the cart and on its own (`/shop/orders/{tokenValue}/items/{id}`),
   tells the code of its plan and of its frequency, or null:
   `"subscriptionPlan": "COFFEE_MONTHLY", "subscriptionFrequency": null`.

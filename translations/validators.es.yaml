@@ -1,6 +1,9 @@
 jpm_martin_sylius_subscription:
     cart_frequency:
         not_offered: "Esta frecuencia de suscripción no se ofrece para este carrito."
+    cart_item_subscription_terms:
+        both_given: "Elige un plan o una frecuencia, no los dos."
+        not_offered: "Esta opción de suscripción no se ofrece para este artículo."
     checkout:
         account_required: Las suscripciones necesitan una cuenta. Inicia sesión o crea una cuenta para realizar este pedido.
         payment_method_not_supported: 'El método de pago "%payment_method%" no admite suscripciones. Elige otro.'

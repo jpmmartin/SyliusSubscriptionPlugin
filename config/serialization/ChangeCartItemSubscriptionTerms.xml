@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+
+<serializer xmlns="http://symfony.com/schema/dic/serializer-mapping"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/serializer-mapping https://symfony.com/schema/dic/serializer-mapping/serializer-mapping-1.0.xsd"
+>
+    <!-- A plan's or a frequency's code, as the cart's lines already show them; both null buys it once. -->
+    <class name="JpmMartin\SyliusSubscriptionPlugin\Command\ChangeCartItemSubscriptionTerms">
+        <attribute name="subscriptionPlan">
+            <group>jpm_martin_sylius_subscription:shop:cart:change_item_subscription_terms</group>
+        </attribute>
+        <attribute name="subscriptionFrequency">
+            <group>jpm_martin_sylius_subscription:shop:cart:change_item_subscription_terms</group>
+        </attribute>
+    </class>
+</serializer>

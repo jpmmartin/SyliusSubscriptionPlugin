@@ -114,6 +114,49 @@
                     </values>
                 </normalizationContext>
             </operation>
+
+            <!-- A single line's own choice, next to Sylius's own PATCH on the same line for its quantity:
+                 choose-subscription-per-cart-line. {"subscriptionPlan": "<code>"}, {"subscriptionFrequency": "<code>"}
+                 or both null to buy it once. -->
+            <operation
+                name="jpm_martin_sylius_subscription_shop_order_item_subscription_terms_patch"
+                class="ApiPlatform\Metadata\Patch"
+                uriTemplate="/shop/orders/{tokenValue}/items/{orderItemId}/subscription-terms"
+                messenger="input"
+                input="JpmMartin\SyliusSubscriptionPlugin\Command\ChangeCartItemSubscriptionTerms"
+            >
+                <uriVariables>
+                    <uriVariable parameterName="tokenValue" fromClass="%sylius.model.order.class%"/>
+                    <uriVariable parameterName="orderItemId" fromClass="%sylius.model.order_item.class%" fromProperty="order"/>
+                </uriVariables>
+                <validationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription</value>
+                            </values>
+                        </value>
+                    </values>
+                </validationContext>
+                <denormalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>jpm_martin_sylius_subscription:shop:cart:change_item_subscription_terms</value>
+                            </values>
+                        </value>
+                    </values>
+                </denormalizationContext>
+                <normalizationContext>
+                    <values>
+                        <value name="groups">
+                            <values>
+                                <value>sylius:shop:cart:show</value>
+                            </values>
+                        </value>
+                    </values>
+                </normalizationContext>
+            </operation>
         </operations>
     </resource>
 </resources>

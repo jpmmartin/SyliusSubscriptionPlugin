@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace JpmMartin\SyliusSubscriptionPlugin\CommandHandler;
 
+use JpmMartin\SyliusSubscriptionPlugin\Cart\CartAccessInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Command\AddSubscriptionItemToCart;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanAwareInterface;
 use JpmMartin\SyliusSubscriptionPlugin\Entity\SubscriptionPlanInterface;
-use Sylius\Bundle\ApiBundle\Context\UserContextInterface;
 use Sylius\Bundle\ApiBundle\Exception\ProductVariantUnprocessableException;
 use Sylius\Bundle\ApiBundle\Exception\UnprocessableCartException;
-use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
-use Sylius\Component\Core\Model\ShopUserInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Core\Repository\ProductVariantRepositoryInterface;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Sylius\Component\Order\Modifier\OrderModifierInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Webmozart\Assert\Assert;
 
 /**
@@ -44,7 +41,7 @@ final class AddSubscriptionItemToCartHandler
         private readonly OrderModifierInterface $orderModifier,
         private readonly FactoryInterface $cartItemFactory,
         private readonly OrderItemQuantityModifierInterface $orderItemQuantityModifier,
-        private readonly ?UserContextInterface $userContext = null,
+        private readonly CartAccessInterface $cartAccess,
     ) {
     }
 
@@ -60,7 +57,7 @@ final class AddSubscriptionItemToCartHandler
             throw new UnprocessableCartException();
         }
 
-        $this->assertCartAccessible($cart);
+        $this->cartAccess->assertAccessible($cart);
 
         $plan = $this->subscriptionPlanRepository->findOneBy(['code' => $command->subscriptionPlanCode]);
         Assert::isInstanceOf($plan, SubscriptionPlanInterface::class);
@@ -74,25 +71,5 @@ final class AddSubscriptionItemToCartHandler
         $this->orderModifier->addToOrder($cart, $cartItem);
 
         return $cart;
-    }
-
-    /** The same rule as Sylius's handler: a registered customer's cart is theirs alone. */
-    private function assertCartAccessible(OrderInterface $cart): void
-    {
-        if (null === $this->userContext || $cart->isCreatedByGuest()) {
-            return;
-        }
-
-        $cartCustomer = $cart->getCustomer();
-        if (!$cartCustomer instanceof CustomerInterface || null === $cartCustomer->getUser()) {
-            return;
-        }
-
-        $currentUser = $this->userContext->getUser();
-        if ($currentUser instanceof ShopUserInterface && $currentUser->getCustomer()?->getId() === $cartCustomer->getId()) {
-            return;
-        }
-
-        throw new NotFoundHttpException('Cart not found.');
     }
 }
