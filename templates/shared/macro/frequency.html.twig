@@ -8,3 +8,18 @@
     {%- from _self import every -%}
     {{ every(subscription.deliveryIntervalCount, subscription.deliveryIntervalUnit) }}
 {%- endmacro -%}
+
+{#
+    The plain text for one frequency: how often, and its steady discount if it has one. Introductory prices and
+    free trials are deliberately left out - "repeat this cart" (repeat_cart.html.twig) says those inline in its own
+    option list, and a line already shows them below itself, from its own fields, whichever gave it the
+    frequency (choose-subscription-per-cart-line, D6's dropdown included).
+#}
+{%- macro choice(frequency) -%}
+    {%- from _self import every -%}
+    {%- if frequency.discountPercentage > 0 -%}
+        {{ 'jpm_martin_sylius_subscription.ui.frequency_choice_with_discount'|trans({'%frequency%': every(frequency.intervalCount, frequency.intervalUnit), '%discount%': frequency.discountPercentage}) }}
+    {%- else -%}
+        {{ every(frequency.intervalCount, frequency.intervalUnit) }}
+    {%- endif -%}
+{%- endmacro -%}

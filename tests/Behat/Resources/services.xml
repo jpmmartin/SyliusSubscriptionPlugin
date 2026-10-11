@@ -288,6 +288,12 @@
             <argument type="service" id="sylius.behat.notification_checker.shop" />
         </service>
 
+        <service id="jpm_martin_sylius_subscription.behat.context.ui.shop.choosing_a_lines_subscription"
+                 class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Shop\ChoosingALinesSubscriptionContext"
+        >
+            <argument type="service" id="jpm_martin_sylius_subscription.behat.page.shop.cart.repeat_cart" />
+        </service>
+
         <service id="jpm_martin_sylius_subscription.behat.context.ui.admin.managing_repeatable_variants"
                  class="Tests\JpmMartin\SyliusSubscriptionPlugin\Behat\Context\Ui\Admin\ManagingRepeatableVariantsContext"
         >

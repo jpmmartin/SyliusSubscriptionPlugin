@@ -50,9 +50,28 @@ final class RepeatCartPage extends SymfonyPage
         return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-plan]')?->getAttribute('data-test-cart-item-subscription-plan');
     }
 
+    /**
+     * The plain badge when the line has only this one option, as before; its dropdown's current choice,
+     * reworded the same way, once it has more than one (choose-subscription-per-cart-line) and so has no badge
+     * of its own any more.
+     */
     public function getRepetitionOf(string $productName): ?string
     {
-        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-frequency]')?->getText();
+        $badge = $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-frequency]');
+        if (null !== $badge) {
+            return $badge->getText();
+        }
+
+        if (!$this->hasSubscriptionOptions($productName)) {
+            return null;
+        }
+
+        $current = $this->getCurrentSubscriptionChoice($productName);
+        if ('One-time purchase' === $current || str_starts_with($current, 'Subscribe: ')) {
+            return null;
+        }
+
+        return 'Repeated: ' . $current;
     }
 
     public function getIntroductoryPriceOf(string $productName): ?string
@@ -73,6 +92,37 @@ final class RepeatCartPage extends SymfonyPage
     public function isBoughtOnce(string $productName): bool
     {
         return null !== $this->getItemRow($productName)->find('css', '[data-test-cart-item-bought-once]');
+    }
+
+    /** choose-subscription-per-cart-line: a single line's own dropdown, present only with more than one option. */
+    public function hasSubscriptionOptions(string $productName): bool
+    {
+        return null !== $this->subscriptionOptionsOf($productName);
+    }
+
+    /** What the dropdown itself currently shows: the same text as its highlighted option. */
+    public function getCurrentSubscriptionChoice(string $productName): string
+    {
+        $toggle = $this->subscriptionOptionsOf($productName)?->find('css', '[data-test-cart-item-subscription-toggle]');
+        if (null === $toggle) {
+            throw new \RuntimeException(\sprintf('The "%s" line has no subscription dropdown.', $productName));
+        }
+
+        return trim($toggle->getText());
+    }
+
+    public function chooseSubscriptionOption(string $productName, string $label): void
+    {
+        foreach ($this->subscriptionOptionElementsOf($productName) as $option) {
+            if (trim($option->getText()) === $label) {
+                $option->press();
+                DriverHelper::waitForPageToLoad($this->getSession());
+
+                return;
+            }
+        }
+
+        throw new \RuntimeException(\sprintf('The "%s" line has no "%s" subscription option.', $productName, $label));
     }
 
     protected function getDefinedElements(): array
@@ -110,5 +160,21 @@ final class RepeatCartPage extends SymfonyPage
     private function getItemRow(string $productName): NodeElement
     {
         return $this->getElement('item_row', ['%name%' => $productName]);
+    }
+
+    private function subscriptionOptionsOf(string $productName): ?NodeElement
+    {
+        return $this->getItemRow($productName)->find('css', '[data-test-cart-item-subscription-options]');
+    }
+
+    /** @return list<NodeElement> */
+    private function subscriptionOptionElementsOf(string $productName): array
+    {
+        $options = $this->subscriptionOptionsOf($productName);
+        if (null === $options) {
+            throw new \RuntimeException(\sprintf('The "%s" line has no subscription options to choose from.', $productName));
+        }
+
+        return array_values($options->findAll('css', '[data-test-cart-item-subscription-option]'));
     }
 }

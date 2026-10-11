@@ -1,7 +1,10 @@
 {#
-    Sylius's product cell, with what the line renews on added below the product: its plan, or the
-    frequency its cart is repeated with, and their introductory price or the free trial the line got. In
-    a repeated cart, a line that is not repeated says it is bought once.
+    Sylius's product cell, with what the line renews on added below the product. A line with more than one option
+    (choose-subscription-per-cart-line) gets a dropdown to change it, submitting to the outside form
+    (item_subscription_terms_form.html.twig) through its own formaction, since a form cannot nest inside the cart's
+    live one. A line with only one option - still bought once, however the cart repeats - keeps today's plain
+    label instead: there is nothing to choose. Either way, the introductory price or the free trial the line got
+    is shown below it, as before.
 #}
 {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import every %}
 {% import '@SyliusShop/shared/macro/money.html.twig' as money %}
@@ -12,11 +15,47 @@
 {% set offer = terms is null or item.variant is null or item.order is null or item.order.channel is null ? null : jpm_martin_sylius_subscription_introductory_offer(item.variant, terms, item.order.channel) %}
 {% set trial = offer is not null or (item.subscriptionTrialDays ?? null) is null ? null : jpm_martin_sylius_subscription_trial_offer(item.variant, terms, item.order.channel) %}
 {% set cart_is_repeated = item.order is not null and item.order.items|filter(line => (line.subscriptionFrequency ?? null) is not null)|length > 0 %}
+{% set options = jpm_martin_sylius_subscription_cart_item_subscription_options(item) %}
+
+{% macro option_label(option) %}
+    {% from '@JpmMartinSyliusSubscriptionPlugin/shared/macro/frequency.html.twig' import choice as frequency_choice %}
+    {% if option.plan is not null %}
+        {{ (option.plan.discountPercentage > 0 ? 'jpm_martin_sylius_subscription.ui.plan_choice_with_discount' : 'jpm_martin_sylius_subscription.ui.plan_choice')|trans({'%name%': option.plan.name, '%discount%': option.plan.discountPercentage}) }}
+    {% elseif option.frequency is not null %}
+        {{ frequency_choice(option.frequency) }}
+    {% else %}
+        {{ 'jpm_martin_sylius_subscription.ui.one_time_purchase'|trans }}
+    {% endif %}
+{% endmacro %}
 
 <td {{ sylius_test_html_attribute('cart-item-product') }}>
     {{ component('sylius_shop:order_item:product_info', { item: item }) }}
 
-    {% if plan is not null %}
+    {% if options|length > 1 %}
+        {% set current_option = options|filter(o => o.current)|first %}
+        <div class="dropdown mt-2" {{ sylius_test_html_attribute('cart-item-subscription-options') }}>
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" {{ sylius_test_html_attribute('cart-item-subscription-toggle') }}>
+                {{ _self.option_label(current_option) }}
+            </button>
+            <ul class="dropdown-menu">
+                {% for option in options %}
+                    <li>
+                        <button
+                            class="dropdown-item{{ option.current ? ' active' }}"
+                            type="submit"
+                            form="jpm-martin-sylius-subscription-cart-item-subscription-terms"
+                            formaction="{{ path('jpm_martin_sylius_subscription_shop_cart_item_subscription_terms', { id: item.id }) }}"
+                            name="subscription_terms"
+                            value="{{ option.value }}"
+                            {{ sylius_test_html_attribute('cart-item-subscription-option', option.value) }}
+                        >
+                            {{ _self.option_label(option) }}
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% elseif plan is not null %}
         <div class="mt-2">
             <span class="badge text-bg-light" {{ sylius_test_html_attribute('cart-item-subscription-plan', plan.code) }}>
                 {{ 'jpm_martin_sylius_subscription.ui.subscription_line'|trans({'%name%': plan.name}) }}
