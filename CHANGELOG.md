@@ -8,6 +8,8 @@ here, and what counts as a breaking change, are written down in [RELEASING.md](R
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-11
+
 ### Added
 
 - Each cart line can choose its own subscription, independently of the cart's: buying it once, one of
@@ -115,6 +117,7 @@ Stated here as well as in the README, because they decide whether this release f
 - **MariaDB with Sylius 2.3 is not supported.** Sylius 2.3's own migrations do not create its tables on
   a MariaDB that DBAL 4 recognises, and DBAL 4 misreads one it does not.
 
-[Unreleased]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/compare/v1.1.0...main
+[Unreleased]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/compare/v1.2.0...main
+[1.2.0]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/releases/tag/v1.2.0
 [1.1.0]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jpmmartin/SyliusSubscriptionPlugin/releases/tag/v1.0.0
